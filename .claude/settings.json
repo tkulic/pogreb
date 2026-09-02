@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Read(//c/Users/D862/**)",
+      "Bash(supabase --version)",
+      "WebFetch(domain:www.fininfo.hr)",
+      "WebFetch(domain:www.companywall.hr)",
+      "WebFetch(domain:lovrinac.hr)",
+      "Bash(./.tools/supabase/supabase.exe db *)",
+      "Bash(grep -A6 'CREATE TYPE' __TRACKED_VAR__/live_schema.sql)",
+      "Bash(./.tools/supabase/supabase.exe migration *)",
+      "Bash(./.tools/supabase/supabase.exe projects *)",
+      "WebFetch(domain:bilaruza.com)"
+    ]
+  }
+}

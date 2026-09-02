@@ -1,0 +1,12 @@
+node_modules/
+.tools/
+data/
+migrations/
+
+# Secrets — Sudreg OAuth credentials, Supabase keys, DB password
+.env
+.env.*
+!.env.example
+
+# Design canvas working files and the seeded artifact
+.design/
