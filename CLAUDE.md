@@ -7,6 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - You are allowed to read and edit any file in the project root directory without asking for permission first.
 - Always summarize what you did at the end of each task — which files were changed and what was changed.
 - Never create a git commit automatically. Only commit when the user explicitly asks for it.
+- **Commit directly on `main`. Never create a feature branch and never propose a PR flow** — this is a single-developer project with no review workflow, so a branch only adds a merge step and hides the work from `main`. The general "branch before committing to the default branch" default does not apply here. Pushing stays separate: commit when asked, push only when asked.
 - When writing SQL migrations (or other multi-part code), build it in small reviewable chunks and present each chunk for approval before starting the next — don't write the whole thing in one step.
 
 ## Project status
