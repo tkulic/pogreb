@@ -1,0 +1,68 @@
+/* An answer in the flow.
+
+   Every option is a real link, not a button with a handler: the answer lives
+   in the URL, so choosing one is a navigation. That is what makes Back work
+   natively and preserve answers — the requirement that exists because
+   bestattungen.de's own wizard discarded every selection on Continue. */
+
+.tile {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+
+  /* Large tiles: one tap, no free text, nothing to mis-hit. */
+  min-height: 64px;
+  padding: 16px 18px;
+
+  font-family: var(--font-text);
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--ink);
+  text-decoration: none;
+
+  background: transparent;
+  border: 1px solid var(--rule-quiet);
+  /* No radius, no shadow, no transition — motion is none on the path to
+     results, so the press state below is instant. */
+}
+
+.tile:hover {
+  color: var(--ink);
+  border-color: var(--ink);
+}
+
+.tile:active {
+  background: rgba(30, 27, 22, 0.05);
+}
+
+/* The selected answer, when the user comes back to change it. Marked by a gold
+   cut line down the leading edge rather than a fill — gold is a line, not a
+   surface. */
+.selected {
+  border-color: var(--ink);
+  border-left-width: 3px;
+  border-left-color: var(--gold);
+}
+
+.selectedMark {
+  font-family: var(--font-text);
+  font-size: 10.5px;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+  color: var(--text-label);
+  white-space: nowrap;
+}
+
+/* The escape hatch on every question — "Još ne znam", "Ne znam". Quieter than
+   a real answer, but the same size to tap: it is the most humane thing on the
+   reference sites and must not be made hard to hit. */
+.quiet {
+  min-height: 56px;
+  color: var(--text-secondary);
+  border-style: dashed;
+}
+
+.quiet:hover {
+  color: var(--ink);
+}

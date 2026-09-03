@@ -1,0 +1,64 @@
+/* Shortlist card.
+
+   Kamen has no containers: entries are separated by rules cut on one tablet,
+   never boxed. That is what distinguishes it from the rejected Ploča variant,
+   and it is why this still reads calmly at 40 providers. */
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding-block: 18px;
+  border-bottom: 1px solid var(--rule-gold);
+}
+
+.head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.name {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 17px;
+  letter-spacing: 0.05em;
+  line-height: 1.35;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.name:hover {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+/* Head office only — never implies branch coverage. */
+.address {
+  font-family: var(--font-text);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+/* The difference between a justified shortlist and an opaque ranking. */
+.reason {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  line-height: 1.5;
+  color: var(--gold);
+}
+
+/* Every service, no truncation and no "+N more": at twelve rows this is three
+   lines, and a family scanning for one specific service should not have to
+   expand anything. */
+.services {
+  font-family: var(--font-text);
+  font-size: 12.5px;
+  line-height: 1.75;
+  color: var(--ink-body);
+}

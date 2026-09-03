@@ -1,0 +1,80 @@
+/* The contact actions on a shortlist card.
+
+   Three actions on one line, equal thirds. The row is the main lever on page
+   height: at seven providers, stacking these would add roughly a screenful.
+
+   The phone stays filled while the other two are outlined, so the Kamen rule
+   still holds — exactly one solid dark mass per card, and it is the action the
+   product exists to produce. Equal widths mean colour alone carries that
+   distinction, which is why nothing else on the card may be filled. */
+
+.actions {
+  display: grid;
+  /* minmax(0, 1fr), not 1fr: the default `auto` minimum lets a long label —
+     "Pošaljite e-mail" — push its own column wider than the others, which
+     quietly breaks the equal thirds and makes the filled call button the
+     narrowest of the three. */
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 2px;
+}
+
+/* With only two actions — a provider with no website — they share the row
+   rather than leaving a gap where the third would be. */
+.actions.two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.actions.one {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* Labels are vi-form imperatives and some are two words, so a third of a
+   390px screen cannot hold them on one line. They wrap to two rather than
+   shrinking below the 12px floor or being abbreviated into something curt.
+   The button grows to fit; 48px is a minimum, not a fixed height. */
+.action {
+  /* Tight padding and a 12.5px label so all three labels hold one line at the
+     390px design width. 12.5px is above the 12px floor for real content. */
+  padding-inline: 6px;
+  gap: 6px;
+  font-size: 12.5px;
+  letter-spacing: 0.03em;
+  line-height: 1.25;
+  text-wrap: balance;
+}
+
+/* The revealed number sits under the whole row, not under one column. */
+.revealedRow {
+  grid-column: 1 / -1;
+}
+
+/* Not a third button style: a --gold-link text link with tabular figures, so
+   the digits do not shift as they appear. */
+.revealed {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  min-height: 44px;
+  padding-block: 8px;
+  font-family: var(--font-text);
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+  color: var(--gold-link);
+}
+
+.revealed:hover {
+  color: var(--gold-link-hover);
+}
+
+/* "dežurni telefon" — shown when the office is shut and we are handing over
+   the emergency line instead. */
+.afterHours {
+  font-family: var(--font-text);
+  font-size: 10.5px;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+  color: var(--text-label);
+}

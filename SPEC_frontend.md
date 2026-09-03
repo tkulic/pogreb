@@ -31,6 +31,20 @@ With 7 providers in the Split pilot, a filter cannot do much work. Four of the s
 
 So the flow's value is **not filtering**. It is orientation and confidence: turning "I have no idea where to start" into "here are these few, and here is why these few". Every design decision below follows from that. A flow that filtered well but explained nothing would be the wrong product.
 
+## Landing page
+
+`/` is the landing page, and the flow begins one tap later at `/?korak=situacija`.
+
+It exists because the flow could not answer the one question a stranger arrives with. Someone landing from a search result previously met *"Što se dogodilo?"* with no indication of what the site was, who was asking, or what would happen to their answer — which is a great deal to ask of a person in the first hours after a death, and it is also the moment a visitor decides whether this is a directory or a lead broker.
+
+**Structure, in order:** what this is and one primary action, both above the fold; the image band; *"Kako radi"* in three steps; *"Što obećavamo"*; the settlement list and the two prose pages.
+
+Three rules on it:
+
+1. **One primary action.** `Pronađite pogrebnika` is the heaviest thing on the screen, and the bypass beside it is a text link rather than a second button — two buttons would split the action in two. Everything below the fold supports the decision to tap it and must not compete with it.
+2. **The promises are the product's actual differentiators**, stated plainly: everyone is listed, nobody pays for position, no personal data is collected, it is free. These are the things the three German reference sites cannot say, and they are worth more here than any description of features.
+3. **It states the count from live data** — *"Popis svih sedam pogrebnika…"* — rather than asserting completeness in the abstract. If the count changes the sentence changes with it.
+
 ## Flow overview
 
 Three question screens, then the results. The results are the destination, not a fourth step.
@@ -54,7 +68,9 @@ Three large tiles, one tap, no free text:
 |---|---|---|
 | Osoba je preminula | `preminuo` | urgent path |
 | Osoba je u posljednjim danima | `posljednji-dani` | imminent path |
-| Planiram unaprijed | `planiranje` | planning path |
+| ~~Planiram unaprijed~~ | `planiranje` | planning path — **currently hidden** |
+
+**`planiranje` is hidden from the screen, not removed from the code.** Pre-planning is a different product with a different pace — the whole flow is built for someone who has hours rather than days — and whether it belongs here at all is an open question. Hiding the tile is the reversible half of that decision: the value still parses from a URL, still ranks, and still drives copy, so an old shared link keeps working and re-enabling it is one entry in `VISIBLE_SITUACIJA` (`web/lib/copy.ts`). If it is ever dropped for good, the `planiranje` member of `Situacija`, its label, and the urgency note in `lib/ranking.ts` go with it.
 
 All three reference sites open with this same split rather than a search box, and it is the single most valuable pattern taken from them: it is a statement of situation, not a filter, and it sets urgency, ranking and tone in one tap.
 
@@ -145,7 +161,25 @@ This is the strongest question on any of the three reference sites, because it d
 
 **It is a guidance question, not a filter, and the spec is explicit about that:** it changes the guidance strip on the results page and nothing else. It does not reorder or exclude providers. Even `inozemstvo` filters nothing, because `prijevoz-pokojnika-inozemstvo` is offered by all 7.
 
-**Decided: 3b ships.** Its guidance text is a claim about Croatian procedure (who confirms death, what document is needed, what the family must do before a provider can act), so it must come from a source the project owner supplies — writing it from the German equivalents would be fabrication ([SPEC.md](SPEC.md) → Never). Until that source is in hand the question can be built and wired; the guidance strip renders empty rather than guessed. Tracked under [Open questions](#open-questions).
+**Decided: 3b ships, and its guidance text is now written and sourced.** The text is a claim about Croatian procedure — who confirms death, what document is issued, what the family must do before a provider can act — so it was never going to be written from the German equivalents, which would be fabrication ([SPEC.md](SPEC.md) → Never).
+
+It was instead researched from **primary sources**, at the project owner's direction, and every sentence is traceable to one of three:
+
+| source | supports |
+|---|---|
+| [gov.hr — Postupak kod smrtnog slučaja](https://gov.hr/hr/postupak-kod-smrtnog-slucaja/760) | who to call by place of death; the documents the mrtvozornik issues; the three-day reporting deadline and who is obliged to report; that the family chooses the provider directly or through the institution |
+| [Pravilnik o načinu pregleda umrlih (NN 46/2011)](https://narodne-novine.nn.hr/clanci/sluzbeni/2011_04_46_1067.html) | art. 8 — examination within 12 hours for a death outside a health institution; art. 10 — *Potvrda o smrti* in four copies and where each goes; art. 15 — burial ordinarily 24–48 hours after death, and the *dozvola za ukop* required before transfer |
+| [MVEP — Prijava smrti](https://mvep.gov.hr/konzularne-informacije-99074/maticarstvo-prijava-rodjenja-braka-ili-smrti/prijava-smrti-179979/179979) | death abroad — the embassy or consulate; the *sprovodnica* required to repatriate remains; that an urn of ashes needs none |
+
+Three rules bind any future edit, and they are enforced in `lib/guidance.ts` where the text lives:
+
+1. **A sentence that cannot be attributed to a listed source does not go in.** Funeral-home marketing pages are not a source.
+2. **It is a description of the ordinary procedure, not legal advice.** Where practice varies, say what usually happens.
+3. **Deadlines and document names are quoted, not paraphrased** — *"u roku od tri dana"*, *Potvrda o smrti*, *sprovodnica*. A family repeating the wrong word at a counter is a real cost.
+
+**The sources are rendered on `/sto-uciniti-prvo` itself**, not merely recorded in the code — the same reasoning that publishes the ranking rules rather than only documenting them.
+
+⚠️ **Still pending: a native-speaker read and the owner's sign-off.** The facts are sourced; the Croatian phrasing has not been reviewed. Tracked under [Open questions](#open-questions).
 
 ## Navigation and state rules
 
@@ -154,6 +188,7 @@ Binding on the implementation:
 1. **State lives in the URL, not only in React state.** `/pogrebne-usluge/split?situacija=preminuo&nacin=kremiranje`. Croatian parameter names and values ([SPEC.md](SPEC.md) → Naming Convention). This makes a result set shareable — a family member sends the link to a sibling — survives refresh, and is the surface the rest of the routing hangs off.
 2. **Back always works and preserves answers.** During design review, bestattungen.de's own wizard discarded every selection and returned four validation errors at once on the first Continue. That failure mode is the reason this is a numbered requirement.
 3. **Every screen is skippable except screen 2**, which is pre-answered from the city path segment and then not shown at all.
+3a. **Every page carries the site header** — a wordmark that always returns to the landing page, plus a contextual back link, and a `n / 3` step counter inside the flow. The back link is a real `<Link>` to a known URL rather than `history.back()`: history can hold anything, including another site, and a back control that sometimes leaves the product is worse than none. It also keeps the header working with no JavaScript, like the rest of the flow.
 4. **Every question carries an explicit escape** — *"Još ne znam"*, *"Ne znam"*, *"Nije važno"*. Taken directly from bestatter-preisvergleich, which offers "Weiß noch nicht" on every question, and it is the most humane thing on that site.
 5. **No validation errors are possible.** Nothing is required, nothing is typed, so nothing can be wrong. The flow must never block on input.
 6. **Results are reachable in at most three taps**, and in one tap via the screen 1 bypass.
@@ -165,12 +200,17 @@ The destination of the flow, and the page the whole product exists to render.
 
 ### Block structure, top to bottom
 
-1. **Header** — title, *"Split i okolica"*, the settlement list, closing gold rule.
-2. **Context strip** — *"Sedam pogrebnika · odabrali ste: Osoba je preminula · Kremiranje"*, with a *"Promijeni odgovore"* link back into the flow (which must arrive with the current answers still selected).
-3. **Guidance strip** — conditional on `situacija` and `pokojnik`; links to `/sto-uciniti-prvo`. Renders empty until the sourced text exists (see screen 3b).
-4. **`NAJBOLJE ODGOVARA · N`** — the shortlist.
-5. **`OSTALI POGREBNICI · N`** — everyone else, quieter but complete.
-6. **Transparency footer** — *"Prikazujemo sve registrirane pogrebnike u Splitu i okolici. Nitko nam ne plaća za bolju poziciju."*
+1. **Site header** — wordmark home link and a back link into the questions. Shared with every other page.
+2. **Header** — title, *"Split i okolica"*, and the answers read back on one quiet line with a *"promijenite"* link into the flow (which must arrive with the current answers still selected). Closing gold rule.
+3. **`NAJBOLJE ODGOVARA · N`** — the shortlist.
+4. **`OSTALI POGREBNICI · N`** — everyone else, quieter but complete.
+5. **Guidance strip** — conditional on `situacija` and `pokojnik`; links to `/sto-uciniti-prvo`. Text is sourced from the primary references listed under [screen 3b](#question-3b--conditional-on-sourcing). Omitted entirely — rules and link included — when neither answer has guidance attached, rather than rendering an empty bordered strip.
+6. **Transparency footer** — *"Prikazujemo sve registrirane pogrebnike u Splitu i okolici. Nitko nam ne plaća za bolju poziciju."*, then the settlement list.
+
+**Two things moved here after the page was built and reviewed, and both were hierarchy problems rather than content problems:**
+
+- **The provider count is gone from the header.** It used to open the context strip — *"Sedam pogrebnika · odabrali ste…"* — in the most prominent position on the page. Both section headings already carry `· N`, so it was the same number stated three times, and it was the first thing the eye met on a page whose job is to present providers.
+- **The guidance strip moved below the two blocks.** Above them it read as the page's main content and pushed the actual service into second place. It is genuinely useful and honestly sourced, but a family that arrived here to find someone to call should meet the providers first; below the list it catches the reader who did not find what they needed. The settlement list moved to the footer for the same reason — it qualifies the claim rather than introducing it.
 
 ### Guarantees
 
@@ -201,30 +241,48 @@ Composed from stored facts only, deterministic, **at most two clauses**, joined 
 
 - **Clause 1 — availability.** `available_24_7` → *"Dostupni 0–24"*. Else any phone with `type = 'emergency'` → *"Dežurna linija"*. Else omitted.
 - **Clause 2 — the most distinguishing remaining fact**, first match wins:
-  1. **Rarest service** — a service this provider offers that ≤2 providers in the city offer, rendered as its short display phrase (*"klesarske usluge"*, *"ekshumacija"*). Most rare wins ties.
-  2. **Widest range** — this provider has the most `entity_services` rows in the city → *"najveći izbor usluga"*.
+  1. **Rarest *eligible* service** — a service this provider offers that ≤2 providers in the city offer **and** that is a reason to choose a provider, rendered as its short display phrase (*"klesarske usluge"*). Most rare wins ties; ties at equal rarity break on canonical seed order, so the output is deterministic.
+  2. **Widest range** — this provider has strictly the most `entity_services` rows in the city → *"najveći izbor usluga"*. A strict maximum: if two providers tie for the most rows, neither is the widest.
   3. **Match confirmation** — a filter was selected and this provider satisfies it → *"nudi kremiranje"*.
   4. Otherwise omitted.
 
 Worked against the pilot data, this reproduces the approved mockup exactly:
 
+**Rarity alone is not sufficient, and this was learned by shipping it.** Implemented literally against the pilot data, the clause produced *"Dežurna linija · ekshumacija"* for Lovrinac and *"Dežurna linija · urne"* for Zec. Both are true, both are rare, and both are the wrong thing to say to someone whose relative died tonight. Worse, it made the widest-range clause **unreachable** — the widest provider in the city always tripped the rare-service rule first.
+
+So a rare service must also be **decision-driving**. Three kinds are excluded, held in `REASON_ELIGIBLE_SERVICES` (`web/lib/services.ts`):
+
+| excluded | which | why |
+|---|---|---|
+| goods chosen in person | `urne`, `lijesovi` | the same argument that rejects a service picker above — a casket is not a filter, it is an item chosen an hour later, with the provider |
+| out of register | `ekshumacija` | a real service and a real search term, but not something that recommends a funeral director in the first hours |
+| nice-to-have extras | `fotografiranje-pogreba` | genuinely useful when relatives cannot travel, but it does not drive the choice, and it crowds out a stronger clause |
+
+That list is **copy, not logic** — an editorial judgement about what recommends a funeral director, and the project owner's to change. Adding a service back is safe: the rarity threshold still gates it.
+
 | provider | clause 1 | clause 2 | line |
 |---|---|---|---|
-| Bila ruža | 24/7 | no rare service, not widest → match | Dostupni 0–24 · nudi kremiranje |
-| Bradvica | emergency line | no rare service, not widest → match | Dežurna linija · nudi kremiranje |
+| Bila ruža | 24/7 | no eligible rare service, not widest → match | Dostupni 0–24 · nudi kremiranje |
+| Bradvica | **24/7** | no eligible rare service, not widest → match | Dostupni 0–24 · nudi kremiranje |
 | Zec | emergency line | widest range (12 rows) | Dežurna linija · najveći izbor usluga |
-| Lovrinac | emergency line | rarest (`nadgrobni-spomenici`, 1 of 7) | Dežurna linija · klesarske usluge |
+| Lovrinac | emergency line | rarest eligible (`nadgrobni-spomenici`, 1 of 7) | Dežurna linija · klesarske usluge |
+
+**Bradvica's clause 1 changed from the mockup** — it reads *"Dostupni 0–24"* rather than *"Dežurna linija"* because `available_24_7` became true in the availability reconciliation the project owner resolved. That is data drift correctly reflected, not a rule change.
+
+These four lines are asserted exactly in `web/lib/ranking.test.ts` against a fixture captured from the live database, so a change to the rules or the data that breaks them fails the suite rather than silently reaching the page.
 
 Both clauses empty → the card moves to the others block.
+
+**Ranking, the partition and the reason line are one pure function** over the array the city query returns — `web/lib/ranking.ts`, with no database access, no clock and no randomness in it. That is what makes the guarantees above testable rather than merely stated: the partition adding up, the shortlist cap, the "no reason line, no shortlist" rule and the stable ordering are all unit tests.
 
 ### Card anatomy — shortlist
 
 Rendered per the **Kamen** direction (chunk 3). Content and order:
 
-1. **Name** — `entities.name`, Cinzel caps. The trading name as stored, which is what families know (see [SPEC_database.md](SPEC_database.md) — *"Pogrebne usluge Zec"*, not *"Adepto d.o.o."*).
+1. **Name** — `entities.name`, Spectral SC caps. The trading name as stored, which is what families know (see [SPEC_database.md](SPEC_database.md) — *"Pogrebne usluge Zec"*, not *"Adepto d.o.o."*).
 2. **24-hour mark** — filled gold, top right, only when `available_24_7`.
 3. **Address** — `address` + city name. Head office only; never implies branch coverage.
-4. **Reason line** — Cinzel, gold.
+4. **Reason line** — Spectral SC, gold.
 5. **Service list** — every service the provider offers, in canonical seed order ([SPEC_database.md](SPEC_database.md) → Seed data), joined by `·`. No truncation and no "+N more": at 12 rows maximum this is three lines, and a family scanning for one specific service should not have to expand anything.
 6. **Contact actions** — see below.
 
@@ -232,30 +290,39 @@ Rendered per the **Kamen** direction (chunk 3). Content and order:
 
 **Neither CTA displays the address it acts on.** A visible phone number can be dialled by hand, which produces the conversion without producing the `phone_click` that is the product's only evidence it happened ([SPEC_database.md](SPEC_database.md) → What the numbers are worth). The number is therefore revealed *by* the click that logs it.
 
-**Primary — `Nazovi`.** Dark fill `--ink`, `--gold-on-ink` label, ≥48px tall, full width on the urgent paths.
+**Three actions on one row, equal thirds.** `Nazovite` · `Pošaljite e-mail` · `Web stranica`. The row is the main lever on page height: at seven providers, stacking these would add roughly a screenful, and height is what made the list read as an undifferentiated wall.
+
+Equal widths mean **colour alone carries the hierarchy**, so the one-dark-mass-per-card rule stops being a stylistic preference and becomes the only thing marking the primary action. Nothing else on a card may be filled.
+
+Actions render only when the underlying field is non-null, and the row collapses to two columns or one rather than leaving a gap where a missing action would be. No disabled controls, ever.
+
+**Labels are vi-form imperatives.** `Nazovite`, not `Nazovi`. The ti-form is familiar singular address, and using it on a stranger arranging a funeral is the wrong register in Croatian — a real defect, not a stylistic preference, and it is why the earlier `Nazovi`/`Pošalji` labels were replaced. At the 390px design width all three labels hold one line at 12.5px; at 360px `Pošaljite e-mail` wraps to two, and the buttons stay equal in width and height because 48px is a minimum rather than a fixed height.
+
+**Primary — `Nazovite`.** Dark fill `--ink`, `--gold-on-ink` label, ≥48px tall.
 
 - Markup is a real `<a href="tel:+385…">` on the display-selected number (selection rule under [Provider detail page](#provider-detail-page)) — not a div with a handler, which is required both for keyboard use and for `event.isTrusted` to mean anything.
-- The label is `Nazovi` alone, with the phone glyph. No number.
+- The label is `Nazovite` alone, with the phone glyph. No number.
 - **On click:** log `phone_click` fire-and-forget, then reveal the number in place beneath the button, itself a `tel:` link. The reveal is synchronous and must never wait on the log.
 - One piece of markup is correct on both platforms: on mobile the browser dials natively and the revealed number is there if the handoff fails; on desktop, where `tel:` usually does nothing visible, **the reveal is the outcome**.
 - Once revealed it stays revealed for that page view. Clicking the revealed number logs again — that is a real second call attempt, and the hourly cap inside `log_event` bounds any abuse.
 
-**Secondary — `Pošalji e-mail`.** Outlined `--ink`, transparent fill, ≥48px. Rendered **only when `entities.email` is non-null**; when absent the card reserves no space and shows no disabled control.
+**Secondary — `Pošaljite e-mail`.** Outlined `--ink`, transparent fill, ≥48px. Rendered **only when `entities.email` is non-null**.
 
 - A real `<a href="mailto:…?subject=Upit%20o%20pogrebnim%20uslugama">`.
 - **Subject prefilled, body never.** A prefilled body would put words in a grieving person's mouth.
-- The label says what actually happens. Not `Pošalji upit`, which would imply an in-product form this product deliberately does not have ([SPEC.md](SPEC.md) → Out of scope).
+- The label says what actually happens. Not `Pošaljite upit`, which would imply an in-product form this product deliberately does not have ([SPEC.md](SPEC.md) → Out of scope).
 - **No reveal step.** `mailto:` works reliably on desktop, unlike `tel:`, so the click and the outcome coincide. Logs `email_click`.
-- Outlined, never filled — the one-dark-mass-per-card rule holds, so the phone action stays visibly primary.
 
-**Relative prominence follows `situacija`**, because the appropriate channel genuinely differs:
+**Secondary — `Saznajte više`.** Outlined, identical to the email action, and **always rendered** — the detail page always exists, so this action never disappears and the row is never empty.
 
-| `situacija` | layout |
-|---|---|
-| `preminuo`, `posljednji-dani` | phone full width; email below, auto width |
-| `planiranje` | phone and email side by side, equal width — nobody pre-planning needs a dežurni line, and email is a reasonable first contact |
+**It links to our own detail page, not to the provider's website**, and that is the deliberate choice:
 
-Phone stays filled and first in every case; only the weight of the email option changes.
+- The detail page is where the provider is actually presented — every number with its type, opening hours, the full service list. A visitor sent straight to the provider's own site leaves the product at the moment they were still deciding, and this is the step where the product is meant to be doing the comparing.
+- It keeps any outbound click on a page where a `detail_view` has already been recorded, so nothing is dialled or followed off an untracked surface. That is the same reasoning the [others block](#card-anatomy--others) already uses, now applied to the shortlist as well.
+
+**It logs nothing itself.** The destination fires `detail_view` on mount; logging here too would count one navigation twice. It renders as a Next `<Link>` rather than a plain `<a>` — `ActionLink` chooses from the href, so an internal path gets client-side navigation and `tel:` / `mailto:` do not.
+
+**Layout no longer varies by `situacija`.** An earlier revision gave `planiranje` a side-by-side arrangement and the urgent paths a full-width phone; the three-across row supersedes both. With `planiranje` currently hidden from screen 1 (see [Screen 1](#screen-1--situacija)) the distinction had no live case anyway.
 
 **Accepted cost.** Hiding the number is a small usability tax on a product whose first priority is usability, paid to protect the one metric the pitch rests on. The mitigations are that the detail page lists every number openly (below), and that any leak *undercounts* — which is the safe direction to be wrong, since an overstated click count would destroy the number's credibility entirely.
 
@@ -326,7 +393,8 @@ That is a deliberate exception. Choosing between a provider's office and dežurn
 
 | route | purpose |
 |---|---|
-| `/` | screen 1 (Situacija) |
+| `/` | landing page — what the service is, and the way into the flow |
+| `/?korak=situacija\|mjesto\|potrebe` | the three question screens; not canonical, `noindex` via `robots` |
 | `/pogrebne-usluge/{grad}` | results; screen 2 answered by the path, screens 1 and 3 by query params |
 | `/pogrebne-usluge/{grad}/{pogrebnik}` | provider detail |
 | `/pogrebne-usluge/{grad}/usluga/{usluga}` | indexable service-filtered listing |
@@ -380,16 +448,23 @@ Exact values, as approved in the mockup. Warm and desaturated throughout — no 
 | `--ink` | `#1E1B16` | business names, headings, call-button fill |
 | `--ink-body` | `#443F35` | service lists, body copy |
 | `--ink-quiet` | `#3B362D` | names in the others block |
-| `--text-secondary` | `#756E60` | addresses, footer |
-| `--text-label` | `#857D6D` | uppercase tracked labels |
-| `--text-muted` | `#8C8474` | helper lines |
-| `--gold` | `#8A6C28` | rules, labels, filled 24-hour mark |
+| `--text-secondary` | `#6D6659` | addresses, footer |
+| `--text-label` | `#6D6659` | uppercase tracked labels |
+| `--text-muted` | `#6D6659` | helper lines |
+| `--gold` | `#7A5F22` | rules, gold labels, the reason line, both 24-hour marks |
 | `--gold-link` | `#7A5F22` | links (hover `#5C4718`) |
 | `--gold-on-ink` | `#DFC489` | call-button text and icon |
 | `--rule-gold` | `rgba(138,108,40,.55)` | shortlist entry separators |
 | `--rule-quiet` | `rgba(30,27,22,.13)` | others-block separators |
 
-Round 1's brighter gold was tuned for a black ground and is not legible here — `#8A6C28` is the light-ground value and replaces it everywhere.
+Round 1's brighter gold was tuned for a black ground and is not legible here — the light-ground value replaces it everywhere.
+
+**Four values changed from the approved mockup after contrast measurement** (see [Accessibility](#accessibility) for the numbers). The changes are corrections to the mockup, not a new direction:
+
+- **`--gold` `#8A6C28` → `#7A5F22`.** The mockup value measured 3.92:1 on stone, below AA, and it carries real text — the reason line at 13px and the tracked gold labels — as well as the 24-hour mark. Darkening it is the remedy this spec already prescribed. It now equals `--gold-link`; the two token names are kept because they mean different things and may diverge again, but any change to one must be re-measured against the other's use.
+- **`--text-secondary`, `--text-label` and `--text-muted` all → `#6D6659`.** All three failed AA (4.02, 3.24, 2.95), and the minimum hue-preserving darkening that clears 4.5:1 lands all three within one unit of each other. Three tokens that must sit at the same lightness to be legible are one token. **Hierarchy between them comes from size, case and tracking, never from colour** — 10.5px uppercase at .17em for a label, 13px sentence case for an address. The three names are kept so the intent of each use site stays readable, but they are one value and must be changed together.
+
+`--stone-inset` `#DDD8CC` is too dark to carry any of these: on it, even the corrected values measure 4.00–4.23. **`--stone-inset` is therefore the image band and decorative strips only, and never a ground for text.** The context strip renders on plain `--stone`.
 
 **Stone texture**, on the image band and inset strips only: two `repeating-linear-gradient`s over `--stone-inset`, at `102deg` (`rgba(30,27,22,.045)`, 1px on 7px) and `14deg` (`rgba(30,27,22,.03)`, 1px on 11px). Deliberately near-invisible; it exists so the band does not read as a flat grey box when no image has loaded.
 
@@ -401,21 +476,42 @@ Kamen is committed to one visual world: **no dark mode, no `prefers-color-scheme
 
 Two faces, each with one job. Round 1 established that a single Garamond serving both fails at data sizes — that finding is what fixed this split.
 
-- **Cinzel** (400/600) — the dignity carrier: business names, page and section headings, the reason line. Roman capitals need tracking, so **never below `.04em`**, and never below **12px**. Never used for body copy.
+- **Spectral SC** (400/600) — the dignity carrier: business names, page and section headings, the reason line. Roman capitals need tracking, so **never below `.04em`**, and never below **12px**. Never used for body copy.
+
+  Spectral SC **replaced Cinzel**, which failed the diacritic gate — see [The diacritic constraint](#the-diacritic-constraint). The direction survives the substitution exactly as this spec predicted it would, because Kamen rests on Roman capitals rather than on Cinzel specifically. Spectral SC is a small-caps face, so lowercase input renders as small capitals and the intended inscriptional colour is unchanged; it is also sturdier than Cinzel at the small end, which the 12px floor and the 13px reason line both benefit from.
 - **Archivo** (400/500/600) — the legibility carrier: addresses, service lists, labels, button text, footer, all guidance prose. Everything the reader actually has to get through quickly.
 
-Loaded from Google Fonts, the one font host permitted. Fallback stacks declared on every rule: `Cinzel, Georgia, serif` and `Archivo, 'Helvetica Neue', Arial, sans-serif` — both fallbacks have full Croatian coverage, so a font failure degrades rather than breaks.
+**Self-hosted, and never fetched from Google.** This reverses the earlier note that Google Fonts was the permitted font host, and the reason is the same one that keeps the product free of a consent banner: a request to `fonts.googleapis.com` or `fonts.gstatic.com` transmits the visitor's IP address to a third party on every page load. That is a transfer of personal data, and it would put the product back inside the territory a consent banner exists to cover — see [What this is](#what-this-is), where having no cookie banner is a stated requirement rather than a nicety. Self-hosting removes the transfer, and with it the last external runtime dependency the pages have.
+
+Both families are SIL Open Font License 1.1, which permits redistribution and self-hosting; the licences ship alongside the files and must not be removed.
+
+**Six files.** Archivo is variable on `wght` (`100..900`), so one file per subset covers 400/500/600. Spectral SC is static, so it needs one file per weight per subset:
+
+| file | family | subset |
+|---|---|---|
+| `spectral-sc-400-latin.woff2` | Spectral SC 400 | `latin` |
+| `spectral-sc-400-latin-ext.woff2` | Spectral SC 400 | `latin-ext` |
+| `spectral-sc-600-latin.woff2` | Spectral SC 600 | `latin` |
+| `spectral-sc-600-latin-ext.woff2` | Spectral SC 600 | `latin-ext` |
+| `archivo-latin.woff2` | Archivo | `latin` |
+| `archivo-latin-ext.woff2` | Archivo | `latin-ext` |
+
+The `latin` / `latin-ext` split and its `unicode-range` values are Google's own subsetting, kept because it is good: a `latin-ext` file is fetched only by a page that actually renders a Croatian diacritic. Only these two subsets are vendored — Google also serves `cyrillic`, `cyrillic-ext` and `vietnamese` for Spectral SC, and the product needs none of them. Spectral SC 600 and Archivo are preloaded, being what the first screenful needs; the rest is left to `unicode-range` to pull in on demand. Provenance, versions and the licence sit in `web/public/fonts/README.md`.
+
+Fallback stacks declared on every rule: `'Spectral SC', Georgia, serif` and `Archivo, 'Helvetica Neue', Arial, sans-serif` — both fallbacks have full Croatian coverage, so a font failure degrades rather than breaks.
+
+**The same rule applies to anything else the pages might load.** No third-party CDN, no analytics script, no embedded map, no external icon set — the product ships one origin. `log_event` is the sole outbound call, it goes to our own Supabase project, and it carries no visitor identifier by design ([SPEC_database.md](SPEC_database.md) → Usage logging). Adding any third-party asset host is a decision with a GDPR consequence, not a build detail.
 
 **Type scale** (design width 390px):
 
 | role | face | size | tracking |
 |---|---|---|---|
-| page title | Cinzel 600 | 22px | .08em |
-| city line | Cinzel 400 | 14.5px | .13em |
-| section heading | Cinzel 600 | 13px | .18em |
-| card name | Cinzel 600 | 17px | .05em |
-| card name (others) | Cinzel 400 | 14px | .05em |
-| reason line | Cinzel 400 | 13px | .04em |
+| page title | Spectral SC 600 | 22px | .08em |
+| city line | Spectral SC 400 | 14.5px | .13em |
+| section heading | Spectral SC 600 | 13px | .18em |
+| card name | Spectral SC 600 | 17px | .05em |
+| card name (others) | Spectral SC 400 | 14px | .05em |
+| reason line | Spectral SC 400 | 13px | .04em |
 | uppercase label | Archivo 400 | 10.5px | .17em |
 | context value | Archivo 400 | 14.5px | — |
 | address | Archivo 400 | 13px | — |
@@ -433,7 +529,17 @@ Test string, rendered in every face at every weight used:
 
 > `Čč Ćć Žž Šš Đđ` — `Pogrebne usluge Čagalj · Žrnovnica · Đakovo · Šibenik`
 
-**Cinzel's `latin-ext` coverage must be verified against the live Google Fonts payload**, not assumed — `Đ`/`đ` is the likely gap. If it falls back, Kamen needs a substitute inscriptional face and the candidates to test are Cormorant SC, Spectral SC, or a self-hosted alternative; the direction survives the substitution, since it rests on Roman capitals rather than on Cinzel specifically. This check is a build gate, listed below.
+**Cinzel failed this gate and was replaced by Spectral SC.** The failure is worth recording in full, because it defeated the obvious form of the check.
+
+Cinzel has a glyph for all ten characters, so a `cmap` coverage test passes it. But it draws `Đ` and `đ` as `D` and `d` **with a macron above** rather than with a stroke through the stem — so `Đakovo` rendered as `D̄akovo`. The letters were present and wrong, and no coverage check can see that. It was caught by looking at the rendered page, not by the tooling, which is the lesson worth keeping: **coverage is necessary and not sufficient.**
+
+The test that caught it was geometric rather than a coverage check: a stroke sits inside the letter's own vertical extent, while a macron clears it. Cinzel's `Đ` sat **130 font units** above its `D`; Spectral SC's sits at **0**. It was validated against both known cases before being trusted — failing Cinzel and passing Archivo, matching what the two visibly render.
+
+**Current result: Spectral SC 400, Spectral SC 600 and Archivo all pass** — full coverage of the ten characters, `Đ`/`đ` correctly struck, and the test string fully covered across the `latin` and `latin-ext` subsets.
+
+Every candidate tested other than Cinzel rendered `Đ`/`đ` correctly (Cormorant SC, Cormorant Garamond, Spectral SC, Marcellus SC, Marcellus, Forum, EB Garamond, Playfair Display SC, Sorts Mill Goudy, Gilda Display), so this is a Cinzel defect rather than a general hazard of inscriptional faces. Spectral SC was chosen over Cormorant SC — the other candidate this spec named — for weight at small sizes. Marcellus SC is the closest visual match to Cinzel but ships weight 400 only, which cannot serve the 600 roles in the type scale without synthetic bold.
+
+**The automated check has since been removed**, deliberately: the payloads are vendored in the repo (see [Typography](#typography)), so they cannot change underneath us, and the risk it guarded against only returns when someone swaps or version-bumps a face. The constraint itself still binds. **If a face is ever replaced, check `Đ`/`đ` on `/specimen` before adopting it** — the stroke must cut through the stem, not float above it. Having the glyph is not the same as drawing it correctly, which is the entire lesson of this section.
 
 ### Layout and shape
 
@@ -475,7 +581,23 @@ Images are in scope and chosen by the project owner — this is the frame they s
 
 ### Accessibility
 
-- **Contrast must be measured, not assumed.** Two pairs are the ones at risk: `--gold` on `--stone` (the reason line, at 13px) and `--text-label` on `--stone`. If either misses WCAG AA for its size, darken to `--gold-link` (`#7A5F22`) rather than enlarging the type — the type scale is load-bearing.
+- **Contrast has been measured, and the palette above is the corrected one.** Four of the thirteen tokens missed WCAG AA on `--stone` at the mockup values — two more than this spec anticipated — and all four were darkened rather than the type enlarged, because the type scale is load-bearing. Measured ratios against `--stone` `#E9E5DB`:
+
+  | token | mockup | corrected | ratio |
+  |---|---|---|---|
+  | `--gold` | `#8A6C28` — 3.92 ✗ | `#7A5F22` | **4.79** ✓ |
+  | `--text-secondary` | `#756E60` — 4.02 ✗ | `#6D6659` | **4.52** ✓ |
+  | `--text-label` | `#857D6D` — 3.24 ✗ | `#6D6659` | **4.52** ✓ |
+  | `--text-muted` | `#8C8474` — 2.95 ✗ | `#6D6659` | **4.52** ✓ |
+  | `--ink-body` | `#443F35` | unchanged | 8.31 ✓ |
+  | `--ink-quiet` | `#3B362D` | unchanged | 9.53 ✓ |
+  | `--ink` | `#1E1B16` | unchanged | 13.64 ✓ |
+  | `--gold-link` | `#7A5F22` | unchanged | 4.79 ✓ |
+  | `--gold-on-ink` on `--ink` | `#DFC489` | unchanged | 10.13 ✓ |
+
+- **The filled 24-hour mark carries `--stone` text on `--gold`** — 4.79:1. It must not use `--gold-on-ink` `#DFC489`, which measures 3.55 on the gold fill and fails; that token is for the `--ink` button fill only, where it measures 10.13.
+
+- **Any new colour pairing is measured before it ships.** The two the mockup got wrong were both greys that look unremarkable and read as safe.
 - **Visible focus state on every interactive element**: 2px `--ink` outline, 2px offset. Outlines are never removed.
 - The call button is a real `<a href="tel:…">`, not a div with a handler — required for keyboard use, and required for `event.isTrusted` gating to mean anything.
 - One `<h1>` per page; section headings are `<h2>`.
@@ -489,13 +611,24 @@ Applying [SPEC_database.md](SPEC_database.md) → Client-side rules to these spe
 2. **Environment guard** — log only when `process.env.NODE_ENV === 'production'` **and** the hostname is the real host. `npm run dev` points at the production database, so without this the developer's own refreshes are the largest contributor in month one.
 3. **`phone_click`** on the shortlist `Nazovi` button, on the number it reveals, on the detail-page button, and on every number in the detail-page list. Gated on `event.isTrusted`. The others block has no phone action, so nothing there can fire. **The log call must never gate the reveal** — reveal synchronously, log fire-and-forget, in that order.
 4. **`email_click`** on the shortlist `Pošalji e-mail` button and on the detail page's email link. This is a change from the original design, where `email_click` was a detail-page-only event; the list-page email CTA makes it a primary-surface signal, and for the `planiranje` path probably the dominant one.
-5. **`website_click`** on the detail page's website link.
+5. **`website_click`** on the detail page's website link, and nowhere else. The shortlist's third action goes to our own detail page rather than to the provider's site, so there is no outbound website click to log from the results page.
 6. **Fire and forget** — `supabase.rpc('log_event', …)` unawaited, errors swallowed. A failed log must never delay a `tel:` handoff or a `mailto:` handoff. The contact is the point; the metric is not.
 7. **One log per mount**, guarded against StrictMode's double-invoked effects.
 
 **Not logged in Phase 1: the flow's answers.** Knowing which services families actually ask for would be genuinely valuable, but it needs a new `event_type` or a new column — ask-first ([SPEC.md](SPEC.md) → Ask first) — and a combination of `situacija` + `nacin` + `pokojnik` starts to look like a fingerprint, which is the boundary that keeps `events` outside GDPR scope. Out.
 
 **One consequence worth recording:** the shortlist means ranking position now affects clicks. That makes the deferred per-card impression event ([SPEC.md](SPEC.md) → Future considerations) more meaningful than its note implies — without it, a provider's click count cannot be separated from where the ranking put them. Still deferred; adding an enum value later stays a one-liner.
+
+## Known gaps, deliberately deferred
+
+Not out of scope — accepted as incomplete, and tracked here so they are not rediscovered as surprises.
+
+| gap | state |
+|---|---|
+| **Desktop layout** | The app is mobile-*only* rather than mobile-*first*. Every page caps at a 560px column and centres, which is correct on a phone and leaves a wide desktop window mostly empty — it does not break, but it reads as an unfinished phone app. Deferred by the project owner; a desktop treatment is a real design pass, not a media query, and the mobile experience is the one the product is actually used in. |
+| **Landing page imagery** | The band renders as stone texture alone until an image is chosen. Working as designed — every page must hold with no image — but it is not the finished state. |
+| **`planiranje` path** | Hidden from screen 1 and still fully wired. See [Screen 1](#screen-1--situacija). |
+| **Croatian phrasing review** | See [Open questions](#open-questions). |
 
 ## Out of scope for the POC
 
@@ -527,15 +660,15 @@ None of these are frontend work, and all of them block or degrade it.
 | `working_hours` for all 7 providers | open-now status, after-hours phone selection | populated for roughly one provider |
 | `available_24_7` / `emergency` phone reconciliation | urgent-path ranking, after-hours phone | **resolved** by the project owner |
 | `entities.email` | the email CTA | populated for all 7; nullable in schema, so the CTA stays conditional |
-| Trusted Croatian procedure source | screen 3b guidance strip, `/sto-uciniti-prvo` | with the project owner |
-| Cinzel diacritic verification | the whole type system | **not yet checked** |
+| Trusted Croatian procedure source | screen 3b guidance strip, `/sto-uciniti-prvo` | **researched and written** from gov.hr, NN 46/2011 and MVEP; pending a native-speaker read and owner sign-off |
+| Display-face diacritic gate | the whole type system | **resolved** — Cinzel failed (`Đ`/`đ` drawn with a macron) and was replaced by Spectral SC, which renders correctly along with Archivo. Payloads are vendored; checked by eye on `/specimen` after any font change. See [The diacritic constraint](#the-diacritic-constraint) |
 | Header-band imagery | nothing — pages render without it | not started |
 
 The schema is complete as of 2026-09-02 — nothing in the database blocks a build. What remains gating or degrading it is data and assets, not DDL. The one future migration is the production hostname, needed at deploy time rather than at build time.
 
 ## Open questions
 
-- **Screen 3b guidance text.** The project owner is supplying a trusted Croatian source for the *"Gdje je pokojnik sada?"* guidance and for `/sto-uciniti-prvo`. Both render empty until it arrives; neither is written from the German checklists.
+- **Croatian phrasing review of the guidance text.** The procedural content for the *"Gdje je pokojnik sada?"* strip and for `/sto-uciniti-prvo` is written and every claim is sourced (see [screen 3b](#question-3b--conditional-on-sourcing)). What remains is not sourcing but language: a native speaker should read it, and the project owner should sign it off, before launch. Facts checked; phrasing unreviewed.
 - **No-JavaScript path on the list page.** The reveal-on-click behaviour means that with scripting unavailable, the list page's `Nazovi` still dials on mobile (it is a real `tel:` link) but reveals nothing on desktop. The detail page is the fallback, since it lists every number as plain markup. Acceptable, but worth a decision if analytics ever show meaningful no-JS traffic.
 
 ### Resolved

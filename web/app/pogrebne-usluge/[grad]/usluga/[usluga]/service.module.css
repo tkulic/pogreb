@@ -1,0 +1,87 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+  padding-block: 24px 56px;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  min-height: 44px;
+  font-family: var(--font-text);
+  font-size: 13px;
+  color: var(--gold-link);
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--rule-gold);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 22px;
+  letter-spacing: 0.06em;
+  line-height: 1.3;
+  color: var(--ink);
+}
+
+.city {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 14.5px;
+  letter-spacing: 0.13em;
+  line-height: 1.4;
+  color: var(--ink);
+}
+
+/* What makes the page specific rather than a thin duplicate of the city page:
+   it states how many of the area's providers offer this, which is a real fact
+   about the service and different on every one of these pages. */
+.lede {
+  font-family: var(--font-text);
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--ink-body);
+}
+
+.settlements {
+  font-family: var(--font-text);
+  font-size: 12px;
+  line-height: 1.8;
+  color: var(--text-muted);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.footer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 20px;
+  border-top: 1px solid var(--rule-gold);
+  font-family: var(--font-text);
+  font-size: 12px;
+  line-height: 1.8;
+  color: var(--text-secondary);
+}
+
+.footerLink {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  min-height: 44px;
+  color: var(--gold-link);
+}

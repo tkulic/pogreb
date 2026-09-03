@@ -1,0 +1,67 @@
+/* The two button styles. There are exactly two, and SPEC_frontend.md → Layout
+   and shape forbids a third — so anything that looks like a button in this
+   product comes from this file.
+
+   The single heaviest thing on any screen is the call button, because it is
+   the most important action. `secondary` is outlined rather than filled
+   precisely so that stays true: one dark mass per card. */
+
+.base {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+
+  /* Both contact buttons are ≥48px tall. */
+  min-height: 48px;
+  padding-inline: 22px;
+
+  font-family: var(--font-text);
+  font-weight: 500;
+  font-size: 14px;
+  letter-spacing: 0.05em;
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none;
+
+  /* No border-radius anywhere. No shadows. No gradients. */
+  border-radius: 0;
+  box-shadow: none;
+
+  /* A real <a> that happens to look like a button — never a div with a
+     handler. Required for keyboard use, and required for `event.isTrusted` to
+     mean anything on the click. */
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Motion is none on the path to results, so neither variant transitions. The
+   hover states below are instant. */
+
+.primary {
+  background: var(--ink);
+  color: var(--gold-on-ink);
+  border: 1px solid var(--ink);
+}
+
+.primary:hover {
+  /* Stays the dark mass; only the label lifts. */
+  color: #efdcae;
+}
+
+.secondary {
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--ink);
+}
+
+.secondary:hover {
+  color: var(--ink);
+  background: rgba(30, 27, 22, 0.05);
+}
+
+/* Full width on the urgent paths, where the phone action is the whole point of
+   the card. Relative prominence follows `situacija` — see the results page. */
+.fullWidth {
+  width: 100%;
+}

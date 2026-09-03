@@ -1,0 +1,42 @@
+/* The 24-hour mark.
+
+   Never colour-only: it carries the literal text `24 SATA` in both variants
+   (SPEC_frontend.md → Accessibility). That is why there is no icon here and no
+   aria-label doing the work a visible word should do. */
+
+.base {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+
+  padding: 3px 8px 2px;
+
+  font-family: var(--font-text);
+  font-weight: 500;
+  font-size: 10.5px;
+  letter-spacing: 0.17em;
+  line-height: 1.4;
+  text-transform: uppercase;
+  white-space: nowrap;
+
+  /* Square, like everything else. */
+  border-radius: 0;
+}
+
+/* Shortlist cards. Gold is a cut line and not a surface — this small filled
+   mark is the one sanctioned exception, and it stays small for that reason. */
+.filled {
+  background: var(--gold);
+  /* --stone, NOT --gold-on-ink. Measured: --stone on --gold is 4.79:1 and
+     passes; --gold-on-ink (#dfc489) on --gold is 3.55:1 and fails. That token
+     belongs to the --ink button fill only. */
+  color: var(--stone);
+  border: 1px solid var(--gold);
+}
+
+/* Others block — reduced rather than restyled, so the hierarchy holds. */
+.outlined {
+  background: transparent;
+  color: var(--gold);
+  border: 1px solid var(--gold);
+}

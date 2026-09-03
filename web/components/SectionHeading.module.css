@@ -1,0 +1,35 @@
+/* Section headings: `NAJBOLJE ODGOVARA · 4`, `OSTALI POGREBNICI · 3`.
+
+   The count is part of the heading, not decoration — the reader can see that
+   the two blocks add up to the number in the context strip, which is what
+   makes the transparency footer's claim checkable rather than asserted. */
+
+.heading {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.18em;
+  line-height: 1.3;
+  text-transform: uppercase;
+  color: var(--ink);
+
+  /* Kamen has no containers: entries are separated by rules cut on one
+     tablet. The heading closes with the same gold hairline. */
+  padding-bottom: 9px;
+  border-bottom: 1px solid var(--rule-gold);
+}
+
+/* Quieter rule for the others block, matching its separators. */
+.quiet {
+  border-bottom-color: var(--rule-quiet);
+}
+
+.count {
+  /* Same size and tracking as the label — the separator carries the
+     distinction, not a second type treatment. */
+  color: var(--gold);
+}

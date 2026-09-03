@@ -1,0 +1,51 @@
+/* Others block — deliberately quieter, and reduced rather than restyled.
+
+   No service list, no reason line, no contact action and no visible number:
+   the whole card is a link to the detail page. That costs one extra tap for
+   the providers that matched least, and buys two things — the hierarchy stays
+   intact (a second pair of buttons per row would flatten it), and the contact
+   happens on a page where a `detail_view` has already been recorded, so
+   nothing is dialled off an untracked surface. */
+
+.card {
+  border-bottom: 1px solid var(--rule-quiet);
+}
+
+.link {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+
+  /* ≥44px for every tappable element that is not a contact button. */
+  min-height: 44px;
+  padding-block: 14px;
+  text-decoration: none;
+}
+
+.link:hover .name {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.name {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 14px;
+  letter-spacing: 0.05em;
+  line-height: 1.4;
+  color: var(--ink-quiet);
+}
+
+.address {
+  font-family: var(--font-text);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}

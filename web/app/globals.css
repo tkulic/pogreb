@@ -1,0 +1,263 @@
+/* ==========================================================================
+   Kamen — the visual system, per SPEC_frontend.md → Visual system.
+
+   Dignity here comes from inscription and permanence: dark letters cut into
+   pale stone. That is why this is a light-ground design despite being a
+   black-and-gold one, and it is the constraint every rule below answers to.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Fonts — self-hosted, never fetched from Google.
+
+   A fonts.googleapis.com request would send the visitor's IP to a third party
+   on every page load, which is precisely what the no-cookie-banner position
+   depends on not happening. See public/fonts/README.md for provenance,
+   licence, and the diacritic verification these exact files passed.
+
+   Archivo is variable on wght, so one file per subset covers 400/500/600.
+   Spectral SC is static, so it ships one file per weight per subset — four
+   files for the two weights the design uses.
+
+   Spectral SC replaced Cinzel, which drew Đ and đ with a macron above rather
+   than a stroke through the stem, so "Đakovo" rendered as "D̄akovo". Both faces
+   are vendored, so the payload cannot change underneath us — but if either is
+   ever swapped or version-bumped, check Đ/đ by eye on /specimen first. Having
+   all ten glyphs is not the same as drawing them correctly.
+   -------------------------------------------------------------------------- */
+
+@font-face {
+  font-family: "Spectral SC";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/spectral-sc-400-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7,
+    U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F,
+    U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F,
+    U+A720-A7FF;
+}
+
+@font-face {
+  font-family: "Spectral SC";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/spectral-sc-400-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6,
+    U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122,
+    U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Spectral SC";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/spectral-sc-600-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7,
+    U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F,
+    U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F,
+    U+A720-A7FF;
+}
+
+@font-face {
+  font-family: "Spectral SC";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/spectral-sc-600-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6,
+    U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122,
+    U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Archivo";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("/fonts/archivo-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7,
+    U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F,
+    U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F,
+    U+A720-A7FF;
+}
+
+@font-face {
+  font-family: "Archivo";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("/fonts/archivo-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6,
+    U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122,
+    U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* --------------------------------------------------------------------------
+   Tokens
+   -------------------------------------------------------------------------- */
+
+:root {
+  /* Grounds. Warm and desaturated — no pure white, no pure black anywhere. */
+  --stone: #e9e5db;
+
+  /* Decorative only: the image band and inset strips. Too dark to carry text —
+     every text token measures below AA on it (4.00–4.23). Never a ground for
+     type; the context strip renders on plain --stone. */
+  --stone-inset: #ddd8cc;
+
+  /* Ink. */
+  --ink: #1e1b16;        /* names, headings, call-button fill — 13.64:1 */
+  --ink-body: #443f35;   /* service lists, body copy — 8.31:1 */
+  --ink-quiet: #3b362d;  /* names in the others block — 9.53:1 */
+
+  /* Secondary text. These three are one value, and that is deliberate: the
+     minimum AA-passing darkening of all three landed within a unit of each
+     other, so three tokens that must sit at the same lightness are one colour.
+     Hierarchy between them comes from size, case and tracking — never colour.
+     Change them together, and only after re-measuring. 4.52:1. */
+  --text-secondary: #6d6659; /* addresses, footer */
+  --text-label: #6d6659;     /* uppercase tracked labels */
+  --text-muted: #6d6659;     /* helper lines */
+
+  /* Gold is a cut line, not a surface: hairlines, tracked labels, the reason
+     line, the 24-hour mark. Never a fill behind body text, never a gradient,
+     never a whole-card border — that is the exact point where classical turns
+     kitsch. Darkened from the mockup's #8a6c28 (3.92, below AA) because it
+     carries real text at 13px. 4.79:1. */
+  --gold: #7a5f22;
+  --gold-link: #7a5f22;
+  --gold-link-hover: #5c4718; /* 7.05:1 */
+
+  /* Button label on the --ink fill only — 10.13:1 there, but 3.55 on --gold,
+     so this never goes on the gold 24-hour mark. That mark uses --stone. */
+  --gold-on-ink: #dfc489;
+
+  /* Rules. All 1px. The double rules belong to the rejected Arhiv variant. */
+  --rule-gold: rgba(138, 108, 40, 0.55); /* shortlist entry separators */
+  --rule-quiet: rgba(30, 27, 22, 0.13);  /* others-block separators */
+
+  /* Type. Fallbacks are declared everywhere and both have full Croatian
+     coverage, so a font failure degrades rather than breaks. */
+  --font-display: "Spectral SC", Georgia, serif;
+  --font-text: "Archivo", "Helvetica Neue", Arial, sans-serif;
+
+  /* Layout. Design width 390px; the column caps at 560px and centres — a list
+     page gains nothing from a second column. */
+  --gutter: 22px;
+  --measure: 560px;
+}
+
+/* --------------------------------------------------------------------------
+   Reset and base
+   -------------------------------------------------------------------------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Sibling spacing is flex/grid `gap` throughout, never per-element margins. */
+* {
+  margin: 0;
+}
+
+html {
+  /* Painted explicitly so the page holds regardless of host or browser
+     setting. Kamen is single-theme by decision: no dark mode, no
+     prefers-color-scheme handling, no toggle — inverting it inverts the
+     concept of carved inscription. */
+  background: var(--stone);
+  color-scheme: light;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--stone);
+  color: var(--ink-body);
+  font-family: var(--font-text);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.6;
+  /* The page body never scrolls sideways; wide content gets its own
+     overflow-x container instead. */
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* No border-radius anywhere. No shadows. No gradients other than the stone
+   texture below. */
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+img {
+  height: auto;
+}
+
+a {
+  color: var(--gold-link);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+a:hover {
+  color: var(--gold-link-hover);
+}
+
+/* Outlines are never removed. */
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   Shared primitives
+   -------------------------------------------------------------------------- */
+
+.page {
+  max-width: var(--measure);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+/* Near-invisible by design. It exists so a band does not read as a flat grey
+   box when no image has loaded — and every page must render correctly with no
+   image at all. */
+.stoneTexture {
+  background-color: var(--stone-inset);
+  background-image:
+    repeating-linear-gradient(
+      102deg,
+      rgba(30, 27, 22, 0.045) 0 1px,
+      transparent 1px 7px
+    ),
+    repeating-linear-gradient(
+      14deg,
+      rgba(30, 27, 22, 0.03) 0 1px,
+      transparent 1px 11px
+    );
+}
+
+/* For the cases where a visual mark needs a spoken equivalent. The 24-hour
+   mark is not one of them — it carries the literal text `24 SATA`, because it
+   is never colour-only. */
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Motion: none on the path to results. No scroll reveals, no fades, no
+   skeleton shimmer, no page-load sequence. prefers-reduced-motion is satisfied
+   trivially, because there is nothing to reduce. */

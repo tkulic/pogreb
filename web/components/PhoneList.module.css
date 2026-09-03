@@ -1,0 +1,38 @@
+.list {
+  display: flex;
+  flex-direction: column;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  min-height: 44px;
+  padding-block: 6px;
+  border-bottom: 1px solid var(--rule-quiet);
+}
+
+.number {
+  font-family: var(--font-text);
+  font-size: 15px;
+  /* Tabular figures so a column of numbers aligns rather than shimmers. */
+  font-variant-numeric: tabular-nums;
+  color: var(--gold-link);
+}
+
+.number:hover {
+  color: var(--gold-link-hover);
+}
+
+/* `office` → ured, `mobile` → mobitel, `emergency` → dežurni. English in the
+   data because it drives logic; Croatian on screen because it is read. */
+.type {
+  font-family: var(--font-text);
+  font-size: 10.5px;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+  color: var(--text-label);
+}

@@ -1,0 +1,199 @@
+/* The landing page.
+
+   Its job is to say what this is and get out of the way. The primary action is
+   the heaviest thing on the screen, and everything below it is support for the
+   decision to tap it — not a second competing pitch. */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  padding-block: 20px 56px;
+}
+
+/* --- hero --- */
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-top: 14px;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 26px;
+  letter-spacing: 0.05em;
+  line-height: 1.28;
+  color: var(--ink);
+}
+
+.lede {
+  font-family: var(--font-text);
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--ink-body);
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+/* The bypass, for someone who does not want to be led. A text link, not a
+   second button — a second button would split the primary action in two. */
+.bypass {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  min-height: 44px;
+  font-family: var(--font-text);
+  font-size: 13.5px;
+  color: var(--gold-link);
+}
+
+/* --- the band ---
+   The one image slot on this page. Renders as texture alone when no image has
+   been chosen, which is the state it ships in. */
+
+.band {
+  height: 118px;
+  border-bottom: 1px solid var(--gold);
+}
+
+/* --- how it works --- */
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.heading {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink);
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--rule-gold);
+}
+
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  counter-reset: step;
+}
+
+.step {
+  display: grid;
+  grid-template-columns: 26px 1fr;
+  gap: 12px;
+  align-items: baseline;
+}
+
+.step::before {
+  counter-increment: step;
+  content: counter(step);
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 15px;
+  letter-spacing: 0.04em;
+  color: var(--gold);
+  font-variant-numeric: tabular-nums;
+}
+
+.stepText {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.stepTitle {
+  font-family: var(--font-text);
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--ink);
+}
+
+.stepBody {
+  font-family: var(--font-text);
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--text-secondary);
+}
+
+/* --- promises --- */
+
+.promises {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.promise {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--rule-quiet);
+}
+
+.promiseTitle {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  color: var(--gold);
+}
+
+.promiseBody {
+  font-family: var(--font-text);
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--ink-body);
+}
+
+/* --- foot --- */
+
+.foot {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 18px;
+  border-top: 1px solid var(--rule-gold);
+}
+
+.footNote {
+  font-family: var(--font-text);
+  font-size: 12px;
+  line-height: 1.8;
+  color: var(--text-secondary);
+}
+
+.footLinks {
+  display: flex;
+  flex-direction: column;
+}
+
+.footLink {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  min-height: 44px;
+  font-family: var(--font-text);
+  font-size: 13px;
+  color: var(--gold-link);
+}

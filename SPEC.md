@@ -56,7 +56,11 @@ Phase 1 goal: a free, public portal with a database of all business entities reg
 SPEC.md, SPEC_database.md,
 SPEC_frontend.md            specs — source of truth
 CLAUDE.md                   agent working rules
-.env.example                frontend env vars to copy to .env.local
+web/                        the Next.js app
+  app/                      App Router routes
+  lib/                      env, Supabase client, database types
+  public/fonts/             self-hosted Cinzel + Archivo, with their OFL licences
+  .env.example              frontend env vars to copy to web/.env.local
 supabase/
   config.toml               CLI config, linked to the hosted project
   migrations/               SQL migrations (applied via `supabase db push`) — gitignored
@@ -65,7 +69,9 @@ data/                       curated pilot CSVs, imported via Studio — gitignor
 .design/                    design canvas working files — gitignored
 ```
 
-The frontend directory is not created yet. The Supabase CLI runs without Docker (no local database) — migrations are pushed straight to the hosted project.
+The Supabase CLI runs without Docker (no local database) — migrations are pushed straight to the hosted project.
+
+**The app ships from one origin.** Fonts are self-hosted rather than loaded from Google, because a Google Fonts request sends the visitor’s IP to a third party on every page load — the same reasoning that keeps the product free of a consent banner ([SPEC_frontend.md](SPEC_frontend.md) → Typography). Next.js telemetry is disabled for the same reason. Adding any third-party asset host, analytics script or embedded map is an **Ask first** decision with a GDPR consequence, not a build detail.
 
 ## Boundaries
 

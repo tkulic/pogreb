@@ -1,0 +1,129 @@
+/* The three question screens. */
+
+.screen {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  padding-block: 40px 56px;
+  min-height: 100dvh;
+}
+
+.masthead {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--rule-gold);
+}
+
+.wordmark {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 13px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.question {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 22px;
+  letter-spacing: 0.08em;
+  line-height: 1.35;
+  color: var(--ink);
+}
+
+/* A second question on the same screen — smaller, still a real heading. */
+.subTitle {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  line-height: 1.4;
+  color: var(--ink);
+}
+
+.hint {
+  font-family: var(--font-text);
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--text-muted);
+}
+
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Pushes the bypass and the continue action to the foot of the screen. */
+.spacer {
+  flex: 1 1 auto;
+  min-height: 12px;
+}
+
+.foot {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-top: 18px;
+  border-top: 1px solid var(--rule-quiet);
+}
+
+/* A text link, deliberately not a button: someone who does not want to be led
+   must be one tap from the list, without that tap competing with the answers. */
+.bypass {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  min-height: 44px;
+  font-family: var(--font-text);
+  font-size: 13.5px;
+  color: var(--gold-link);
+}
+
+.guidance {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  min-height: 44px;
+  font-family: var(--font-text);
+  font-size: 13.5px;
+  color: var(--gold-link);
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  min-height: 44px;
+  font-family: var(--font-text);
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.back:hover {
+  color: var(--ink);
+}
+
+.settlements {
+  font-family: var(--font-text);
+  font-size: 12px;
+  line-height: 1.8;
+  color: var(--text-muted);
+}

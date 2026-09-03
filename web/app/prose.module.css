@@ -1,0 +1,146 @@
+/* Shared layout for the two prose pages and the 404.
+
+   Guidance prose is Archivo throughout — it is the legibility carrier, and
+   these are the pages a reader actually has to get through rather than scan. */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding-block: 24px 56px;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  min-height: 44px;
+  font-family: var(--font-text);
+  font-size: 13px;
+  color: var(--gold-link);
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--rule-gold);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 22px;
+  letter-spacing: 0.06em;
+  line-height: 1.3;
+  color: var(--ink);
+}
+
+.lede {
+  font-family: var(--font-text);
+  font-size: 14.5px;
+  line-height: 1.7;
+  color: var(--ink-body);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.heading {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+
+.body {
+  font-family: var(--font-text);
+  font-size: 13.5px;
+  line-height: 1.75;
+  color: var(--ink-body);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--rule-quiet);
+}
+
+.itemTitle {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  color: var(--gold);
+}
+
+.itemBody {
+  font-family: var(--font-text);
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--ink-body);
+}
+
+.note {
+  font-family: var(--font-text);
+  font-size: 12.5px;
+  line-height: 1.8;
+  color: var(--text-secondary);
+  padding-left: 14px;
+  border-left: 1px solid var(--rule-gold);
+}
+
+.footerLink {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  min-height: 44px;
+  font-family: var(--font-text);
+  font-size: 13.5px;
+  color: var(--gold-link);
+}
+
+/* Sources — quiet, but present. A procedural claim a reader cannot check is
+   worth less than one they can. */
+
+.sourceNote {
+  font-family: var(--font-text);
+  font-size: 12.5px;
+  line-height: 1.75;
+  color: var(--text-secondary);
+}
+
+.sourceList {
+  display: flex;
+  flex-direction: column;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sourceLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-family: var(--font-text);
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--gold-link);
+}
