@@ -4,8 +4,13 @@ import { notFound } from 'next/navigation';
 import { ProviderCard } from '@/components/ProviderCard';
 import { QuietProviderCard } from '@/components/QuietProviderCard';
 import { SectionHeading } from '@/components/SectionHeading';
-import { SiteHeader } from '@/components/SiteHeader';
-import { answersToQuery, isUnanswered, parseAnswers } from '@/lib/answers';
+import { PageBack } from '@/components/PageBack';
+import {
+  answersToQuery,
+  flowHref,
+  isUnanswered,
+  parseAnswers,
+} from '@/lib/answers';
 import { CATCHMENT, NACIN_LABEL, SITUACIJA_LABEL, coverageClaim } from '@/lib/copy';
 import { getCityBySlug, getCityProviders } from '@/lib/queries';
 import { rankProviders } from '@/lib/ranking';
@@ -56,6 +61,13 @@ export default async function ResultsPage({ params, searchParams }: PageProps) {
   const answers = parseAnswers(rawSearch);
   const query = answersToQuery(answers);
 
+  // Back into the questions, with every answer still selected and this city
+  // already chosen — `/${query}` used to land on the *landing page*, because a
+  // query string with no `korak` is the landing page. Screen 3 is the right
+  // destination: it is the last question, and screen 2 is already answered by
+  // being here at all.
+  const questionsHref = flowHref({ answers, grad: city.slug, korak: 'potrebe' });
+
   const providers = await getCityProviders(city.id);
   const { shortlist, others, noMatches } = rankProviders(providers, answers);
 
@@ -76,7 +88,7 @@ export default async function ResultsPage({ params, searchParams }: PageProps) {
 
   return (
     <main className={`page ${styles.page}`}>
-      <SiteHeader back={{ href: `/${query}`, label: '← Pitanja' }} />
+      <PageBack href={questionsHref} label="← Pitanja" />
 
       {/*
         The header is deliberately compact. Everything in it is orientation, and
@@ -100,14 +112,14 @@ export default async function ResultsPage({ params, searchParams }: PageProps) {
           <p className={styles.chosen}>
             <span className={styles.chosenLabel}>odabrali ste</span>{' '}
             {chosen.join(' · ')}{' '}
-            <Link className={styles.change} href={`/${query}`}>
+            <Link className={styles.change} href={questionsHref}>
               promijenite
             </Link>
           </p>
         )}
         {isUnanswered(answers) && (
           <p className={styles.chosen}>
-            <Link className={styles.change} href={`/${query}`}>
+            <Link className={styles.change} href={questionsHref}>
               Odgovorite na dva pitanja
             </Link>{' '}
             i predložit ćemo koga nazvati prvog.

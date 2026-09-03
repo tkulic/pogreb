@@ -4,8 +4,12 @@
   display: flex;
   flex-direction: column;
   gap: 22px;
-  padding-block: 40px 56px;
-  min-height: 100dvh;
+  padding-block: 28px 56px;
+  /* Full-height so the bypass sits at the bottom of the first screenful, under
+     the thumb. Minus the masthead, which now sits above this: without the
+     subtraction the escape hatch lands just past the fold, which is the one
+     place it must never be. */
+  min-height: calc(100dvh - 56px);
 }
 
 .masthead {

@@ -1,73 +1,168 @@
-/* Site header — the same on every page.
+/* The masthead — full width, on every page, at every width.
 
-   Deliberately light: it is navigation, not content. The wordmark and the back
-   link sit on one line and share a single quiet rule, so the header costs one
-   row of height and never competes with the page's own heading. */
+   It is a band rather than a bar: a single gold hairline under it and nothing
+   else, so it separates the way everything in Kamen separates. No fill, no
+   shadow, no border box, and it does not stick — a sticky bar on a phone eats
+   the top of a page whose whole job is to be read once, quickly. */
 
 .header {
+  border-bottom: 1px solid var(--rule-gold);
+}
+
+.inner {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  min-height: 48px;
-  padding-block: 6px;
-  border-bottom: 1px solid var(--rule-quiet);
+  max-width: var(--frame);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+  min-height: 56px;
+}
+
+/* --- brand --- */
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.brand:hover {
+  color: var(--ink);
+}
+
+/* Inherits ink from .brand — the mark never carries a colour of its own. */
+.mark {
+  flex: none;
+  color: var(--gold);
 }
 
 .wordmark {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
   font-family: var(--font-display);
-  font-weight: 400;
-  font-size: 12px;
+  font-weight: 600;
+  font-size: 13px;
   letter-spacing: 0.2em;
+  line-height: 1;
   text-transform: uppercase;
-  color: var(--ink);
-  text-decoration: none;
   white-space: nowrap;
 }
 
-.wordmark:hover {
-  color: var(--ink);
+/* --- desktop menu, inline --- */
+
+.nav {
+  display: none;
 }
 
-.back {
+/* --- mobile menu, a JavaScript-free disclosure --- */
+
+.menu {
+  position: relative;
+}
+
+.menuButton {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   min-height: 44px;
+  padding-inline: 2px;
   font-family: var(--font-text);
-  font-size: 13px;
-  color: var(--gold-link);
-  text-align: right;
+  font-weight: 500;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink);
+  cursor: pointer;
+  list-style: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.back:hover {
+/* The UA disclosure triangle, removed in both of its spellings. */
+.menuButton::-webkit-details-marker {
+  display: none;
+}
+
+/* Our own mark instead: a cut rule that becomes two when open. Not motion —
+   it is a different glyph, drawn instantly. */
+.menuButton::after {
+  content: "";
+  width: 16px;
+  height: 7px;
+  border-top: 1px solid var(--ink);
+  border-bottom: 1px solid var(--ink);
+}
+
+.menu[open] .menuButton::after {
+  height: 0;
+  border-bottom: none;
+}
+
+/* Drops below the header band, full width, on the page ground. Not a modal and
+   not an overlay: it pushes nothing and traps nothing. */
+.menuPanel {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  min-width: 220px;
+  padding: 4px 0 10px 16px;
+  background: var(--stone);
+  /* The panel is the page's own ground, so without an edge it reads as text
+     floating over the heading it covers rather than as a surface above it.
+     A cut rule on the two open sides is how the rest of Kamen would say it —
+     a shadow is not available and would be wrong here anyway. */
+  border-left: 1px solid var(--rule-quiet);
+  border-bottom: 1px solid var(--rule-gold);
+}
+
+.menuLink {
+  display: flex;
+  align-items: center;
+  min-height: 46px;
+  font-family: var(--font-text);
+  font-size: 14px;
+  color: var(--gold-link);
+  text-decoration: none;
+}
+
+.menuLink:hover {
   color: var(--gold-link-hover);
 }
 
-/* Desktop: the rail is the masthead, so the header stops being one. It keeps
-   the contextual back link and the step counter, which are per-page and cannot
-   live in a route-independent rail. */
-@media (min-width: 1024px) {
-  .wordmark {
+/* --- desktop --- */
+
+@media (min-width: 860px) {
+  .inner {
+    min-height: 68px;
+  }
+
+  .menu {
     display: none;
   }
 
-  /* Nothing but the wordmark was in it — see SiteHeader's `bare`. */
-  .bare {
-    display: none;
+  .nav {
+    display: flex;
+    align-items: center;
+    gap: 26px;
   }
-}
 
-/* Step counter in the flow — "2 / 3". Navigational, so 10.5px is permitted. */
-.step {
-  font-family: var(--font-text);
-  font-size: 10.5px;
-  letter-spacing: 0.17em;
-  text-transform: uppercase;
-  color: var(--text-label);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
+  .navLink {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    font-family: var(--font-text);
+    font-size: 13px;
+    color: var(--ink-body);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .navLink:hover {
+    color: var(--gold-link-hover);
+  }
 }

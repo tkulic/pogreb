@@ -1,6 +1,7 @@
 # Project Spec: Funeral Services Portal (working name)
 
-> Status: Phase 1 — **the database schema is complete and applied** to the hosted Supabase project, including `entities.slug`, Croatian `services.slug` values, and anonymous usage logging (`events` + `log_event`). Seven Split pilot providers are loaded. The frontend is **built and running locally**, desktop layout included — see [SPEC_frontend.md](SPEC_frontend.md). The next step is expanding coverage beyond the one pilot city.
+> Status: Phase 1 — **the database schema is complete and applied** to the hosted Supabase project, including `entities.slug`, Croatian `services.slug` values, and anonymous usage logging (`events` + `log_event`). **Seven cities and 45 providers are loaded** — Zagreb, Split, Rijeka, Zadar, Osijek, Pula, Dubrovnik (expanded 2026-09-03). The frontend is **built and running locally** — masthead, reading column and footer at every width, a rebuilt landing page, and a provider page carrying the product's only form — see [SPEC_frontend.md](SPEC_frontend.md).
+> **Coverage expansion is written but not applied (2026-09-03):** six further cities — Zagreb, Rijeka, Zadar, Osijek, Pula, Dubrovnik — as 38 providers, 163 service rows, two `services` additions and two corrections to the Split data. All data, no schema change. Reviewed decision by decision with the project owner; the data and its provenance live in `data/` (gitignored) and the conventions are recorded in [SPEC_database.md](SPEC_database.md). Nothing is pushed: `db push` reaches production directly.
 > This document is a living artifact — updated as decisions are made. See also [SPEC_database.md](SPEC_database.md) for database schema details and [SPEC_frontend.md](SPEC_frontend.md) for the frontend user story, flow and visual system.
 >
 > Note: the product itself targets Croatian-speaking users (Croatian market), but this spec and all engineering docs are written in English. Croatian legal/registry terms (OIB, MBS, NKD, Sudreg, obrt) are kept as-is — they're domain identifiers without a real English equivalent.
@@ -20,7 +21,9 @@ Applies to the database schema and all future code:
 
 The Croatian funeral services market is fragmented — there is no aggregator that helps grieving families quickly find a trustworthy funeral director in their city. People in this situation rarely compare offers (per a CMA UK study) — they choose based on recommendation/locality, under significant time and emotional pressure, within a window of a few hours from the death.
 
-Phase 1 goal: a free, public portal with a database of all business entities registered under the "funeral and related activities" classification (NKD 96.03), covering a pilot of 1-2 cities, giving users a fast, trustworthy, local list of funeral directors.
+Phase 1 goal: a free, public portal with a database of all business entities registered under the "funeral and related activities" classification (NKD 96.03), covering a pilot of a handful of cities, giving users a fast, trustworthy, local list of funeral directors.
+
+The pilot began as 1–2 cities (Split). As of 2026-09-03 it is **seven**: Split, plus Zagreb, Rijeka, Zadar, Osijek, Pula and Dubrovnik. The expansion changed nothing structural — it was always the point of storing `city_id` — but it did surface what a national list will actually cost: the largest city took roughly as much research as the other five combined, obrti do not publish their OIB anywhere public, and three of the six new cities are effectively held by a single municipally-owned operator.
 
 ## Context / data sources
 
@@ -31,7 +34,7 @@ Phase 1 goal: a free, public portal with a database of all business entities reg
 ## Phase 1 — scope
 
 **In scope:**
-- Database of business entities (companies + obrti) for 1-2 pilot cities
+- Database of business entities (companies + obrti) for the pilot cities — seven as of 2026-09-03, from an initial scope of 1–2
 - Manual data entry into Supabase
 - Structure prepared for future SEO pages per city
 - Public read-only frontend (Next.js), run locally against the hosted Supabase project — specified in [SPEC_frontend.md](SPEC_frontend.md): user story, three-screen flow, results page and ranking rules, routing, and the **Kamen** visual system. Built, including the desktop layout
@@ -40,7 +43,9 @@ Phase 1 goal: a free, public portal with a database of all business entities reg
 **Out of scope (deliberately deferred):**
 - Monetization (pay-per-lead, premium listing)
 - Account system for funeral directors (Supabase Auth + RLS) — schema prepares `owner_id`, but the flow itself is not being built
-- Lead form / Twilio call tracking — anonymous click logging *is* in scope (above); what stays out is anything that captures who the user is or routes their call
+- Lead form / Twilio call tracking — anonymous click logging *is* in scope (above); what stays out is anything that captures who the *user* is or routes their call.
+
+  **Not this:** the provider form on `/za-pogrebnike`, added at the project owner's direction. It points the other way — a listed business writing to us about its own listing, for a correction, a missing entry or collaboration — and a family never meets it. It is the product's only form, and the constraint that it must never become a lead form is written down in [SPEC_frontend.md](SPEC_frontend.md) → The provider page
 - Automated sync with Sudreg
 - Netlify deploy / public launch — the Phase 1 frontend runs locally against the hosted Supabase project. Deploying is a separate decision, not folded into building the pages
 
@@ -55,8 +60,8 @@ Phase 1 goal: a free, public portal with a database of all business entities reg
 ```
 SPEC.md, SPEC_database.md,
 SPEC_frontend.md            specs — source of truth
-RESEARCH_market.md          comparable platforms worldwide, and
-                            monetization options — research, not decisions
+.research/                  comparable platforms worldwide and monetization
+                            options — research, not decisions; gitignored
 CLAUDE.md                   agent working rules
 web/                        the Next.js app
   app/                      App Router routes
@@ -66,7 +71,8 @@ web/                        the Next.js app
 supabase/
   config.toml               CLI config, linked to the hosted project
   migrations/               SQL migrations (applied via `supabase db push`) — gitignored
-data/                       curated pilot CSVs, imported via Studio — gitignored
+data/                       curated pilot data and the provenance trail for
+                            each city — gitignored
 .tools/                     local Supabase CLI binary — gitignored
 .design/                    design canvas working files — gitignored
 ```
@@ -87,7 +93,7 @@ The Supabase CLI runs without Docker (no local database) — migrations are push
 - Database schema changes (new table, new column, type change)
 - Running a migration or any command that changes the live hosted database — there's no staging environment, so this always touches production
 - Deleting or bulk-overwriting existing rows, including during data re-import
-- Introducing a new external integration (Twilio, payment provider, mapping API, new hosting service)
+- Introducing a new external integration (Twilio, payment provider, mapping API, new hosting service). **Netlify Forms is the one so far approved**, for the provider form only — it loads no third-party script and posts to our own host, so the one-origin position is intact; adding a second form, or form handling from any other provider, is a fresh decision
 - Any change to the Sudreg sync approach (e.g. moving to automated sync)
 - Activating the multi-tenant/auth flow or any new RLS write policy
 - Adding any column to `events` that could identify or fingerprint a visitor, or storing a raw referrer, raw user-agent, or IP — this reopens a GDPR question that the current design closes
@@ -104,7 +110,7 @@ The Supabase CLI runs without Docker (no local database) — migrations are push
 ## Success Criteria (Phase 1)
 
 - Supabase schema defined and implemented, covering both companies and obrti
-- At least 1 pilot city has a fully manually-entered list of active funeral directors (entities under NKD 96.03)
+- At least 1 pilot city has a fully manually-entered list of active funeral directors (entities under NKD 96.03) — **met**, by Split and by the six cities added 2026-09-03, all applied
 - Every record has a clear `data_source` (sudreg/manual) and `last_verified_at` date
 - Schema is ready to support, without breaking changes: an SEO page per city, future owner account activation, future filtering by service type
 - **Usage is measurable and the numbers are quotable** — `events` records per-provider `detail_view` and `phone_click` counts, and `phone_click` is bot-resistant by construction (see [SPEC_database.md](SPEC_database.md) → Data integrity). A count nobody would believe is not a success criterion met

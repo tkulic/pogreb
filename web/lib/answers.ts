@@ -76,6 +76,80 @@ export function answersToQuery(answers: FlowAnswers): string {
   return s ? `?${s}` : '';
 }
 
+/**
+ * Which question screen is showing. `null` means the landing page.
+ *
+ * Lives here rather than in the route because the results page also has to
+ * build links back into the flow, and two files constructing flow URLs by hand
+ * is how the "arrive with the current answers still selected" rule quietly
+ * stopped being true.
+ */
+export type Korak = 'situacija' | 'mjesto' | 'potrebe';
+
+/** `?korak=` absent → the landing page. Anything unexpected → the first step. */
+export function parseKorak(value: string | string[] | undefined): Korak | null {
+  const v = one(value);
+  if (v === undefined) return null;
+  return v === 'mjesto' || v === 'potrebe' ? v : 'situacija';
+}
+
+/**
+ * The city chosen on screen 2, while the flow is still running.
+ *
+ * **It lives in the query string during the flow and in the path at the
+ * results**, which is the same split the spec already describes: screen 2 is
+ * "pre-answered from the city path segment" when you arrive from a city URL,
+ * and has to be carried some other way when you arrive from the landing page.
+ *
+ * It is deliberately **not part of `FlowAnswers`.** `FlowAnswers` is the input
+ * to ranking, and the city is not a ranking term — it decides *which*
+ * providers are fetched, not how they are ordered. Putting it in there would
+ * also leak `?grad=` into the results URL, where the path already says it.
+ *
+ * Validated against the cities that actually exist, so a hand-edited or stale
+ * URL drops the value rather than producing a link to a city page that 404s.
+ */
+export function parseGrad(
+  value: string | string[] | undefined,
+  allowed: readonly string[],
+): string | undefined {
+  const v = one(value);
+  return v && allowed.includes(v) ? v : undefined;
+}
+
+/**
+ * A link to a question screen, carrying everything answered so far.
+ *
+ * Fixed parameter order, for the same reason `answersToQuery` has one: the
+ * same state must produce the same URL every time, whether it was built by the
+ * flow or by the results page linking back into it.
+ */
+export function flowHref(opts: {
+  answers: FlowAnswers;
+  grad?: string;
+  korak: Korak;
+}): string {
+  const { answers, grad, korak } = opts;
+  const params = new URLSearchParams();
+  if (answers.situacija) params.set('situacija', answers.situacija);
+  if (answers.nacin) params.set('nacin', answers.nacin);
+  if (answers.pokojnik) params.set('pokojnik', answers.pokojnik);
+  if (grad) params.set('grad', grad);
+  params.set('korak', korak);
+  return `/?${params.toString()}`;
+}
+
+/**
+ * A link to the results for a city, carrying the answers.
+ *
+ * The city moves from the query string into the path here, and `grad` is
+ * dropped rather than duplicated — a URL that said the city twice would give
+ * two spellings of the same page for search engines to reconcile.
+ */
+export function resultsHref(grad: string, answers: FlowAnswers): string {
+  return `/pogrebne-usluge/${grad}${answersToQuery(answers)}`;
+}
+
 /** True when the user answered nothing — the bypass path, or a bare city URL. */
 export function isUnanswered(answers: FlowAnswers): boolean {
   return !answers.situacija && !answers.nacin && !answers.pokojnik;

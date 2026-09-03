@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="hr">
+  <head>
+    <meta charset="utf-8" />
+    <title>Obrasci</title>
+    <meta name="robots" content="noindex" />
+  </head>
+  <body>
+    <!--
+      Netlify's form definition, and the reason this file exists.
+
+      Netlify discovers forms by scanning the static HTML a build produces. A
+      Next.js App Router page is rendered by the runtime rather than emitted as
+      a plain file the scanner reads, so a form declared only inside a React
+      component is never registered and its submissions are silently dropped.
+      The documented workaround is this file: a static page holding the field
+      definitions, which the real form POSTs to.
+
+      Two consequences worth knowing before editing:
+
+      1. **This file and the form in `app/za-pogrebnike/page.tsx` must carry the
+         same field names.** Netlify records only the fields declared here — a
+         field added to the React form and not to this one arrives empty, with
+         no error anywhere.
+      2. **`action` here is where a successful submission lands**, not where the
+         form posts. The React form posts to `/__forms.html`; Netlify matches on
+         `form-name`, stores the submission, and then redirects the visitor to
+         the URL below.
+
+      None of this can be verified locally: form handling is a Netlify build
+      and runtime feature, and Phase 1 runs the app locally against the hosted
+      Supabase project with no deploy (SPEC.md → Out of scope). The form renders
+      and validates in dev; it begins recording on first deploy.
+    -->
+    <form
+      name="pogrebnici"
+      data-netlify="true"
+      netlify-honeypot="bot-field"
+      action="/za-pogrebnike/hvala"
+      hidden
+    >
+      <input type="hidden" name="form-name" value="pogrebnici" />
+      <input type="text" name="company" />
+      <input type="text" name="oib" />
+      <input type="text" name="city" />
+      <input type="text" name="contact_name" />
+      <input type="email" name="email" />
+      <input type="tel" name="phone" />
+      <select name="reason">
+        <option value="correction"></option>
+        <option value="missing"></option>
+        <option value="partnership"></option>
+        <option value="other"></option>
+      </select>
+      <textarea name="message"></textarea>
+      <input type="text" name="bot-field" />
+    </form>
+  </body>
+</html>

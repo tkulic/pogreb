@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next';
 import { SITE_HOST } from '@/lib/env';
+import { PROVIDER_FORM_PUBLIC } from '@/lib/nav';
 import { getCities, getCityProviders, getServicePageParams } from '@/lib/queries';
 
 /**
@@ -12,6 +13,8 @@ import { getCities, getCityProviders, getServicePageParams } from '@/lib/queries
  *   Listing them would offer search engines a combinatorial set of
  *   near-identical pages, which is the definition of thin content.
  * - **No `/specimen`.** It is a development page and is `noindex`.
+ * - **No `/za-pogrebnike/hvala`.** It is reachable only by Netlify's redirect
+ *   after a submission, and it is `noindex` for the same reason.
  * - **No service page that failed the ≥3-and-fewer-than-all rule**, because
  *   `getServicePageParams` is the single place that rule is evaluated.
  */
@@ -25,6 +28,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE}/sto-uciniti-prvo`, changeFrequency: 'yearly', priority: 0.5 },
     { url: `${BASE}/kako-rangiramo`, changeFrequency: 'yearly', priority: 0.3 },
     { url: `${BASE}/nase-obecanje`, changeFrequency: 'yearly', priority: 0.3 },
+    // Omitted while PROVIDER_FORM_PUBLIC is false: a page kept out of the
+    // navigation for a compliance reason must not be handed to a crawler
+    // instead. See lib/nav.ts.
+    ...(PROVIDER_FORM_PUBLIC
+      ? [
+          {
+            url: `${BASE}/za-pogrebnike`,
+            changeFrequency: 'yearly' as const,
+            priority: 0.3,
+          },
+        ]
+      : []),
   ];
 
   const cityPages: MetadataRoute.Sitemap = cities.map((city) => ({

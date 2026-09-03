@@ -4,6 +4,8 @@
 >
 > Status: **the whole schema in this document is implemented and applied to the hosted Supabase project** — the four content tables, `entities.slug`, the Croatian `services.slug` values, and all of **Usage logging** (`events` + `log_event`, its enums, index, RLS and grants). Applied 2026-09-02. SQL lives in `supabase/migrations/`; this document stays the source of truth for intent, the migrations for exact DDL.
 >
+> **Applied (2026-09-03):** the six-city pilot expansion — Zagreb, Rijeka, Zadar, Osijek, Pula, Dubrovnik. Six `cities` rows, 38 `entities`, 163 `entity_services`, two additions to the `services` lookup, and two corrections to the Split rows. No schema change: every migration is data. Curated source data and the full provenance trail live in `data/` (gitignored). The conventions those migrations follow are recorded in this document, marked *(2026-09-03)*. The hosted database now holds **seven cities and 45 providers**, and the frontend reads them — see [SPEC_frontend.md](SPEC_frontend.md) → Landing page and Screen 2.
+>
 > **Naming convention:** table/column names and code are in English. Croatian appears only for (a) genuine Croatian identifiers with no English equivalent — OIB, MBS — and (b) customer-facing data values (city names, service display names). See [SPEC.md](SPEC.md) → Naming Convention.
 
 ## Tables
@@ -25,11 +27,11 @@
 | id | uuid | PK | |
 | name | text | not null | business name |
 | slug | text | not null, unique **per city** — `unique (city_id, slug)` | URL segment for the detail page: `/pogrebne-usluge/split/cagalj`. Derivation rule below. **Stored, never re-derived at query time**, so renaming a business does not silently break inbound links or invalidate indexed lookups |
-| oib | text | unique, not null | Croatian personal/business tax ID — natural dedup key. For obrti, OIB belongs to the owner — edge case if one person runs 2 obrti, accepted risk for the pilot |
-| mbs | text | nullable | Matični broj subjekta (Croatian court registry number) — only for legal entities from Sudreg, obrti don't have one |
+| oib | text | unique, not null | Croatian personal/business tax ID — natural dedup key. For obrti, OIB belongs to the owner — edge case if one person runs 2 obrti, accepted risk for the pilot. **One deliberate exception (2026-09-03):** see *A podružnica under its holding's OIB* below |
+| mbs | text | nullable | Matični broj subjekta — the **9-digit** commercial-court registry number, prefixed by the registering court (Zagreb `080…`, Split and Zadar `060…`, Rijeka and Pula `040…`, Osijek `030…`). Only for legal entities; obrti don't have one, and for them the column instead stays null (their MBO is not stored). **Not** the 8-digit DZS *matični broj* (MB) — a distinct identifier that the commercial aggregators frequently conflate with it, one even labelling the field "MB (MBS)". The four Split rows seeded in 2026-08 held an MB; corrected 2026-09-03, and where a real MBS could not be found the value was cleared rather than left wrong. **Rule: this column holds a 9-digit MBS or nothing** |
 | entity_type | enum | not null | `doo`, `jdoo`, `obrt`, `dd` — actual Croatian legal-form names, kept as-is (dotless, so the values stay usable as URL/filter params) |
-| data_source | enum | not null | which registry the record came from: `sudreg` = Sudski registar (companies), `portor` = Portal Obrtnog registra RH (obrti), `manual` = web/phone research with no registry record. `portor` records are looked up by hand — the portal has no API and scraping it is a Never-tier boundary (see SPEC.md) |
-| address | text | | street and house number as one field (manual entry, splitting adds no benefit at this stage) |
+| data_source | enum | not null | which registry the record came from: `sudreg` = Sudski registar (companies), `portor` = **any obrt** — craft-registry-backed data, whichever intermediary surfaced it (widened 2026-09-03; it previously meant a hand lookup in the Portal Obrtnog registra specifically), `manual` = web/phone research with no registry record. The portal has no API and scraping it is a Never-tier boundary (see SPEC.md), so obrt records are always hand-collected |
+| address | text | | street and house number as one field (manual entry, splitting adds no benefit at this stage). **Operating address, not registered seat (2026-09-03).** Where a business publishes an address that differs from its registry seat, the published one is stored — a bereaved family needs the office they can walk into, not the address on the court record. Set by the Čagalj precedent in the Split pilot and applied since to Pokop, In Memoriam, Bor, Ukop and Denaro; the seat is recorded in the migration comment. For a provider inside a city's catchment but outside the city proper, the town is written into this field (`"Kastavska cesta 2, Matulji"`), since `city_id` names the city the provider serves |
 | city_id | uuid | FK → cities.id, not null, on delete restrict | a city with entities attached cannot be deleted |
 | postal_code | text | nullable | |
 | phones | jsonb | nullable | ordered array, first entry is the primary number — see shape below. Sudreg returns no contact numbers, so always manual entry |
@@ -37,7 +39,7 @@
 | website | text | nullable | |
 | latitude | double precision | nullable | preparation for map integration |
 | longitude | double precision | nullable | preparation for map integration |
-| available_24_7 | boolean | default false | |
+| available_24_7 | boolean | default false | **True only where the business states round-the-clock availability in words** — "0-24", "24/7", "u svako doba dana" (rule fixed 2026-09-03). A phone merely *labelled* "dežurna služba" is not enough: that row gets `false` plus an `emergency`-typed number, which already carries the meaning in the UI. Nor is a third-party directory's claim enough — the statement has to be the business's own. The distinction is not pedantry: after hours this flag is the difference between a provider a family can use tonight and one they cannot |
 | working_hours | jsonb | nullable | see shape below |
 | logo_url | text | nullable | URL to Supabase Storage |
 | owner_id | uuid | FK → auth.users, nullable, on delete set null | preparation for future multi-tenant, unused in Phase 1. Deleting the auth user releases the claim, it doesn't delete the business |
@@ -56,9 +58,20 @@
 
 Worked examples from the Split pilot: `Pogrebne usluge Čagalj, d.o.o.` → `cagalj`; `Trgovačko društvo Lovrinac d.o.o.` → `lovrinac`; `Bradvica d.o.o.` → `bradvica`; `Pogrebne usluge Aničić` → `anicic`; `Pogrebne usluge Zec` → `zec`.
 
+**Two documented exceptions (2026-09-03).** The rule is mechanical, and twice it produced a slug that would have been worse than the exception:
+
+- `Pogrebno poduzeće Zagreb d.o.o.` → **`pogrebno-poduzece-zagreb`**, not `zagreb`. Step 3 would drop the descriptor and leave only the city name, giving `/pogrebne-usluge/zagreb/zagreb`. So step 3 is skipped whenever dropping the descriptor would leave nothing but the city.
+- `E & E d.o.o.`, trading as Cvjećarna Nives → **`ee-marcana`**. The rule yields `e-e`, which no one would recognise or type. The town is added because the business itself pairs the initials with it (`eemarcana@gmail.com`). Adding a word not in the name is a departure, taken because two bare initials are not an identifier.
+
+Both are additions to the *slug*, never to the `name` — the customer-facing name always stays what the business is called.
+
 **Why unique per city, not globally.** The detail URL already contains the city, so the city is part of the identifier — global uniqueness would be over-constrained. It matters as soon as a second city is added: short surname-derived slugs collide easily across cities (a `Zec` in Zagreb is entirely plausible), and a global constraint would force an artificial suffix on a provider for a name clash the URL structure never actually has.
 
 **Note:** no `status` field — the table holds only active entities by convention. Tracking status changes over time is deferred to a future history/audit table (see SPEC.md → Future considerations), out of Phase 1 scope.
+
+**A podružnica under its holding's OIB (2026-09-03).** One row breaks the one-OIB-one-business assumption, deliberately and at the project owner's direction: **Gradska groblja Zagreb** is a *podružnica* (branch) of ZAGREBAČKI HOLDING d.o.o. and is not a legal person, so it has no OIB of its own. The row carries the holding's OIB (`85584865987`), which also covers water, transport, markets and much else.
+
+It is included because it operates the Zagreb crematorium and is the city's largest funeral operator — omitting it would have made the Zagreb list indefensible, and the alternative (making `oib` nullable) would weaken the dedup key for all 44 other rows to accommodate one. The consequence to keep in mind: `oib` is still unique, but it is no longer safe to assume a row's OIB identifies *only* that business. If a second Zagrebački holding branch is ever listed, that assumption breaks outright and the schema needs revisiting rather than a second workaround.
 
 **Shape of `working_hours` (jsonb):**
 ```json
@@ -74,6 +87,12 @@ Worked examples from the Split pilot: `Pogrebne usluge Čagalj, d.o.o.` → `cag
 ```
 
 A day takes one of three forms: `{"from","to"}` for fixed hours, `{"closed": true}`, or `{"by_arrangement": true}` for "po dogovoru". A day that is **absent** means unknown — deliberately distinct from closed, since wrongly showing "closed" is worse than showing nothing for a family that needs a provider now.
+
+**Known limitation: one window per day (2026-09-03).** The shape cannot express a split shift, which the Mediterranean midday closure makes common. Cvjećarna Nives (Pula) publishes *mon–fri 08:00–12:00 and 16:00–19:00*; only the morning window is stored. The choice was deliberate — understating means a family is told "closed" when the provider is open, while storing `08:00–19:00` would send someone to a locked door at 14:00, and of the two failures the second is worse. Fixing it properly means allowing an array of windows per day, which needs no DDL (the column is jsonb) but does need `web/lib/hours.ts` and its tests changed. Deferred, not dismissed.
+
+**A related limitation: `0-24` is availability, not hours.** Where a provider's only published statement is "0-24", `working_hours` is left **null** and `available_24_7` carries the fact. Storing seven `00:00–24:00` days would conflate a staffed office with a mobile phone someone answers at 3am. Nine of the 38 new-city rows are in this position.
+
+**And a third: no field can hold a Croatian 0800 number.** Ukop (Osijek) and KD Kozala (Rijeka) both publish a freephone as their round-the-clock line. Croatian `0800` numbers have no E.164 form and cannot be dialled from a `tel:` link, so they are not stored in `phones` at all — the invariant that every stored number works in a `tel:` link is worth more than the number. Where the business also states 0–24 in words (Ukop does), the *claim* is still recorded in `available_24_7`; the number backing it simply is not listed.
 
 **Shape of `phones` (jsonb):**
 ```json
@@ -157,6 +176,8 @@ Six columns, all fixed-width, no `text` column anywhere — which is what keeps 
 | Oblačenje i uređivanje pokojnika | `uredivanje-pokojnika` | `deceased-preparation` |
 | Organizacija glazbe | `glazba-na-pogrebu` | `funeral-music` |
 | Fotografiranje i snimanje | `fotografiranje-pogreba` | `funeral-photography` |
+| Posredovanje pri kupnji grobnog mjesta | `posredovanje-grobnog-mjesta` | *(added 2026-09-03)* |
+| Ugovaranje pogreba unaprijed | `ugovaranje-unaprijed` | *(added 2026-09-03)* |
 
 Slugs are Croatian because they appear in URLs ([SPEC.md](SPEC.md) → Naming Convention), with diacritics transliterated (đ→d, ž→z, č→c, ć→c, š→s) so no path segment needs percent-encoding.
 
@@ -164,7 +185,16 @@ Where a slug is shorter than its display name, it is cut toward the phrase peopl
 
 The rename replaced the English slugs seeded in `20260827073807_initial_schema.sql`. That migration is applied and **must not be edited**, so the change went into `20260902102000_services_slug_croatian.sql` as 16 `update services set slug = … where slug = …` statements, keyed on the old slug (unique and stable), followed by a guard that raises if any English slug survives — a half-renamed lookup table would leave the frontend 404-ing on that service's URL with no other symptom. Nothing referenced `services.slug`: `entity_services` joins on `service_id` (uuid), and no frontend existed yet, so the rename broke nothing.
 
-The last four were added after the Split pilot research: each recurs across multiple providers and none mapped to the original twelve. `uredivanje-pokojnika` (oblačenje i uređivanje) is deliberately distinct from `balzamiranje` — Croatian providers offer the former routinely and the latter appears nowhere in the pilot.
+The last four were added after the Split pilot research: each recurs across multiple providers and none mapped to the original twelve. `uredivanje-pokojnika` (oblačenje i uređivanje) is deliberately distinct from `balzamiranje` — Croatian providers offer the former routinely and the latter appeared nowhere in the Split pilot (Pokop in Zagreb is the first and so far only provider in the whole dataset to name it).
+
+**The two 2026-09-03 additions** came out of the six-city research, chosen from seven recurring offers on how often they appear and whether they are genuinely distinct:
+
+- `posredovanje-grobnog-mjesta` — four providers advertise brokering the purchase of a burial plot. Deliberately distinct from `uredenje-groba`, which is maintaining a grave you already have. **Assigned only to private providers who broker on a family's behalf**, never to a municipal cemetery operator selling its own plots — those supply graves as the owner, which is a different transaction.
+- `ugovaranje-unaprijed` — three providers offer arranging a funeral in advance, and the frontend already carries a wired-but-hidden `planiram unaprijed` path, so this one has somewhere to land.
+
+Five recurring offers were left out for want of providers, and are recorded here so the reasoning survives rather than being re-derived: grief counselling (2), eulogy speaker (2), post-death flat cleaning and ozone disinfection (1), veteran funeral subsidies (3 — an eligibility category rather than a service), memorial diamond (1). A service with one or two providers is useless as a filter and noise on a detail page.
+
+**Claiming rule, unchanged and worth restating:** a service is recorded **only where the provider's own material states it**. Registry activity text lists what a business is *permitted* to do, not what it sells, so a provider whose only evidence is registry text gets no service rows at all — 16 of the 38 new-city rows are in that position, and their detail pages correctly show nothing. `kremiranje` is the one place the rule was loosened: it is assigned where a provider *arranges* a cremation, not only where it operates a crematorium, because that is the question a family is actually asking. Two cemetery operators still do not get it, because their own wording is transport to a crematorium and nothing more.
 
 ## Usage logging: the `log_event` function
 

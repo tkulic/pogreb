@@ -1,10 +1,19 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { ActionLink } from '@/components/ActionLink';
 import { Landing } from '@/components/Landing';
 import { OptionTile } from '@/components/OptionTile';
-import { SiteHeader } from '@/components/SiteHeader';
-import { answersToQuery, parseAnswers, type FlowAnswers } from '@/lib/answers';
+import { PageBack } from '@/components/PageBack';
+import {
+  flowHref,
+  parseAnswers,
+  parseGrad,
+  parseKorak,
+  resultsHref,
+  type FlowAnswers,
+  type Korak,
+} from '@/lib/answers';
 import {
   CATCHMENT,
   NACIN_LABEL,
@@ -12,7 +21,7 @@ import {
   SITUACIJA_LABEL,
   VISIBLE_SITUACIJA,
 } from '@/lib/copy';
-import { getCities } from '@/lib/queries';
+import { getCityCoverage } from '@/lib/queries';
 import styles from './flow.module.css';
 
 /**
@@ -27,15 +36,20 @@ import styles from './flow.module.css';
  * natively and preserves answers, every intermediate state is shareable,
  * refresh is safe, and no validation error is possible because nothing is
  * typed and nothing is required.
+ *
+ * **Screen 2 became a real question with the city expansion**, exactly as the
+ * spec predicted it would at city #2. It was a single button over one city, and
+ * the answer was thrown away because there was nothing to remember — the flow
+ * then sent everyone to `cities[0]`. With seven cities that silently routed a
+ * family who chose Zagreb to the Dubrovnik listing, so the chosen city is now
+ * carried in the URL like every other answer (`parseGrad`, `flowHref`).
  */
 export const metadata: Metadata = {
-  title: 'Pogrebne usluge — Split i okolica',
+  title: 'Pogrebne usluge — svi registrirani pogrebnici',
   description:
-    'Popis svih registriranih pogrebnika u Splitu i okolici. Besplatno, bez ' +
-    'prijave i bez posrednika.',
+    'Popis svih registriranih pogrebnika u Zagrebu, Splitu, Rijeci, Osijeku, ' +
+    'Zadru, Puli i Dubrovniku. Besplatno, bez prijave i bez posrednika.',
 };
-
-type Korak = 'situacija' | 'mjesto' | 'potrebe';
 
 const STEP_NUMBER: Record<Korak, number> = { situacija: 1, mjesto: 2, potrebe: 3 };
 const STEP_TOTAL = 3;
@@ -44,59 +58,58 @@ type PageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
-/** `?korak=` absent → the landing page. Anything unexpected → the first step. */
-function parseKorak(value: string | string[] | undefined): Korak | null {
-  const v = Array.isArray(value) ? value[0] : value;
-  if (v === undefined) return null;
-  return v === 'mjesto' || v === 'potrebe' ? v : 'situacija';
-}
-
-/** A link to this same flow with one answer changed, added or cleared. */
-function step(answers: FlowAnswers, korak: Korak, patch: Partial<FlowAnswers> = {}) {
-  const next: FlowAnswers = { ...answers, ...patch };
-  // An explicit `undefined` in the patch means "I don't know" — clear it.
-  for (const key of Object.keys(patch) as (keyof FlowAnswers)[]) {
-    if (patch[key] === undefined) delete next[key];
-  }
-  const query = answersToQuery(next);
-  return `/${query}${query ? '&' : '?'}korak=${korak}`;
-}
-
 export default async function HomePage({ searchParams }: PageProps) {
   const raw = await searchParams;
   const answers = parseAnswers(raw);
   const korak = parseKorak(raw.korak);
-  const query = answersToQuery(answers);
 
-  const cities = await getCities();
-  // With one city, screen 2 is a single button. It becomes a real choice at
-  // city #2 and a text input only when the settlement count makes buttons
-  // impractical.
-  const pilot = cities[0];
-  const catchment = pilot ? CATCHMENT[pilot.slug] : undefined;
+  // One query serving both branches: the landing page needs the coverage list,
+  // and the flow needs the same cities for screen 2 and to validate `?grad=`.
+  const cities = await getCityCoverage();
+  const grad = parseGrad(
+    raw.grad,
+    cities.map((c) => c.slug),
+  );
 
-  if (korak === null) {
-    // No provider query here, deliberately: the landing page's claim is
-    // coverage rather than a count (see `coverageClaim`), so it needs the city
-    // and its catchment copy and nothing else. One fewer query on the page
-    // most visitors arrive at.
-    return <Landing city={pilot} />;
+  if (korak === null) return <Landing cities={cities} />;
+
+  /** A link to this same flow with one answer changed, added or cleared. */
+  const step = (korakTo: Korak, patch: Partial<FlowAnswers> = {}, gradTo = grad) => {
+    const next: FlowAnswers = { ...answers, ...patch };
+    // An explicit `undefined` in the patch means "I don't know" — clear it.
+    for (const key of Object.keys(patch) as (keyof FlowAnswers)[]) {
+      if (patch[key] === undefined) delete next[key];
+    }
+    return flowHref({ answers: next, grad: gradTo, korak: korakTo });
+  };
+
+  // Screen 2 is the one mandatory screen, so screen 3 cannot be rendered
+  // without it. This is not a validation error — nothing was typed and nothing
+  // is wrong — it simply puts the reader on the question that has to be
+  // answered. It also catches a shared link made before `?grad=` existed.
+  if (korak === 'potrebe' && !grad) {
+    redirect(flowHref({ answers, korak: 'mjesto' }));
   }
 
-  const resultsHref = pilot ? `/pogrebne-usluge/${pilot.slug}${query}` : '/';
+  const catchment = grad ? CATCHMENT[grad] : undefined;
+  const chosen = grad ? cities.find((c) => c.slug === grad) : undefined;
 
   // Back goes to the previous step, or out of the flow to the landing page.
   const back =
     korak === 'situacija'
       ? { href: '/', label: '← Naslovnica' }
       : {
-          href: step(answers, korak === 'potrebe' ? 'mjesto' : 'situacija'),
+          href: step(korak === 'potrebe' ? 'mjesto' : 'situacija'),
           label: '← Natrag',
         };
 
   return (
     <main className={`page ${styles.screen}`}>
-      <SiteHeader back={back} step={{ current: STEP_NUMBER[korak], total: STEP_TOTAL }} />
+      <PageBack
+        href={back.href}
+        label={back.label}
+        step={{ current: STEP_NUMBER[korak], total: STEP_TOTAL }}
+      />
 
       {korak === 'situacija' && (
         <>
@@ -107,7 +120,7 @@ export default async function HomePage({ searchParams }: PageProps) {
             {VISIBLE_SITUACIJA.map((value) => (
               <OptionTile
                 key={value}
-                href={step(answers, 'mjesto', { situacija: value })}
+                href={step('mjesto', { situacija: value })}
                 selected={answers.situacija === value}
               >
                 {SITUACIJA_LABEL[value]}
@@ -125,21 +138,28 @@ export default async function HomePage({ searchParams }: PageProps) {
           </div>
           <div className={styles.options}>
             {cities.map((city) => (
-              <OptionTile key={city.id} href={step(answers, 'potrebe')}>
+              <OptionTile
+                key={city.id}
+                href={step('potrebe', {}, city.slug)}
+                selected={grad === city.slug}
+              >
                 {CATCHMENT[city.slug]?.label ?? city.name}
               </OptionTile>
             ))}
           </div>
-          {catchment && (
-            <p className={styles.settlements}>
-              Pogrebnici koji rade u {catchment.locative} —{' '}
-              {catchment.settlements.join(', ')}.
-            </p>
-          )}
+          {/*
+            The settlement lists are long enough across seven cities that
+            printing all of them here would bury the buttons. The chosen city's
+            list is shown on its results page, where it qualifies that page's
+            claim; here one line says what "i okolica" is doing.
+          */}
+          <p className={styles.settlements}>
+            Svaki grad uključuje i okolicu — popis naselja piše uz rezultate.
+          </p>
         </>
       )}
 
-      {korak === 'potrebe' && (
+      {korak === 'potrebe' && grad && (
         <>
           <div className={styles.section}>
             <div className={styles.question}>
@@ -149,14 +169,14 @@ export default async function HomePage({ searchParams }: PageProps) {
               {(['kremiranje', 'ukop'] as const).map((value) => (
                 <OptionTile
                   key={value}
-                  href={step(answers, 'potrebe', { nacin: value })}
+                  href={step('potrebe', { nacin: value })}
                   selected={answers.nacin === value}
                 >
                   {NACIN_LABEL[value]}
                 </OptionTile>
               ))}
               {/* Every question carries an explicit escape. */}
-              <OptionTile href={step(answers, 'potrebe', { nacin: undefined })} quiet>
+              <OptionTile href={step('potrebe', { nacin: undefined })} quiet>
                 Još ne znam
               </OptionTile>
             </div>
@@ -168,19 +188,19 @@ export default async function HomePage({ searchParams }: PageProps) {
               {(['kuca', 'bolnica', 'dom', 'inozemstvo'] as const).map((value) => (
                 <OptionTile
                   key={value}
-                  href={step(answers, 'potrebe', { pokojnik: value })}
+                  href={step('potrebe', { pokojnik: value })}
                   selected={answers.pokojnik === value}
                 >
                   {POKOJNIK_LABEL[value]}
                 </OptionTile>
               ))}
-              <OptionTile href={step(answers, 'potrebe', { pokojnik: undefined })} quiet>
+              <OptionTile href={step('potrebe', { pokojnik: undefined })} quiet>
                 Ne znam
               </OptionTile>
             </div>
           </div>
 
-          <ActionLink variant="primary" href={resultsHref} fullWidth>
+          <ActionLink variant="primary" href={resultsHref(grad, answers)} fullWidth>
             Prikažite pogrebnike
           </ActionLink>
         </>
@@ -191,11 +211,25 @@ export default async function HomePage({ searchParams }: PageProps) {
       <div className={styles.foot}>
         {/*
           The bypass. Someone who does not want to be led must always be one tap
-          from the list, on every screen.
+          from the list — but with seven cities the city is genuinely required,
+          so before it is chosen the bypass can only skip to that one question.
+          Screen 2 was always the one mandatory screen; this is that rule
+          becoming visible rather than a new restriction.
         */}
-        <Link href={pilot ? `/pogrebne-usluge/${pilot.slug}` : '/'} className={styles.bypass}>
-          Preskočite pitanja i prikažite sve pogrebnike
-        </Link>
+        {grad ? (
+          <Link href={`/pogrebne-usluge/${grad}`} className={styles.bypass}>
+            Preskočite pitanja i prikažite sve pogrebnike u{' '}
+            {catchment?.locative ?? chosen?.name}
+          </Link>
+        ) : (
+          // Nothing on screen 2 itself: "skip the questions and just pick a
+          // city" is not an escape from a screen that *is* picking a city.
+          korak !== 'mjesto' && (
+            <Link href={flowHref({ answers, korak: 'mjesto' })} className={styles.bypass}>
+              Preskočite pitanja i samo odaberite grad
+            </Link>
+          )
+        )}
       </div>
     </main>
   );

@@ -143,17 +143,23 @@
   --font-display: "Spectral SC", Georgia, serif;
   --font-text: "Archivo", "Helvetica Neue", Arial, sans-serif;
 
-  /* Layout. Design width 390px; the column caps at 560px and centres.
+  /* Layout. Design width 390px; the reading column caps at 560px and centres,
+     and is allowed 620px on desktop — a little more measure reads as
+     deliberate, and it is still well inside a comfortable line length for
+     13px Archivo.
 
-     From 1024px up the page becomes rail + content column (see the shell,
-     below). The content column is allowed 620px there rather than 560:
-     a little more measure reads as deliberate beside the rail, and it is still
-     well inside a comfortable line length for 13px Archivo. */
+     `--frame` is the wider band the masthead, the footer and the landing
+     page's horizontal sections share. It exists because those three are about
+     the *site* and want the width of the window, while everything that is read
+     in sequence — prose, a provider list — still wants a measure. A wide
+     masthead over a narrow reading column is an ordinary editorial shape;
+     a 1000px column of 13px body copy is not.
+
+     This replaces the rail tokens. See the shell, below. */
   --gutter: 22px;
   --measure: 560px;
   --measure-wide: 620px;
-  --rail: 220px;
-  --rail-gap: 64px;
+  --frame: 1000px;
 }
 
 /* --------------------------------------------------------------------------
@@ -224,52 +230,73 @@ a:hover {
 }
 
 /* --------------------------------------------------------------------------
-   Shared primitives
+   The shell — masthead, content column, footer.
+
+   The app was mobile-*only* rather than mobile-first: every page capped at
+   560px and centred, which is correct on a phone and leaves a wide window
+   mostly empty. The first answer to that was a sticky 220px rail beside the
+   column. This is the second, and it retires the rail: a masthead over a
+   reading column with a real footer beneath it is the shape every visitor
+   already knows, and on a page a grieving family reads once, familiarity beats
+   novelty. The rail's own rules survive the change — the navigation it carried
+   is now in the masthead and repeated in the footer, and there is still no
+   primary action in either.
+
+   What has not changed, and must not: **the provider list stays exactly one
+   column at every width.** "Entries separated by cut rules, no containers" is
+   what keeps the design calm at forty providers, and a card grid would trade
+   that away for density nobody asked for.
+
+   The shell is a flex column so the footer sits at the bottom of a short page
+   rather than halfway up it — a `/kontakt` confirmation or a 404 is otherwise
+   two paragraphs floating above a screenful of empty stone.
    -------------------------------------------------------------------------- */
 
+.shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+/* The page grows to fill whatever the header and footer leave. */
+.shell > .page,
+.shell > .pageWide {
+  flex: 1 0 auto;
+}
+
+/* Everything read in sequence — prose, the provider list, the flow — lives in
+   a measure, at every width. */
 .page {
+  width: 100%;
   max-width: var(--measure);
   margin-inline: auto;
   padding-inline: var(--gutter);
 }
 
-/* --------------------------------------------------------------------------
-   The shell — one column on a phone, rail + column on a desktop viewport.
-
-   The app was mobile-*only* rather than mobile-first: every page capped at
-   560px and centred, which is correct on a phone and leaves a wide window
-   mostly empty. This is the desktop pass, and it is deliberately not a card
-   grid: the provider list stays exactly one column at every width, because
-   "entries separated by cut rules, no containers" is what makes the design
-   still read calmly at forty providers.
-
-   Below 1024px this class does nothing at all and `.page` keeps centring
-   itself, so the phone layout is untouched by everything here.
-   -------------------------------------------------------------------------- */
+/* The wider band: the masthead, the footer, and the landing page's horizontal
+   sections. `.pageWide` is the landing page's own frame, and it is the only
+   page that opts into it — see landing.module.css, where the hero text is
+   still held to a measure inside it. */
+.pageWide {
+  width: 100%;
+  max-width: var(--frame);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
 
 @media (min-width: 1024px) {
-  .shell {
-    display: grid;
-    /* Rail, then content. `minmax(0, …)` on the content column so a wide
-       child (a long unbroken phone number, a table) cannot push the grid
-       wider than the viewport — the body never scrolls sideways. */
-    grid-template-columns: var(--rail) minmax(0, var(--measure-wide));
-    column-gap: var(--rail-gap);
-    /* Centres the pair as one block rather than stretching either. */
-    justify-content: center;
-    /* Required for the rail's `position: sticky` to have anything to stick
-       within: a stretched grid item is already full height. */
-    align-items: start;
-    padding-inline: 32px;
-  }
-
-  /* Inside the grid the column is sized by the track, so the page stops
-     centring and gutting itself. No module sets these three properties, so
-     this rule is the only thing that owns them at this width. */
   .page {
-    max-width: none;
-    margin-inline: 0;
-    padding-inline: 0;
+    max-width: var(--measure-wide);
+    /* Aligned to the frame's left edge rather than to the middle of the
+       window. The masthead and the footer are `--frame` wide; a reading column
+       centred in the viewport starts a couple of hundred pixels to the right of
+       the wordmark above it, and two competing left edges is the thing that
+       makes an otherwise plain layout look accidental. `.page` carries its own
+       gutter, so the margin lands exactly on the frame's inner edge.
+
+       `max(0px, …)` keeps this inert once the window is narrower than the
+       frame, where the column centres as before. */
+    margin-inline: max(0px, calc((100% - var(--frame)) / 2)) auto;
   }
 }
 

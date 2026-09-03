@@ -1,0 +1,160 @@
+/* The footer.
+
+   Set as an inscription rather than a chrome bar: no fill, no container, gold
+   hairlines above it and above the baseline row, and nothing else. The columns
+   are one column on a phone and three side by side once there is room. */
+
+.footer {
+  margin-top: 56px;
+  border-top: 1px solid var(--rule-gold);
+}
+
+.inner {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  max-width: var(--frame);
+  margin-inline: auto;
+  padding: 30px var(--gutter) 26px;
+}
+
+/* --- brand column --- */
+
+.brandCol {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 46ch;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: 10px;
+  min-height: 44px;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.brand:hover {
+  color: var(--ink);
+}
+
+.mark {
+  flex: none;
+  color: var(--gold);
+}
+
+.wordmark {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.2em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.claim {
+  font-family: var(--font-text);
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--ink-body);
+}
+
+.note {
+  font-family: var(--font-text);
+  font-size: 12px;
+  line-height: 1.8;
+  color: var(--text-secondary);
+}
+
+/* --- link columns --- */
+
+.col {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Archivo rather than Spectral SC: these are navigational labels, which is the
+   one role 10.5px uppercase is permitted for. */
+.colHeading {
+  font-family: var(--font-text);
+  font-weight: 400;
+  font-size: 10.5px;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+  color: var(--text-label);
+  padding-bottom: 6px;
+}
+
+.link {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  font-family: var(--font-text);
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--gold-link);
+  text-decoration: none;
+}
+
+.link:hover {
+  color: var(--gold-link-hover);
+  text-decoration: underline;
+}
+
+/* --- baseline --- */
+
+.baseline {
+  border-top: 1px solid var(--rule-quiet);
+}
+
+.baselineText {
+  max-width: var(--frame);
+  margin-inline: auto;
+  padding: 16px var(--gutter) 32px;
+  font-family: var(--font-text);
+  font-size: 12px;
+  line-height: 1.8;
+  color: var(--text-secondary);
+}
+
+/* --- desktop ---
+
+   Three columns: the brand block takes the room it needs for a readable line,
+   the two link columns size to their content. */
+
+@media (min-width: 860px) {
+  .footer {
+    margin-top: 80px;
+  }
+
+  .inner {
+    flex-direction: row;
+    /* The brand block stops growing at its measure, so without this the two
+       link columns pack against it and leave the right third of the frame
+       empty. */
+    justify-content: space-between;
+    gap: 56px;
+    padding-top: 40px;
+    padding-bottom: 32px;
+  }
+
+  .brandCol {
+    flex: 1 1 auto;
+    /* Held to a measure: the claim and the note are read, not scanned. */
+    max-width: 38ch;
+  }
+
+  .col {
+    flex: none;
+  }
+
+  /* The source labels are long enough to wrap awkwardly in a narrow column,
+     so this one is allowed the room to hold most of them on one line. */
+  .col:last-child .link {
+    max-width: 34ch;
+  }
+}

@@ -1,14 +1,20 @@
 /* The landing page.
 
-   Its job is to say what this is and get out of the way. The primary action is
-   the heaviest thing on the screen, and everything below it is support for the
-   decision to tap it — not a second competing pitch. */
+   It is the one page that opts into `--frame` rather than the reading measure,
+   because it is the page that has to look like a place rather than a document:
+   a hero, three steps across, four promises across, a close. The hero's *text*
+   is still held to a measure inside that frame — a 1000px line of 15px Archivo
+   is not a lede, it is a paragraph nobody finishes.
+
+   The one-primary-action rule survives the extra length: the CTA at the top and
+   the CTA at the close are the same action, and nothing else on the page is
+   filled. */
 
 .page {
   display: flex;
   flex-direction: column;
-  gap: 32px;
-  padding-block: 20px 56px;
+  gap: 40px;
+  padding-block: 24px 8px;
 }
 
 /* --- hero --- */
@@ -16,17 +22,44 @@
 .hero {
   display: flex;
   flex-direction: column;
+  gap: 26px;
+}
+
+/* The measure the hero's prose is read at, inside the wider frame. */
+.heroText {
+  display: flex;
+  flex-direction: column;
   gap: 14px;
-  padding-top: 14px;
+  width: 100%;
+  max-width: 34em;
 }
 
 .title {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* The reader's situation. The heaviest type on the page. */
+.titleLead {
   font-family: var(--font-display);
   font-weight: 600;
   font-size: 26px;
   letter-spacing: 0.05em;
   line-height: 1.28;
   color: var(--ink);
+}
+
+/* The search terms, inside the same h1 but set as a second voice: Archivo
+   rather than Spectral SC, and --ink-body rather than --ink, so it supports the
+   line above instead of competing with it. */
+.titleClaim {
+  font-family: var(--font-text);
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 1.5;
+  letter-spacing: 0;
+  color: var(--ink-body);
 }
 
 .lede {
@@ -39,7 +72,7 @@
 .actions {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   padding-top: 4px;
 }
 
@@ -55,50 +88,95 @@
   color: var(--gold-link);
 }
 
-/* --- coverage strip ---
+/* --- the city list ---
 
-   Directly under the action, because it is the evidence for the claim in the
-   heading and the line that tells a stranger whether this site covers their
-   town. It sits on plain --stone: --stone-inset is decorative only and no text
-   token clears AA on it. */
+   What the single-city coverage strip became. Same shape as the steps and the
+   promises below — cut rule on top, no container, no fill — so the three rows
+   read as one system rather than three designs.
 
-.coverage {
+   Text links, never buttons: this is the bypass for someone who does not want
+   to be led, and the one primary action above must stay the heaviest thing on
+   the screen. */
+
+.cities {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+  list-style: none;
+  padding: 0;
+}
+
+.cityItem {
   display: flex;
-  flex-direction: column;
-  gap: 5px;
-  padding-top: 4px;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding-block: 4px;
+  border-top: 1px solid var(--rule-quiet);
 }
 
-.coverageLabel {
+.cityLink {
+  display: flex;
+  align-items: center;
+  min-height: 46px;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  color: var(--gold-link);
+  text-decoration: none;
+}
+
+.cityLink:hover {
+  color: var(--gold-link-hover);
+  text-decoration: underline;
+}
+
+/* The count, and the one place on this page a figure appears. Archivo with
+   tabular figures so the column can be compared down its length — Spectral SC
+   draws figures at cap height and "20" would read as letters. */
+.cityCount {
   font-family: var(--font-text);
-  font-size: 10.5px;
-  letter-spacing: 0.17em;
-  text-transform: uppercase;
-  color: var(--text-label);
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
-.coverageValue {
+.citiesNote {
   font-family: var(--font-text);
   font-size: 13px;
   line-height: 1.7;
   color: var(--ink-body);
+  max-width: 44em;
+  padding-top: 12px;
 }
 
 /* --- the band ---
-   The one image slot on this page. Renders as texture alone when no image has
-   been chosen, which is the state it ships in. */
+
+   The one image slot on the page, filled by engraved line art. The texture
+   behind it is what keeps it from reading as a flat grey box, and it is also
+   the state the band would fall back to if the drawing were ever removed. */
 
 .band {
-  height: 118px;
+  position: relative;
+  height: 150px;
+  overflow: hidden;
   border-bottom: 1px solid var(--gold);
 }
 
-/* --- how it works --- */
+.engraving {
+  width: 100%;
+  height: 100%;
+  color: var(--ink);
+}
+
+/* --- sections --- */
 
 .section {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 18px;
 }
 
 .heading {
@@ -112,38 +190,45 @@
   border-bottom: 1px solid var(--rule-gold);
 }
 
+/* --- how it works ---
+
+   One column on a phone, three across once there is room. The numeral is the
+   step's visual element: gold, large enough to mark the entry without becoming
+   an ornament, sitting under the cut rule that separates the three. It is
+   deliberately not an icon — the phone glyph on the call button is still the
+   only icon in the product, and three drawn pictograms would be a set. */
+
 .steps {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 22px;
   list-style: none;
   padding: 0;
-  margin: 0;
-  counter-reset: step;
 }
 
 .step {
-  display: grid;
-  grid-template-columns: 26px 1fr;
-  gap: 12px;
-  align-items: baseline;
-}
-
-.step::before {
-  counter-increment: step;
-  content: counter(step);
-  font-family: var(--font-display);
-  font-weight: 400;
-  font-size: 15px;
-  letter-spacing: 0.04em;
-  color: var(--gold);
-  font-variant-numeric: tabular-nums;
-}
-
-.stepText {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 6px;
+  padding-top: 12px;
+  border-top: 1px solid var(--rule-quiet);
+}
+
+/* Archivo rather than Spectral SC, and this is a legibility fix rather than a
+   preference: Spectral SC is a small-caps face, so its figures are drawn at
+   cap height and "01" reads as "OI" — the 1 loses its foot and the 0 is
+   indistinguishable from an O. The same trap as the Đ/đ macron: the glyphs are
+   present and wrong. Archivo carries figures, which is what the type split is
+   for. */
+.stepNumber {
+  font-family: var(--font-text);
+  font-weight: 400;
+  font-size: 20px;
+  letter-spacing: 0.12em;
+  line-height: 1;
+  color: var(--gold);
+  font-variant-numeric: tabular-nums;
+  padding-bottom: 4px;
 }
 
 .stepTitle {
@@ -161,23 +246,25 @@
   color: var(--text-secondary);
 }
 
-/* --- promises --- */
+/* --- promises ---
+
+   Same shape as the steps, so the two rows read as one system rather than as
+   two designs: cut rule on top, no container, no fill. */
 
 .promises {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
   list-style: none;
   padding: 0;
-  margin: 0;
 }
 
 .promise {
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--rule-quiet);
+  gap: 4px;
+  padding-top: 12px;
+  border-top: 1px solid var(--rule-quiet);
 }
 
 .promiseTitle {
@@ -207,69 +294,131 @@
   color: var(--gold-link);
 }
 
-/* --- foot --- */
+/* --- close --- */
 
-.foot {
+/* Full width so its rule spans the frame like every other section rule; the
+   text inside it is what carries the measure. */
+.close {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding-top: 18px;
+  padding-top: 20px;
   border-top: 1px solid var(--rule-gold);
 }
 
-.footLinks {
+.closeInner {
   display: flex;
   flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 34em;
 }
 
-.footLink {
-  display: inline-flex;
-  align-items: center;
-  align-self: flex-start;
-  min-height: 44px;
+.closeText {
   font-family: var(--font-text);
-  font-size: 13px;
-  color: var(--gold-link);
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--ink-body);
+}
+
+/* --- tablet and up ---
+
+   860px is the masthead's breakpoint too, so the whole page changes shape once
+   rather than in two stages. This is also the width that closes the spec's
+   tablet-portrait gap: the rail could not fit beside a 620px column below
+   1024px, but a masthead has no such constraint. */
+
+@media (min-width: 860px) {
+  .page {
+    gap: 56px;
+    padding-block: 32px 8px;
+  }
+
+  .hero {
+    gap: 34px;
+  }
+
+  .band {
+    height: 220px;
+  }
+
+  .cities {
+    grid-template-columns: repeat(2, 1fr);
+    column-gap: 40px;
+  }
+
+  .steps {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+  }
+
+  .promises {
+    grid-template-columns: repeat(2, 1fr);
+    column-gap: 40px;
+    row-gap: 22px;
+  }
 }
 
 /* --- desktop ---
 
-   Beside the rail the page has room to breathe: more air between sections, a
-   larger hero, a taller band. The body type scale is unchanged — only the
-   display sizes step up, and the lede with them. */
+   Only the display sizes step up, and only these. Body, label and button sizes
+   are identical at every width: the type scale is the type scale, not a mobile
+   variant of one. */
 
 @media (min-width: 1024px) {
   .page {
-    gap: 44px;
-    padding-block: 24px 96px;
+    padding-block: 40px 8px;
   }
 
-  .hero {
-    gap: 16px;
-    padding-top: 24px;
+  .titleLead {
+    font-size: 34px;
+    line-height: 1.22;
   }
 
-  .title {
-    font-size: 30px;
-    line-height: 1.24;
+  .titleClaim {
+    font-size: 17px;
   }
 
   .lede {
     font-size: 15.5px;
   }
 
-  .coverage {
-    padding-top: 8px;
-  }
-
   .band {
-    height: 200px;
+    height: 260px;
   }
 
-  /* The rail carries the wordmark and these three links at this width, and the
-     foot held nothing else once the settlement list moved up into the coverage
-     strip. */
-  .foot {
-    display: none;
+  .cities {
+    grid-template-columns: repeat(3, 1fr);
+    column-gap: 40px;
   }
+
+  .promises {
+    grid-template-columns: repeat(4, 1fr);
+    column-gap: 32px;
+  }
+}
+
+/* --- the provider route ---
+
+   The quietest thing on the page, by design. It is not addressed to the
+   visitor the rest of the page is written for, and a family in the first hours
+   after a death must never mistake it for something being asked of them — so
+   it is secondary text with an inline link, never a section heading and never
+   an action. */
+
+.provider {
+  padding-top: 16px;
+  border-top: 1px solid var(--rule-quiet);
+}
+
+.providerText {
+  font-family: var(--font-text);
+  font-size: 12.5px;
+  line-height: 1.8;
+  color: var(--text-secondary);
+}
+
+.providerLink {
+  color: var(--gold-link);
+  white-space: nowrap;
 }

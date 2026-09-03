@@ -1,14 +1,13 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import {
-  CATCHMENT,
   capitalise,
   countOfTotal,
   numberWord,
   providerCount,
   verbForm,
 } from '@/lib/copy';
-import { getCities, getCityProviders } from '@/lib/queries';
+import { getAllProviders } from '@/lib/queries';
 import { PROCEDURE_STEPS, SOURCES } from '@/lib/guidance';
 import styles from '../prose.module.css';
 
@@ -43,10 +42,11 @@ export const metadata: Metadata = {
 };
 
 export default async function WhatToDoFirstPage() {
-  const cities = await getCities();
-  const pilot = cities[0];
-  const providers = pilot ? await getCityProviders(pilot.id) : [];
-  const catchment = pilot ? CATCHMENT[pilot.slug] : undefined;
+  // Counted across every city, not `cities[0]`. These sentences describe the
+  // listing as a whole, and while one city existed those were the same number;
+  // after the city expansion `cities[0]` is Dubrovnik, and the page would have
+  // described the product using two providers.
+  const providers = await getAllProviders();
 
   // Counted from the data, never asserted. If the numbers change, the page
   // changes with them — and if they were ever wrong, they would be wrong in a
@@ -103,9 +103,8 @@ export default async function WhatToDoFirstPage() {
         <section className={styles.section}>
           <h2 className={styles.heading}>Što pogrebnik preuzima</h2>
           <p className={styles.body}>
-            Pogrebnik ne organizira samo pogreb. Od {providerCount(total)} u{' '}
-            {catchment?.locative ?? pilot?.name}, njih{' '}
-            {countOfTotal(handleDocuments, total)}{' '}
+            Pogrebnik ne organizira samo pogreb. Od {providerCount(total)} na
+            popisu, njih {countOfTotal(handleDocuments, total)}{' '}
             {verbForm(handleDocuments, 'navode', 'navodi')} u ponudi i sređivanje
             dokumentacije, a {countOfTotal(transportAbroad, total)} prijevoz
             pokojnika u inozemstvo. Ako niste sigurni što je sve potrebno, to je
@@ -139,8 +138,13 @@ export default async function WhatToDoFirstPage() {
         </p>
       </section>
 
-      <Link href={pilot ? `/pogrebne-usluge/${pilot.slug}` : '/'} className={styles.footerLink}>
-        Prikaži sve pogrebnike
+      {/*
+        There is no single "all providers" page across seven cities, so this
+        goes to the question that picks one — the same place the flow's bypass
+        goes before a city is chosen.
+      */}
+      <Link href="/?korak=mjesto" className={styles.footerLink}>
+        Prikažite pogrebnike u svom gradu
       </Link>
 
       {/*

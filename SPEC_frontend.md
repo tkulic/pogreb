@@ -2,7 +2,13 @@
 
 > Spec module — the Phase 1 public frontend. See [SPEC.md](SPEC.md) for project context and scope, and [SPEC_database.md](SPEC_database.md) for the schema this reads from.
 >
-> Status: **built and running locally.** The landing page, the three-screen flow, the results page, provider detail, the indexable service listings and the prose pages all exist in `web/`, with ranking and opening hours under unit test. The **desktop layout is built** — rail plus content column, see [Layout and shape](#layout-and-shape). What remains open is listed under [Open questions](#open-questions), and what still degrades the build under [Data dependencies](#data-dependencies-that-gate-the-build).
+> Status: **built and running locally.** The landing page, the three-screen flow, the results page, provider detail, the indexable service listings, the prose pages and the provider page all exist in `web/`, with ranking and opening hours under unit test.
+>
+> The layout is **masthead, reading column, footer** at every width — see [Layout and shape](#layout-and-shape). This replaced the sticky desktop rail, which is deleted, and closed the tablet-portrait gap with it. The landing page was rebuilt around the familiar shape (hero, how it works, why us, close) and its `<h1>` now names the reader's situation before the coverage claim — a deliberate reversal, reasoned through under [Landing page](#landing-page). The landing image band is filled by engraved line art rather than waiting on a photograph.
+>
+> **The product covers seven cities** — Zagreb, Split, Rijeka, Zadar, Osijek, Pula and Dubrovnik, 45 providers — since the 2026-09-03 expansion ([SPEC_database.md](SPEC_database.md)). That turned screen 2 into a real question, replaced the landing page's single-city coverage strip with a city list, and made `cities[0]` a bug rather than a shorthand.
+>
+> `/za-pogrebnike` is the product's **only form**, for funeral directors. **Nothing links to it**: it is gated behind `PROVIDER_FORM_PUBLIC` until `/privatnost` exists, because it collects personal data and there is no named controller. See [The provider page](#the-provider-page). What remains open is listed under [Open questions](#open-questions), and what still degrades the build under [Data dependencies](#data-dependencies-that-gate-the-build).
 >
 > **Naming convention:** UI copy and all URL paths/query parameters are Croatian; code, component names and identifiers are English. See [SPEC.md](SPEC.md) → Naming Convention.
 
@@ -14,8 +20,12 @@ A public, read-only Next.js app over the hosted Supabase project. It has one job
 
 Two consequences of that, which are requirements rather than side effects:
 
-- **No personal data is ever collected.** No email, no name, no phone number, no account. There is no submit button anywhere in the product.
-- **No cookie banner.** The no-PII design of `events` ([SPEC_database.md](SPEC_database.md) → Usage logging) is what earns this. All three reference sites have a consent wall; not having one is a visible usability advantage and must not be traded away.
+- **No personal data is ever collected from the people this product is for.** A visitor looking for a funeral director gives no email, no name, no phone number, and never signs in. There is no submit button anywhere on that path — not on the landing page, not in the flow, not on the results or detail pages.
+
+  **The one exception is [`/za-pogrebnike`](#the-provider-page), and it is an exception to the audience rather than to the rule.** It carries a form for funeral directors — corrections, missing listings, collaboration — because the businesses being listed had no way to reach us at all, which was a tracked gap and an E-E-A-T problem. A provider writing to us about their own listing is initiating, about their own business, and can see exactly what they are sending. **A family never meets it**: it is not linked from the flow, the results or the detail pages, and the one link on the landing page sits after the close, set as the quietest thing on it.
+
+  This does not soften the promise. *Ne tražimo vaše podatke* is addressed to the person looking for a funeral director, and it stays true for them word for word — which is why the promise wording was deliberately left unchanged when the form shipped.
+- **No cookie banner.** The no-PII design of `events` ([SPEC_database.md](SPEC_database.md) → Usage logging) is what earns this, and the provider form does not touch it: it is a plain HTML POST that happens only when a provider presses a button, so nothing is stored, read back or tracked on any visitor's device. All three reference sites have a consent wall; not having one is a visible usability advantage and must not be traded away.
 
 ## The user story
 
@@ -37,15 +47,32 @@ So the flow's value is **not filtering**. It is orientation and confidence: turn
 
 It exists because the flow could not answer the one question a stranger arrives with. Someone landing from a search result previously met *"Što se dogodilo?"* with no indication of what the site was, who was asking, or what would happen to their answer — which is a great deal to ask of a person in the first hours after a death, and it is also the moment a visitor decides whether this is a directory or a lead broker.
 
-**Structure, in order:** the coverage claim as the `<h1>` and one primary action, both above the fold; the coverage strip; the image band; *"Kako radi"* in three steps; *"Naše obećanje"* in four, ending in a link to the full page; the prose links. The prose links are the only part that is mobile-only — above the desktop breakpoint the rail carries them and the foot hides ([Layout and shape](#layout-and-shape)).
+**Structure, in order:** the `<h1>` and one primary action, both above the fold; the image band; *"Gradovi koje pokrivamo"*; *"Kako radi"* in three steps; *"Zašto baš ovdje"* — the four promises — ending in a link to the full page; the closing action; the provider line (currently hidden). The landing page is the only page that lays out against the wide `--frame` rather than the reading measure ([Layout and shape](#layout-and-shape)), which is what lets the steps and the promises run horizontally.
 
-Three rules on it:
+Four rules on it:
 
-1. **One primary action.** `Pronađite pogrebnika` is the heaviest thing on the screen, and the bypass beside it is a text link rather than a second button — two buttons would split the action in two. Everything below the fold supports the decision to tap it and must not compete with it.
+1. **One primary action.** `Pronađite pogrebnika` is the heaviest thing on the screen, and the bypass beside it is a text link rather than a second button — two buttons would split the action in two. Everything below supports the decision to tap it and must not compete with it. **The closing CTA is the same action, not a second one** — repeating it at the foot of a longer page is the familiar shape, and it does not break the rule because there is still exactly one *kind* of heaviest thing on the screen.
 2. **The promises are the product's actual differentiators**, stated plainly: everyone is listed, nobody pays for position, no personal data is collected, it is free, and the ranking rules are published rather than described. These are the things the three German reference sites cannot say, and they are worth more here than any description of features. Each one is stated in a sentence here and **in full on [`/nase-obecanje`](#the-promise-page), where it also carries what it rules out**.
-3. **The claim is coverage, not a count.** The `<h1>` is *"Svi registrirani pogrebnici u Splitu i okolici"*, and the strip under the action names the area and its settlements.
+3. **The `<h1>` names the reader's situation first and carries the search terms second.** It is *"Netko vam je preminuo?"* followed, inside the same `<h1>`, by *"Pogrebne usluge u Splitu i okolici, na jednom mjestu."* The lede immediately widens it to the `posljednji-dani` case, because screen 1 offers that situation too and someone whose relative is dying needs the same list.
 
-   This reverses an earlier rule that had the page state the count from live data — *"Popis svih sedam pogrebnika…"*. That rule was answering the right question, which is *why assert completeness in the abstract*, with the wrong instrument: a stranger reads "seven" as the size of our database rather than the size of the market, so the strongest fact we hold ended up stated in the weakest available way. Coverage is the claim; the count is a detail.
+   **This reverses the rule that made the coverage claim the `<h1>`**, and the reasoning that rule rested on still stands — a stranger reads a count as the size of our database rather than the size of the market. What it got wrong is which question comes first. It was answering *how do we assert completeness* when the first thing a stranger arriving from a search result brings is *is this for me*. Naming their situation answers that in four words; the coverage claim then answers the second question, in the strip directly under the action, where it reads as evidence rather than as an opening boast.
+
+   Two limits on the reversal, both binding:
+
+   - **The empathy line gains a clause; it never displaces the keywords.** *Pogrebne usluge u Splitu i okolici* stays inside the `<h1>`. This product's entire distribution channel is Croatian-language search, so an `<h1>` that reads beautifully and ranks for nothing is not a trade available to it.
+   - **The situation named is the one the product is built for**, and it is put as a question rather than an assertion. *"Netko vam je preminuo?"* matches screen 1's urgent path; the lede catches the reader it does not describe. An `<h1>` that told a visitor what had happened to them would be worse than a generic one.
+4. **The claim is coverage, not a count** — but the subject changed with the city expansion, and so did what may be counted.
+
+   The single-city coverage strip is gone. In its place is **a list of every covered city, each linking to its own page and carrying its own provider count**, and a note reading *"Svi registrirani pogrebnici u sedam gradova"* (`nationalCoverageClaim`, derived from the live row count so it cannot go stale).
+
+   Two counts are now permitted on this page, and both are the count doing real work rather than boasting:
+
+   - **The city count**, because it is the size of the *product* rather than of our database — which is exactly what a stranger is trying to establish, and it moves in a direction that is unambiguously good news. This is the distinction the original objection to *"svih sedam pogrebnika"* actually drew.
+   - **A per-city provider count**, because it is a fact about a place printed beside a link where the reader can go and count them.
+
+   **The `<h1>` no longer names a city**, and that is right for search rather than a concession: this page should rank for *pogrebne usluge*, and `/pogrebne-usluge/{grad}` — which has its own `<h1>`, its own metadata and its own `coverageClaim` — should rank for *pogrebne usluge split*. One page trying to be both would be weaker at each.
+
+   The city list also **is the bypass**. It is set as text links rather than buttons so it cannot compete with the one primary action, and it replaces the old *"Ili odmah prikažite sve pogrebnike"*, which had no meaning once there were seven cities to be "all" of.
 
    Three guardrails come with it, all binding:
 
@@ -116,11 +143,21 @@ A user from Podstrana recognises themselves and gets all 7. This needs no schema
 
 Three constraints on this, all binding:
 
+0. **Every city in `cities` must have a `CATCHMENT` entry**, and the six added on 2026-09-03 were approved by the project owner with their locative forms (decision 12, `data/PILOT_CITIES_REVIEW.md`). A city without one still renders — every consumer falls back to `city.name` — but the fallback drops an uninflected proper noun into a locative slot, so `coverageClaim` reads *"u Zagreb"* rather than *"u Zagrebu"*. That is a visible defect, not graceful degradation, and it is the reason the entry is part of shipping a city rather than a follow-up.
 1. **The claim is about the pilot area, not about individual providers.** No provider's service radius has been verified. Copy may say *"pogrebnici u Splitu i okolici"*; it may never say *"ovaj pogrebnik radi u Podstrani"*.
 2. **The settlement list is a product claim, confirmed by the project owner** — Podstrana, Solin, Kaštela, Klis, Stobreč, Žrnovnica, Omiš, Trogir. It is not derived from data and must not be extended by guesswork ([SPEC.md](SPEC.md) → Never: fabricating business data); adding a settlement is an owner decision, not an implementation one.
 3. **No distance or proximity claims anywhere.** `entities.latitude` / `longitude` exist as columns but are null for all 7, and `cities` has no coordinates at all. Any "near you" or "X km away" wording is unsupported by the data.
 
-With one city, this screen is a single button. It becomes a real choice at city #2 and a text input only when the settlement count makes buttons impractical.
+**City #2 arrived, and with it six more.** This screen is now seven buttons — one per covered city, ordered by name, each labelled with its `CATCHMENT` nominative (*"Zagreb i okolica"*). It stays buttons rather than a text input: seven is well inside what a list can carry, and the spec's threshold was always the settlement count making buttons impractical rather than the city count itself.
+
+**The chosen city is now carried in the URL, and that closed a live defect.** While one city existed the answer could be thrown away, because there was nothing to remember — the flow simply sent everyone to `cities[0]`. With seven cities that silently routed a family who had chosen Zagreb to the Dubrovnik listing. The city now travels as `?grad=` (`parseGrad`, `flowHref` in `lib/answers.ts`).
+
+Two rules on it:
+
+1. **`grad` is not part of `FlowAnswers`.** `FlowAnswers` is the input to ranking, and the city is not a ranking term — it decides *which* providers are fetched, not how they are ordered. Keeping it out also stops `?grad=` leaking into the results URL, where the path already says the city and a second spelling would be a duplicate for search engines to reconcile.
+2. **Screen 3 cannot render without it.** Arriving at `?korak=potrebe` with no valid city redirects to `?korak=mjesto`. That is not a validation error — nothing was typed and nothing is wrong — it is the one mandatory screen asserting itself, and it also catches a link shared before `?grad=` existed.
+
+**The settlement lists moved off this screen.** Printing seven of them would bury the buttons, so the screen carries one line — *"Svaki grad uključuje i okolicu — popis naselja piše uz rezultate"* — and each city's list appears on its own results page, where it qualifies that page's claim.
 
 ### Where this goes later (not built now)
 
@@ -194,6 +231,8 @@ Three rules bind any future edit, and they are enforced in `lib/guidance.ts` whe
 Binding on the implementation:
 
 1. **State lives in the URL, not only in React state.** `/pogrebne-usluge/split?situacija=preminuo&nacin=kremiranje`. Croatian parameter names and values ([SPEC.md](SPEC.md) → Naming Convention). This makes a result set shareable — a family member sends the link to a sibling — survives refresh, and is the surface the rest of the routing hangs off.
+
+   **The city is state too**, and it moves between the two halves of the URL: `?grad=` while the flow is running, the path segment once the results are shown. `lib/answers.ts` owns both spellings (`flowHref`, `resultsHref`) so that no page hand-builds a flow URL — which is how the results page's *"promijenite"* link came to point at the landing page instead of at the questions, silently breaking rule 2 below.
 2. **Back always works and preserves answers.** During design review, bestattungen.de's own wizard discarded every selection and returned four validation errors at once on the first Continue. That failure mode is the reason this is a numbered requirement.
 3. **Every screen is skippable except screen 2**, which is pre-answered from the city path segment and then not shown at all.
 3a. **Every page carries the site header** — a wordmark that always returns to the landing page, plus a contextual back link, and a `n / 3` step counter inside the flow. The back link is a real `<Link>` to a known URL rather than `history.back()`: history can hold anything, including another site, and a back control that sometimes leaves the product is worse than none. It also keeps the header working with no JavaScript, like the rest of the flow.
@@ -211,7 +250,7 @@ The destination of the flow, and the page the whole product exists to render.
 1. **Site header** — wordmark home link and a back link into the questions. Shared with every other page.
 2. **Header** — title, *"Split i okolica"*, the coverage claim on one line, and the answers read back on one quiet line with a *"promijenite"* link into the flow (which must arrive with the current answers still selected). Closing gold rule.
 
-   The coverage line is here rather than only in the footer because it is the reason to trust this page over a page of search results, and it is the page's own claim rather than the site's — which is why the desktop rail must never repeat it ([Layout and shape](#layout-and-shape)). It is set in Archivo and ink, not Spectral SC and gold: on this page gold belongs to the reason lines, and a gold claim above them would compete with the thing that justifies the shortlist.
+   The coverage line is here rather than only in the footer because it is the reason to trust this page over a page of search results, and it is the page's own claim rather than the site's — which is why neither the masthead nor the footer may repeat it ([Layout and shape](#layout-and-shape)). It is set in Archivo and ink, not Spectral SC and gold: on this page gold belongs to the reason lines, and a gold claim above them would compete with the thing that justifies the shortlist.
 3. **`NAJBOLJE ODGOVARA · N`** — the shortlist.
 4. **`OSTALI POGREBNICI · N`** — everyone else, quieter but complete.
 5. **Guidance strip** — conditional on `situacija` and `pokojnik`; links to `/sto-uciniti-prvo`. Text is sourced from the primary references listed under [screen 3b](#question-3b--conditional-on-sourcing). Omitted entirely — rules and link included — when neither answer has guidance attached, rather than rendering an empty bordered strip.
@@ -404,13 +443,15 @@ That is a deliberate exception. Choosing between a provider's office and dežurn
 | route | purpose |
 |---|---|
 | `/` | landing page — what the service is, and the way into the flow |
-| `/?korak=situacija\|mjesto\|potrebe` | the three question screens; not canonical, `noindex` via `robots` |
+| `/?korak=situacija\|mjesto\|potrebe` | the three question screens; not canonical, `noindex` via `robots`. Carries `?grad=` from screen 2 onward |
 | `/pogrebne-usluge/{grad}` | results; screen 2 answered by the path, screens 1 and 3 by query params |
 | `/pogrebne-usluge/{grad}/{pogrebnik}` | provider detail |
 | `/pogrebne-usluge/{grad}/usluga/{usluga}` | indexable service-filtered listing |
 | `/sto-uciniti-prvo` | guidance page |
 | `/kako-rangiramo` | the ranking rules in plain Croatian |
 | `/nase-obecanje` | the four promises in full, each with what it rules out |
+| `/za-pogrebnike` | the provider page — corrections, missing listings, collaboration, and the product's only form |
+| `/za-pogrebnike/hvala` | where a submission lands. Reached only by Netlify's redirect; `noindex`, and absent from the sitemap |
 
 ### Resolving the entity/service slug collision
 
@@ -449,9 +490,49 @@ Three rules on it:
 
 1. **`Što bilježimo` is not a disclaimer bolted on** — it is the second promise being honest about its own edge, stated by us rather than discovered by someone reading network requests. It must stay in step with [SPEC_database.md](SPEC_database.md) → Usage logging: if `events` ever gains a column, this section changes in the same pass.
 2. **A promise wording exists once.** The landing page's short form and this page must not drift; a promise worded one way there and another way here reads as the weaker of the two.
-3. **The four promises are the product's constraints written down**, so a change to any of them is a change to the product, not to copy. Monetisation in particular touches the first and third directly — see [SPEC.md](SPEC.md) → Boundaries, where charging anyone in Phase 1 is a Never, and `RESEARCH_market.md` § 3, where the reason the highest-revenue model in the field is unavailable to us is precisely promise one.
+3. **The four promises are the product's constraints written down**, so a change to any of them is a change to the product, not to copy. Monetisation in particular touches the first and third directly — see [SPEC.md](SPEC.md) → Boundaries, where charging anyone in Phase 1 is a Never, and `.research/RESEARCH_market.md` § 3, where the reason the highest-revenue model in the field is unavailable to us is precisely promise one.
 
 **Deliberately absent, and both belong here:** a named owner and a contact route. A promise page with nobody behind it is the weakest kind, and *"javite nam"* appears on both this page and `/kako-rangiramo` with no address to write to. Neither can be invented ([SPEC.md](SPEC.md) → Never: fabricating data), so both wait on an `/o-nama` decision by the project owner. Tracked under [Known gaps](#known-gaps-deliberately-deferred).
+
+## The provider page
+
+`/za-pogrebnike` carries the product's only form. It exists because the businesses being listed had no way to reach us at all — the tracked half of the *"javite nam"* gap, which `/kako-rangiramo` and `/nase-obecanje` both said with nowhere to write to. Both now link here.
+
+**It is named for its audience, not for the transaction.** A menu item reading *Kontakt* would promise a grieving visitor a route that does not exist: there is still no user-facing form and no published address, by decision. *Za pogrebnike* says who the page is for, which is also how the providers who need it find it.
+
+| section | content |
+|---|---|
+| *Prije nego pišete* | three facts stated before the form rather than after it, because they are what a provider decides on: listing is free, position cannot be bought (linking to `/kako-rangiramo`), and the data is entered by hand and therefore goes stale |
+| the form | company (required), OIB, city, reason, contact name, phone, email (required), message. Croatian labels, English field names — [SPEC.md](SPEC.md) → Naming Convention |
+| the note under it | what happens to what they send, and that the search itself asks nothing of anybody |
+
+Five rules on it, all binding:
+
+1. **A family never meets it.** It is not linked from the flow, the results or the detail pages. The one link on the landing page sits after the close, set as the quietest thing on the page — secondary text with an inline link, never a heading and never an action. Placement is the rule, not just the styling: printed under *"nema obrasca"* it would read as a contradiction whatever it said.
+2. **The four promises do not change because this page exists**, and the wording was deliberately left untouched. See [What this is](#what-this-is) for why the second promise stays true as written.
+3. **The note under the form is not a disclaimer bolted on.** The site tells families it asks nothing of them; a provider is entitled to the same plainness about what happens to what they choose to send. It is the same reasoning that puts *Što bilježimo* on the promise page.
+4. **No JavaScript.** A plain HTML POST with a honeypot, like the rest of the product. Nothing about the form needs a client component, and a form that fails silently without scripting would be worse here than anywhere else.
+5. **It stays a correction-and-collaboration route, never a lead form.** Lead brokerage is what the product is defined against ([What this is](#what-this-is)), and the direction of this form is the opposite one: providers writing to us about themselves, not families writing to providers.
+
+### How the form actually works
+
+**Netlify Forms**, which is a new external integration and therefore an ask-first decision ([SPEC.md](SPEC.md) → Ask first) — authorised by the project owner. It does not touch the one-origin position: no third-party script is loaded, and the POST goes to the site's own host, which is Netlify either way.
+
+Netlify discovers forms by scanning the static HTML a build emits. An App Router page is rendered by the runtime rather than written out as a plain file the scanner reads, so a form declared only inside a React component is **never registered and its submissions are silently dropped**. The documented workaround, and what is implemented:
+
+- `public/__forms.html` holds the field definitions, `data-netlify`, the honeypot, and the `action` that decides where a successful submission lands.
+- The real form POSTs to `/__forms.html` with a matching `form-name`.
+- **The two field lists must stay identical.** A field added to the React form and not to `public/__forms.html` arrives empty, with no error anywhere — which is the failure mode worth writing down, because nothing surfaces it.
+
+⚠️ **Unverified until deploy.** Form handling is a Netlify build-and-runtime feature and Phase 1 runs locally with no deploy ([SPEC.md](SPEC.md) → Out of scope). The page renders and validates in development; the submission path itself has never executed. It is the only part of the frontend in that state.
+
+### The gate: nothing links here yet
+
+**`PROVIDER_FORM_PUBLIC` in `lib/nav.ts` is `false`, and it is a compliance gate rather than a soft launch.** The form collects a name, an e-mail address and a phone number. GDPR art. 13 requires telling that person who the controller is, the legal basis, the retention period, their rights and how to complain to AZOP. The note under the form covers roughly a third of it, and **there is no named legal entity to put in the controller field** — the same `/o-nama` decision that blocks `/privatnost`.
+
+While the flag is `false`: the route is built and reachable by anyone holding the URL, and it is absent from the menu, the footer, the landing page, the sitemap and the two prose pages whose *"javite nam"* would otherwise link to it, and the page itself is `noindex`. Keeping it out of the navigation for a privacy reason while handing it to a crawler would defeat the point.
+
+**Flipping the flag to `true` re-links it everywhere at once, and may only happen once `/privatnost` exists** and the note under the form points at it. Remove the page's `robots` override in the same change.
 
 ## Visual system — Kamen
 
@@ -509,6 +590,8 @@ Two faces, each with one job. Round 1 established that a single Garamond serving
 
 - **Spectral SC** (400/600) — the dignity carrier: business names, page and section headings, the reason line. Roman capitals need tracking, so **never below `.04em`**, and never below **12px**. Never used for body copy.
 
+  **Spectral SC's figures are cap-height, and that has caught us once.** Set as a step number, `01` reads as `OI` — the 1 loses its foot and the 0 is indistinguishable from an O. So **figures that carry meaning are set in Archivo**, which is what the two-face split is for. This is the same class of defect as the Cinzel `Đ` below: the glyphs are present and drawn wrong, and only looking at the rendered page finds it.
+
   Spectral SC **replaced Cinzel**, which failed the diacritic gate — see [The diacritic constraint](#the-diacritic-constraint). The direction survives the substitution exactly as this spec predicted it would, because Kamen rests on Roman capitals rather than on Cinzel specifically. Spectral SC is a small-caps face, so lowercase input renders as small capitals and the intended inscriptional colour is unchanged; it is also sturdier than Cinzel at the small end, which the 12px floor and the 13px reason line both benefit from.
 - **Archivo** (400/500/600) — the legibility carrier: addresses, service lists, labels, button text, footer, all guidance prose. Everything the reader actually has to get through quickly.
 
@@ -552,7 +635,9 @@ Fallback stacks declared on every rule: `'Spectral SC', Georgia, serif` and `Arc
 
 **Floor:** 12px for anything carrying real content. 10.5px is permitted only for uppercase tracked labels, which are navigational rather than informational.
 
-**On desktop only the display sizes step up**, and only these: the landing `<h1>` 26 → 30px, a page title 22 → 26px, the results title 20 → 24px, and the two ledes 14.5/15 → 15.5px. **Body, label, address, service-list and button sizes are identical at every width** — the table above is the type scale, not a mobile variant of one. Scaling body copy with the viewport would mean two scales to keep in step and two sets of contrast and rhythm decisions, for a page whose measure the rail already fixed.
+**On desktop only the display sizes step up**, and only these: the landing `<h1>`'s lead clause 26 → 34px and its keyword clause 16 → 17px, a page title 22 → 26px, the results title 20 → 24px, and the ledes 14.5/15 → 15.5px. **Body, label, address, service-list and button sizes are identical at every width** — the table above is the type scale, not a mobile variant of one. Scaling body copy with the viewport would mean two scales to keep in step and two sets of contrast and rhythm decisions, for a page whose measure is already fixed by the reading column.
+
+**The landing `<h1>` is two clauses in two voices**, and that is a type decision as much as a copy one: the situation line is Spectral SC 600 in `--ink`, the keyword line Archivo 400 in `--ink-body`. Both sit inside the `<h1>`; the second is set to support the first rather than compete with it, which is what lets the heading carry the search terms without reading as two headings.
 
 ### The diacritic constraint
 
@@ -576,39 +661,55 @@ Every candidate tested other than Cinzel rendered `Đ`/`đ` correctly (Cormorant
 
 ### Layout and shape
 
-- Single column, mobile-first, **390px design width**, **22px page gutter**. The column caps at **560px, centred**, up to the desktop breakpoint.
-- **From 1024px up: rail plus content column.** A 220px masthead rail, a 64px gap, and a 620px content column, the pair centred as one block inside a 32px gutter. The rail is `position: sticky`; the shell is a grid in `globals.css` and the rail is `SiteRail`.
+- Single column, mobile-first, **390px design width**, **22px page gutter**. The reading column caps at **560px**, and at **620px** from 1024px up.
+- **A masthead across the top, the reading column beneath it, and a footer under that** — the shape every visitor already knows. `SiteHeader` and `SiteFooter` are rendered once by the root layout; the shell is a flex column in `globals.css`.
 
-  This replaces the earlier rule that the column simply caps at 560px on wide viewports. That rule was right that **a list page gains nothing from a second column of listings** — and that half still binds, which is why the provider list stays exactly one column at every width and there is no card grid anywhere. What it got wrong is that it left a 560px column centred in a 1440px window, which does not break but reads as an unfinished phone app to every person who decides whether the product is real: the provider being pitched, a journalist, a partner. The rail is content *about the site* placed beside content *about the page*, so Kamen's "entries separated by cut rules, no containers" is untouched.
+  **This replaces the sticky 220px desktop rail**, which is deleted. The rail was answering a real problem — a 560px column centred in a 1440px window does not break but reads as an unfinished phone app to every person who decides whether the product is real — and the half of its reasoning that still binds is that **a list page gains nothing from a second column of listings**: the provider list stays exactly one column at every width and there is no card grid anywhere. What the rail got wrong is that it solved the problem with a shape nobody arrives already knowing. On a page a grieving family reads once, in a hurry, familiarity is worth more than novelty, and the people judging whether this is a real product — the provider being pitched, a journalist, a partner — should not have to learn a layout first.
 
-  Four rules on the rail, all load-bearing:
+  The rail's own four rules survive the change, and now bind the masthead and footer instead:
 
-  - **Nothing in it is the only copy of anything.** It is `display: none` below the breakpoint, so every link in it also sits in a page footer. Conversely, what the rail duplicates hides at that width — the landing page's foot is the current case.
-  - **It states what the site is, never what a page claims.** The first draft repeated the coverage claim word for word beside a heading carrying the same sentence, which reads as a stutter rather than emphasis. Coverage belongs to the page.
-  - **No primary action in it.** One heaviest thing per screen, and it is the call button.
-  - **Nothing route-specific and nothing from the database** — no city, no count. That is what lets the root layout render it on every route, including the static prose pages, without a query.
+  - **Nothing in the masthead is the only copy of anything.** Every link in the menu also sits in the footer, so the JavaScript-free mobile disclosure failing would cost nothing.
+  - **They state what the site is, never what a page claims.** The coverage claim belongs to the page — the landing `<h1>`'s strip and the results header both carry it — and neither masthead nor footer repeats it.
+  - **No primary action in either.** One heaviest thing per screen, and it is the call button.
+  - **Nothing route-specific and nothing from the database** — no city, no count, no back link. That is what lets the root layout render both on every route, including the static prose pages, without a query.
+- **Two widths, not one.** `--measure` / `--measure-wide` is the reading column; `--frame` (1000px) is the band the masthead, the footer and the landing page's horizontal sections share. A wide masthead over a narrow reading column is an ordinary editorial shape; a 1000px column of 13px body copy is not.
 
-  Between 560px and 1024px the layout is the mobile column, centred. Accepted: the rail does not fit beside a 620px column much below 1024px, and shrinking both to serve tablet portrait would compromise the two widths that are actually used.
-- **`fullWidth` buttons cap at 360px on desktop.** `fullWidth` means "fill the thing you are in", and beside the rail that thing is a 620px column — at which width a filled button stops reading as a button. Buttons that fill a grid column instead (a card's contact row) are unaffected, because the column is narrower than the cap.
+  **Above 1024px the reading column aligns to the frame's left edge rather than centring in the viewport.** Two competing left edges — a wordmark at one x and the page's own heading at another — is the specific thing that makes an otherwise plain layout look accidental.
+- **The contextual back link is `PageBack`, not the masthead.** It is the one part of the old header that cannot live in a route-independent layout, because it knows where the reader came from. It stays a real `<Link>` to a known URL rather than `history.back()`, for the reason [Navigation and state rules](#navigation-and-state-rules) gives it as a numbered requirement.
+- **The menu breakpoint is 860px, not 1024px.** Four short labels sit inline well below the width the rail needed, and **this closes the tablet-portrait gap** the rail could not: between 560px and 1024px the layout was previously the centred mobile column, because a 220px rail would not fit beside a 620px content column. A masthead has no such constraint, so 560–1024px now gets the real menu and the horizontal step and promise rows.
+- **The mobile menu is a `<details>` disclosure**, so the header works with no JavaScript and opens nothing that is a modal. The inline desktop nav and the disclosure are separate markup rather than one panel CSS forces open — forcing a closed `<details>` open with CSS is unreliable across browsers, and navigation may not be flaky.
+- **`fullWidth` buttons cap at 360px on desktop.** `fullWidth` means "fill the thing you are in", and at 620px a filled button stops reading as a button. Buttons that fill a grid column instead (a card's contact row) are unaffected, because the column is narrower than the cap.
 - **Flex/grid with `gap` throughout**, never per-element margins for sibling spacing.
 - Section separation 26–32px; card internal gap 9–10px.
-- **No `border-radius` anywhere. No shadows. No gradients** other than the stone texture.
+- **No `border-radius` anywhere. No shadows. No gradients** other than the stone texture and the select caret.
 - All rules are 1px. The double rules belong to the rejected Arhiv variant and are not part of Kamen.
-- **Hit targets:** both contact buttons ≥48px tall; every other tappable element ≥44px.
+- **Hit targets:** both contact buttons ≥ 48px tall; every other tappable element ≥ 44px.
 
 **Exactly two button styles exist**, and no third may be added:
 
 | style | fill | border | label | used for |
 |---|---|---|---|---|
-| primary | `--ink` | none | `--gold-on-ink`, Archivo 500, 14px, .05em | `Nazovi` |
-| secondary | transparent | 1px `--ink` | `--ink`, Archivo 500, 14px, .05em | `Pošalji e-mail` |
+| primary | `--ink` | none | `--gold-on-ink`, Archivo 500, 14px, .05em | `Nazovite`, the landing CTA, the provider form's submit |
+| secondary | transparent | 1px `--ink` | `--ink`, Archivo 500, 14px, .05em | `Pošaljite e-mail`, `Saznajte više` |
 
-Both square, both ≥48px, neither with a radius or shadow. A revealed phone number rendered beneath the primary button is not a third style — it is a `--gold-link` text link at 14px with tabular figures.
+Both square, both ≥ 48px, neither with a radius or shadow. A revealed phone number rendered beneath the primary button is not a third style — it is a `--gold-link` text link at 14px with tabular figures.
+
+**`ActionButton` renders a real `<button>` in those same two styles, and imports `ActionLink`'s stylesheet rather than restating it.** It exists for exactly one case, the provider form's submit; everything else that looks like a button in this product is an anchor, and `ActionLink`'s contract — always an anchor, never a div with a handler — is what makes the contact actions keyboard-usable, no-JavaScript-safe and meaningful to `event.isTrusted`. A second file describing a filled `--ink` button is how a third style gets born by accident, so there is not one.
+
+**Form controls** are the one thing Kamen had nothing to say about, because until `/za-pogrebnike` there was nothing to type into. They follow the rules already set rather than inventing a look: no radius, no shadow, a 1px ink rule, a ground one step off the page, and the focus outline never removed. Two specifics worth keeping: the field text is **15px**, above the body scale, because anything under 16px makes iOS Safari zoom the viewport on focus; and the select's caret is **drawn in CSS**, because the product has no icon set to take one from.
+
 - Wide content gets its own `overflow-x: auto` container; the page body never scrolls sideways.
 
 ### Icons
 
 **Exactly one icon exists in the product:** the phone glyph on the call button. Inline SVG, stroke-based, 1.8px stroke on a 24px grid, `currentColor`. No icon set, no emoji, anywhere.
+
+Two marks sit alongside it and neither is an icon, which is the distinction that keeps the rule meaningful rather than merely technically satisfied:
+
+- **The wordmark's mark** (`Logo`) — a Diocletian arch reduced to two piers, the span and the ground line, drawn to the same construction as the phone glyph. It is a brand mark used in exactly two places, the masthead and the footer, and it is architecture rather than iconography.
+- **The landing band's engraving** (`StoneEngraving`) — one drawing on one page, covered by [Image policy](#image-policy) rather than by this rule.
+
+The line the rule is actually drawing is against a *set*: pictograms that stand for concepts and multiply once the first three exist. That is why the *"Kako radi"* steps are marked with numerals rather than with three drawn glyphs — three would have been a set.
 
 ### Image policy
 
@@ -620,6 +721,10 @@ Images are in scope and chosen by the project owner — this is the frame they s
 - **Aspect** ~2.6:1 (390×150 at design width). Served as WebP/AVIF at 2×, with explicit `width`/`height` to prevent layout shift.
 - Illustration is allowed on identical terms — engraving-style line art, ink on stone.
 - **Every page must render correctly with no image at all.** The stone texture exists for exactly this state, and the POC ships whether or not any image has been chosen.
+
+**The landing band is filled, by illustration rather than by photograph.** `StoneEngraving` draws a colonnade as engraved line art on the stone texture, bounded, with the gold rule beneath — which is the finished state of that band, not a placeholder holding a photograph's place. It is also the honest option: the subject rules above rule out everything stock photography offers this category, and a drawing we control cannot drift into people, hands, candles or lilies.
+
+One implementation rule, learned by shipping it wrong: **the SVG's viewBox is the band's exact desktop size**, so `preserveAspectRatio="slice"` crops horizontally and only horizontally. Sized any other way it crops vertically instead and takes the tops off the arches, which turns a colonnade into a fence.
 
 ### Motion
 
@@ -671,9 +776,12 @@ Not out of scope — accepted as incomplete, and tracked here so they are not re
 
 | gap | state |
 |---|---|
-| **Named owner and contact route** | `/nase-obecanje` and `/kako-rangiramo` both say *"javite nam"* with no address to write to, and neither page names a human. Both are E-E-A-T essentials for a page in this category and neither can be invented. Waiting on an `/o-nama` decision — see [The promise page](#the-promise-page). |
-| **Tablet portrait** | Between 560px and 1024px the layout is the centred mobile column: the rail does not fit beside a 620px content column much below 1024px. Accepted rather than solved — see [Layout and shape](#layout-and-shape). |
-| **Landing page imagery** | The band renders as stone texture alone until an image is chosen. Working as designed — every page must hold with no image — but it is not the finished state. |
+| **Named owner, and a contact route for the public** | **Half closed.** Providers now have [`/za-pogrebnike`](#the-provider-page), and both *"javite nam"* sentences link to it. What remains: no page names a human, and a member of the public who is not a funeral director still has no way to reach us. Both are E-E-A-T essentials and neither can be invented. Waiting on an `/o-nama` decision. |
+| **`/privatnost` does not exist, and the form is gated behind it** | The provider form collects personal data with no privacy notice and no named controller, so nothing links to it (`PROVIDER_FORM_PUBLIC`). This is the blocking item for `/za-pogrebnike`, and it resolves with the same `/o-nama` decision. |
+| **Provider form is unverified** | The submission path has never executed — Netlify Forms needs a deploy, and Phase 1 has none. First deploy must include an end-to-end test submission before the flag is flipped. |
+| **`lib/__fixtures__/split-pilot.ts` is Split-only** | The 51 ranking and hours tests still pass and still test the right things — they exercise pure functions over a fixture, and the fixture being one city does not weaken that. But `serviceFrequency` now reasons over a very different distribution in production (`balzamiranje` has one provider nationally, `ekshumacija` four), and no test covers a city the size of Zagreb. |
+| ~~**Tablet portrait**~~ | **Closed** by the masthead. 560–1024px now gets the real menu and the horizontal rows; the constraint was the rail's width, and the rail is gone. |
+| ~~**Landing page imagery**~~ | **Closed** by `StoneEngraving`. A photograph may still replace it, but the band is a finished state rather than a pending one — see [Image policy](#image-policy). |
 | **`planiranje` path** | Hidden from screen 1 and still fully wired. See [Screen 1](#screen-1--situacija). |
 | **Croatian phrasing review** | See [Open questions](#open-questions). |
 
@@ -686,7 +794,7 @@ Not out of scope — accepted as incomplete, and tracked here so they are not re
 | Price calculator, cost tables | zero `price_from` rows; this is the entire model of the German portals and we cannot honestly run it |
 | Geolocation, distance sort, "blizu mene" | no coordinates, and no user location is collected |
 | Side-by-side comparison table | seven cards on one screen already is the comparison |
-| Lead form, contact form, email capture, callback request | out by [SPEC.md](SPEC.md) scope; also the thing that would force a consent banner |
+| Lead form, email capture, callback request — **anything asking a family for their details** | out by [SPEC.md](SPEC.md) scope; also the thing that would force a consent banner. The provider form on [`/za-pogrebnike`](#the-provider-page) is not this and must never become it: it points the other way, from the listed business to us |
 | Provider login / claim-your-listing | `owner_id` exists in the schema; the flow is Phase 2 |
 | Multi-city typeahead | one city — screen 2 is a button |
 | Dark mode | Kamen is single-theme by design |
@@ -709,7 +817,7 @@ None of these are frontend work, and all of them block or degrade it.
 | `entities.email` | the email CTA | populated for all 7; nullable in schema, so the CTA stays conditional |
 | Trusted Croatian procedure source | screen 3b guidance strip, `/sto-uciniti-prvo` | **researched and written** from gov.hr, NN 46/2011 and MVEP; pending a native-speaker read and owner sign-off |
 | Display-face diacritic gate | the whole type system | **resolved** — Cinzel failed (`Đ`/`đ` drawn with a macron) and was replaced by Spectral SC, which renders correctly along with Archivo. Payloads are vendored; checked by eye on `/specimen` after any font change. See [The diacritic constraint](#the-diacritic-constraint) |
-| Header-band imagery | nothing — pages render without it | not started |
+| Header-band imagery | nothing — pages render without it | **landing band filled** by engraved line art; the results header and `/sto-uciniti-prvo` bands are still texture alone |
 
 The schema is complete as of 2026-09-02 — nothing in the database blocks a build. What remains gating or degrading it is data and assets, not DDL. The one future migration is the production hostname, needed at deploy time rather than at build time.
 

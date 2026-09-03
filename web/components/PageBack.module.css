@@ -1,0 +1,40 @@
+/* The contextual back link, and the flow's step counter.
+
+   Sits inside the content column directly under the masthead, so it reads as
+   belonging to the page rather than to the site. One quiet row, no rule of its
+   own — the masthead's gold hairline is already directly above it. */
+
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 44px;
+  padding-top: 4px;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  font-family: var(--font-text);
+  font-size: 13px;
+  color: var(--gold-link);
+  text-decoration: none;
+}
+
+.back:hover {
+  color: var(--gold-link-hover);
+}
+
+/* Navigational rather than informational, which is what permits 10.5px. */
+.step {
+  font-family: var(--font-text);
+  font-size: 10.5px;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+  color: var(--text-label);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}

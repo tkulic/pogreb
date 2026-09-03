@@ -10,3 +10,4 @@ migrations/
 
 # Design canvas working files and the seeded artifact
 .design/
+.research/
