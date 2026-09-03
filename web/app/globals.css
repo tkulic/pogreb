@@ -143,10 +143,17 @@
   --font-display: "Spectral SC", Georgia, serif;
   --font-text: "Archivo", "Helvetica Neue", Arial, sans-serif;
 
-  /* Layout. Design width 390px; the column caps at 560px and centres — a list
-     page gains nothing from a second column. */
+  /* Layout. Design width 390px; the column caps at 560px and centres.
+
+     From 1024px up the page becomes rail + content column (see the shell,
+     below). The content column is allowed 620px there rather than 560:
+     a little more measure reads as deliberate beside the rail, and it is still
+     well inside a comfortable line length for 13px Archivo. */
   --gutter: 22px;
   --measure: 560px;
+  --measure-wide: 620px;
+  --rail: 220px;
+  --rail-gap: 64px;
 }
 
 /* --------------------------------------------------------------------------
@@ -224,6 +231,46 @@ a:hover {
   max-width: var(--measure);
   margin-inline: auto;
   padding-inline: var(--gutter);
+}
+
+/* --------------------------------------------------------------------------
+   The shell — one column on a phone, rail + column on a desktop viewport.
+
+   The app was mobile-*only* rather than mobile-first: every page capped at
+   560px and centred, which is correct on a phone and leaves a wide window
+   mostly empty. This is the desktop pass, and it is deliberately not a card
+   grid: the provider list stays exactly one column at every width, because
+   "entries separated by cut rules, no containers" is what makes the design
+   still read calmly at forty providers.
+
+   Below 1024px this class does nothing at all and `.page` keeps centring
+   itself, so the phone layout is untouched by everything here.
+   -------------------------------------------------------------------------- */
+
+@media (min-width: 1024px) {
+  .shell {
+    display: grid;
+    /* Rail, then content. `minmax(0, …)` on the content column so a wide
+       child (a long unbroken phone number, a table) cannot push the grid
+       wider than the viewport — the body never scrolls sideways. */
+    grid-template-columns: var(--rail) minmax(0, var(--measure-wide));
+    column-gap: var(--rail-gap);
+    /* Centres the pair as one block rather than stretching either. */
+    justify-content: center;
+    /* Required for the rail's `position: sticky` to have anything to stick
+       within: a stretched grid item is already full height. */
+    align-items: start;
+    padding-inline: 32px;
+  }
+
+  /* Inside the grid the column is sized by the track, so the page stops
+     centring and gutting itself. No module sets these three properties, so
+     this rule is the only thing that owns them at this width. */
+  .page {
+    max-width: none;
+    margin-inline: 0;
+    padding-inline: 0;
+  }
 }
 
 /* Near-invisible by design. It exists so a band does not read as a flat grey

@@ -131,6 +131,9 @@ export default async function ServiceListingPage({ params }: PageProps) {
         <Link className={styles.footerLink} href="/kako-rangiramo">
           Kako rangiramo
         </Link>
+        <Link className={styles.footerLink} href="/nase-obecanje">
+          Naše obećanje
+        </Link>
       </footer>
     </main>
   );

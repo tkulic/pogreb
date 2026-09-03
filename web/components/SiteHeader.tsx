@@ -21,8 +21,13 @@ type SiteHeaderProps = {
  * means the whole header works with no JavaScript.
  */
 export function SiteHeader({ back, step }: SiteHeaderProps) {
+  // On a desktop viewport the rail carries the wordmark, so a header holding
+  // nothing else has nothing left to show and hides itself rather than leaving
+  // an empty ruled bar above the page's own heading.
+  const bare = !back && !step;
+
   return (
-    <header className={styles.header}>
+    <header className={bare ? `${styles.header} ${styles.bare}` : styles.header}>
       <Link href="/" className={styles.wordmark}>
         Pogrebne usluge
       </Link>

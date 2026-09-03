@@ -2,7 +2,7 @@
 
 > Spec module — the Phase 1 public frontend. See [SPEC.md](SPEC.md) for project context and scope, and [SPEC_database.md](SPEC_database.md) for the schema this reads from.
 >
-> Status: **specified, nothing built.** The frontend directory does not exist yet. The user story, the three-screen flow, the results page and its ranking rules, the routing, and the visual system are settled; what remains open is listed under [Open questions](#open-questions), and what blocks a build under [Data dependencies](#data-dependencies-that-gate-the-build).
+> Status: **built and running locally.** The landing page, the three-screen flow, the results page, provider detail, the indexable service listings and the prose pages all exist in `web/`, with ranking and opening hours under unit test. The **desktop layout is built** — rail plus content column, see [Layout and shape](#layout-and-shape). What remains open is listed under [Open questions](#open-questions), and what still degrades the build under [Data dependencies](#data-dependencies-that-gate-the-build).
 >
 > **Naming convention:** UI copy and all URL paths/query parameters are Croatian; code, component names and identifiers are English. See [SPEC.md](SPEC.md) → Naming Convention.
 
@@ -37,13 +37,21 @@ So the flow's value is **not filtering**. It is orientation and confidence: turn
 
 It exists because the flow could not answer the one question a stranger arrives with. Someone landing from a search result previously met *"Što se dogodilo?"* with no indication of what the site was, who was asking, or what would happen to their answer — which is a great deal to ask of a person in the first hours after a death, and it is also the moment a visitor decides whether this is a directory or a lead broker.
 
-**Structure, in order:** what this is and one primary action, both above the fold; the image band; *"Kako radi"* in three steps; *"Što obećavamo"*; the settlement list and the two prose pages.
+**Structure, in order:** the coverage claim as the `<h1>` and one primary action, both above the fold; the coverage strip; the image band; *"Kako radi"* in three steps; *"Naše obećanje"* in four, ending in a link to the full page; the prose links. The prose links are the only part that is mobile-only — above the desktop breakpoint the rail carries them and the foot hides ([Layout and shape](#layout-and-shape)).
 
 Three rules on it:
 
 1. **One primary action.** `Pronađite pogrebnika` is the heaviest thing on the screen, and the bypass beside it is a text link rather than a second button — two buttons would split the action in two. Everything below the fold supports the decision to tap it and must not compete with it.
-2. **The promises are the product's actual differentiators**, stated plainly: everyone is listed, nobody pays for position, no personal data is collected, it is free. These are the things the three German reference sites cannot say, and they are worth more here than any description of features.
-3. **It states the count from live data** — *"Popis svih sedam pogrebnika…"* — rather than asserting completeness in the abstract. If the count changes the sentence changes with it.
+2. **The promises are the product's actual differentiators**, stated plainly: everyone is listed, nobody pays for position, no personal data is collected, it is free, and the ranking rules are published rather than described. These are the things the three German reference sites cannot say, and they are worth more here than any description of features. Each one is stated in a sentence here and **in full on [`/nase-obecanje`](#the-promise-page), where it also carries what it rules out**.
+3. **The claim is coverage, not a count.** The `<h1>` is *"Svi registrirani pogrebnici u Splitu i okolici"*, and the strip under the action names the area and its settlements.
+
+   This reverses an earlier rule that had the page state the count from live data — *"Popis svih sedam pogrebnika…"*. That rule was answering the right question, which is *why assert completeness in the abstract*, with the wrong instrument: a stranger reads "seven" as the size of our database rather than the size of the market, so the strongest fact we hold ended up stated in the weakest available way. Coverage is the claim; the count is a detail.
+
+   Three guardrails come with it, all binding:
+
+   - **The wording is `coverageClaim` in `web/lib/copy.ts`, and it says "registrirani".** The qualifier is what we can stand behind — a provider operating with no registry entry we could find is exactly the case it is honest about. The claim is also about **the pilot area, not any provider's service radius**; both limits are `CATCHMENT`'s and they still apply.
+   - **The count keeps every place it does real work**, and those are all places where it is a fact about something rather than a boast: `· N` on each results section heading, *"šest od sedam"* on a service page, the counts in `/sto-uciniti-prvo`.
+   - **A city page ships only once that city's providers are actually verified.** Coverage stated ahead of the data would be the one version of this claim that is a lie, and it is also how a directory earns a thin-content penalty.
 
 ## Flow overview
 
@@ -201,11 +209,13 @@ The destination of the flow, and the page the whole product exists to render.
 ### Block structure, top to bottom
 
 1. **Site header** — wordmark home link and a back link into the questions. Shared with every other page.
-2. **Header** — title, *"Split i okolica"*, and the answers read back on one quiet line with a *"promijenite"* link into the flow (which must arrive with the current answers still selected). Closing gold rule.
+2. **Header** — title, *"Split i okolica"*, the coverage claim on one line, and the answers read back on one quiet line with a *"promijenite"* link into the flow (which must arrive with the current answers still selected). Closing gold rule.
+
+   The coverage line is here rather than only in the footer because it is the reason to trust this page over a page of search results, and it is the page's own claim rather than the site's — which is why the desktop rail must never repeat it ([Layout and shape](#layout-and-shape)). It is set in Archivo and ink, not Spectral SC and gold: on this page gold belongs to the reason lines, and a gold claim above them would compete with the thing that justifies the shortlist.
 3. **`NAJBOLJE ODGOVARA · N`** — the shortlist.
 4. **`OSTALI POGREBNICI · N`** — everyone else, quieter but complete.
 5. **Guidance strip** — conditional on `situacija` and `pokojnik`; links to `/sto-uciniti-prvo`. Text is sourced from the primary references listed under [screen 3b](#question-3b--conditional-on-sourcing). Omitted entirely — rules and link included — when neither answer has guidance attached, rather than rendering an empty bordered strip.
-6. **Transparency footer** — *"Prikazujemo sve registrirane pogrebnike u Splitu i okolici. Nitko nam ne plaća za bolju poziciju."*, then the settlement list.
+6. **Transparency footer** — *"Nitko nam ne plaća za bolju poziciju i nitko nije izostavljen."*, then the settlement list, then links to `/kako-rangiramo` and `/nase-obecanje`. The coverage sentence it used to open with moved up into the header (2); the footer now carries what *qualifies* the claim rather than restating it.
 
 **Two things moved here after the page was built and reviewed, and both were hierarchy problems rather than content problems:**
 
@@ -218,7 +228,7 @@ These are the page's contract with the user, and they are why the transparency f
 
 - **Every provider in the city appears on the page, always.** The two blocks partition the set; they never subset it. No pagination, no "show more" — at pilot scale seven rows fit.
 - **The page is never empty.** The shortlist block may be, the page may not.
-- **`N` is stated in both headings**, so the reader can see the partition adds up to the count in the context strip.
+- **`N` is stated in both headings**, so the reader can see for themselves that the partition adds up — the two numbers are the only count on the page, and they are what makes the header's coverage claim checkable rather than asserted.
 
 ### Partition and shortlist size
 
@@ -400,6 +410,7 @@ That is a deliberate exception. Choosing between a provider's office and dežurn
 | `/pogrebne-usluge/{grad}/usluga/{usluga}` | indexable service-filtered listing |
 | `/sto-uciniti-prvo` | guidance page |
 | `/kako-rangiramo` | the ranking rules in plain Croatian |
+| `/nase-obecanje` | the four promises in full, each with what it rules out |
 
 ### Resolving the entity/service slug collision
 
@@ -421,6 +432,26 @@ Applied to the Split pilot, six pages qualify:
 | `osmrtnice` (6), `sredivanje-dokumentacije` (6), `lijesovi` (6), `kremiranje` (4), `glazba-na-pogrebu` (4), `uredivanje-pokojnika` (3) | all-7: `organizacija-pogreba`, `prijevoz-pokojnika`, `prijevoz-pokojnika-inozemstvo`, `cvjetni-aranzmani` · under-3: `uredenje-groba` (2), `fotografiranje-pogreba` (2), `nadgrobni-spomenici` (1), `ekshumacija` (1) · unused: `urne`, `balzamiranje` |
 
 The route exists before most of its pages do, and the set changes as data lands — so the rule is evaluated at build time from the data, never hardcoded as a list.
+
+## The promise page
+
+`/nase-obecanje` states the four promises in full. The landing page carries them in a sentence each and links here.
+
+It exists because the promises are the product's only real differentiators and a differentiator stated once in six words reads as marketing. **The design of the page is that every promise carries what it rules out**: *"we don't sell your data"* is a slogan, while *"we cannot sell it because we never collect it — and here is the one thing we do count"* is a position a reader can check and hold us to.
+
+| section | content |
+|---|---|
+| the four promises | *Svi, ne samo neki* · *Ne tražimo vaše podatke* · *Besplatno* · *Provjerljivo* — same order as the landing page's short form, each with a quieter `što isključuje` line attached |
+| *Što bilježimo* | exactly what `events` holds and what it does not: per-provider view and click counts, no IP even truncated, no user-agent, no referrer, no session or visitor identifier. Why we count at all, and the accepted cost — that there is no visitor number, only tap counts |
+| *Što obećanje ne pokriva* | no quality judgement and no reviews; no prices; the area is the area of the list and not a per-provider service radius; manual data can go stale |
+
+Three rules on it:
+
+1. **`Što bilježimo` is not a disclaimer bolted on** — it is the second promise being honest about its own edge, stated by us rather than discovered by someone reading network requests. It must stay in step with [SPEC_database.md](SPEC_database.md) → Usage logging: if `events` ever gains a column, this section changes in the same pass.
+2. **A promise wording exists once.** The landing page's short form and this page must not drift; a promise worded one way there and another way here reads as the weaker of the two.
+3. **The four promises are the product's constraints written down**, so a change to any of them is a change to the product, not to copy. Monetisation in particular touches the first and third directly — see [SPEC.md](SPEC.md) → Boundaries, where charging anyone in Phase 1 is a Never, and `RESEARCH_market.md` § 3, where the reason the highest-revenue model in the field is unavailable to us is precisely promise one.
+
+**Deliberately absent, and both belong here:** a named owner and a contact route. A promise page with nobody behind it is the weakest kind, and *"javite nam"* appears on both this page and `/kako-rangiramo` with no address to write to. Neither can be invented ([SPEC.md](SPEC.md) → Never: fabricating data), so both wait on an `/o-nama` decision by the project owner. Tracked under [Known gaps](#known-gaps-deliberately-deferred).
 
 ## Visual system — Kamen
 
@@ -521,6 +552,8 @@ Fallback stacks declared on every rule: `'Spectral SC', Georgia, serif` and `Arc
 
 **Floor:** 12px for anything carrying real content. 10.5px is permitted only for uppercase tracked labels, which are navigational rather than informational.
 
+**On desktop only the display sizes step up**, and only these: the landing `<h1>` 26 → 30px, a page title 22 → 26px, the results title 20 → 24px, and the two ledes 14.5/15 → 15.5px. **Body, label, address, service-list and button sizes are identical at every width** — the table above is the type scale, not a mobile variant of one. Scaling body copy with the viewport would mean two scales to keep in step and two sets of contrast and rhythm decisions, for a page whose measure the rail already fixed.
+
 ### The diacritic constraint
 
 **Binding, and checked before any face is locked in.** Every display face must render **Č č Ć ć Ž ž Š š Đ đ** from the face itself, not from a fallback. Falling back mid-word is the most visible quality failure available to a Croatian-facing product, and classical display faces are exactly where it happens.
@@ -543,7 +576,20 @@ Every candidate tested other than Cinzel rendered `Đ`/`đ` correctly (Cormorant
 
 ### Layout and shape
 
-- Single column, mobile-first, **390px design width**, **22px page gutter**. On wider viewports the column caps at **560px, centred** — a list page gains nothing from a second column.
+- Single column, mobile-first, **390px design width**, **22px page gutter**. The column caps at **560px, centred**, up to the desktop breakpoint.
+- **From 1024px up: rail plus content column.** A 220px masthead rail, a 64px gap, and a 620px content column, the pair centred as one block inside a 32px gutter. The rail is `position: sticky`; the shell is a grid in `globals.css` and the rail is `SiteRail`.
+
+  This replaces the earlier rule that the column simply caps at 560px on wide viewports. That rule was right that **a list page gains nothing from a second column of listings** — and that half still binds, which is why the provider list stays exactly one column at every width and there is no card grid anywhere. What it got wrong is that it left a 560px column centred in a 1440px window, which does not break but reads as an unfinished phone app to every person who decides whether the product is real: the provider being pitched, a journalist, a partner. The rail is content *about the site* placed beside content *about the page*, so Kamen's "entries separated by cut rules, no containers" is untouched.
+
+  Four rules on the rail, all load-bearing:
+
+  - **Nothing in it is the only copy of anything.** It is `display: none` below the breakpoint, so every link in it also sits in a page footer. Conversely, what the rail duplicates hides at that width — the landing page's foot is the current case.
+  - **It states what the site is, never what a page claims.** The first draft repeated the coverage claim word for word beside a heading carrying the same sentence, which reads as a stutter rather than emphasis. Coverage belongs to the page.
+  - **No primary action in it.** One heaviest thing per screen, and it is the call button.
+  - **Nothing route-specific and nothing from the database** — no city, no count. That is what lets the root layout render it on every route, including the static prose pages, without a query.
+
+  Between 560px and 1024px the layout is the mobile column, centred. Accepted: the rail does not fit beside a 620px column much below 1024px, and shrinking both to serve tablet portrait would compromise the two widths that are actually used.
+- **`fullWidth` buttons cap at 360px on desktop.** `fullWidth` means "fill the thing you are in", and beside the rail that thing is a 620px column — at which width a filled button stops reading as a button. Buttons that fill a grid column instead (a card's contact row) are unaffected, because the column is narrower than the cap.
 - **Flex/grid with `gap` throughout**, never per-element margins for sibling spacing.
 - Section separation 26–32px; card internal gap 9–10px.
 - **No `border-radius` anywhere. No shadows. No gradients** other than the stone texture.
@@ -625,7 +671,8 @@ Not out of scope — accepted as incomplete, and tracked here so they are not re
 
 | gap | state |
 |---|---|
-| **Desktop layout** | The app is mobile-*only* rather than mobile-*first*. Every page caps at a 560px column and centres, which is correct on a phone and leaves a wide desktop window mostly empty — it does not break, but it reads as an unfinished phone app. Deferred by the project owner; a desktop treatment is a real design pass, not a media query, and the mobile experience is the one the product is actually used in. |
+| **Named owner and contact route** | `/nase-obecanje` and `/kako-rangiramo` both say *"javite nam"* with no address to write to, and neither page names a human. Both are E-E-A-T essentials for a page in this category and neither can be invented. Waiting on an `/o-nama` decision — see [The promise page](#the-promise-page). |
+| **Tablet portrait** | Between 560px and 1024px the layout is the centred mobile column: the rail does not fit beside a 620px content column much below 1024px. Accepted rather than solved — see [Layout and shape](#layout-and-shape). |
 | **Landing page imagery** | The band renders as stone texture alone until an image is chosen. Working as designed — every page must hold with no image — but it is not the finished state. |
 | **`planiranje` path** | Hidden from screen 1 and still fully wired. See [Screen 1](#screen-1--situacija). |
 | **Croatian phrasing review** | See [Open questions](#open-questions). |

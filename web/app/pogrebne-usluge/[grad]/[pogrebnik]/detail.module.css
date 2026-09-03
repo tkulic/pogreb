@@ -169,3 +169,16 @@
   color: var(--gold-link);
   word-break: break-word;
 }
+
+/* --- desktop --- */
+
+@media (min-width: 1024px) {
+  .page {
+    gap: 34px;
+    padding-block: 28px 88px;
+  }
+
+  .name {
+    font-size: 26px;
+  }
+}

@@ -6,7 +6,7 @@ import { QuietProviderCard } from '@/components/QuietProviderCard';
 import { SectionHeading } from '@/components/SectionHeading';
 import { SiteHeader } from '@/components/SiteHeader';
 import { answersToQuery, isUnanswered, parseAnswers } from '@/lib/answers';
-import { CATCHMENT, NACIN_LABEL, SITUACIJA_LABEL } from '@/lib/copy';
+import { CATCHMENT, NACIN_LABEL, SITUACIJA_LABEL, coverageClaim } from '@/lib/copy';
 import { getCityBySlug, getCityProviders } from '@/lib/queries';
 import { rankProviders } from '@/lib/ranking';
 import { guidanceFor } from '@/lib/guidance';
@@ -88,6 +88,14 @@ export default async function ResultsPage({ params, searchParams }: PageProps) {
       <header className={styles.header}>
         <h1 className={styles.title}>Pogrebnici</h1>
         <p className={styles.city}>{areaLabel}</p>
+        {/*
+          The coverage claim, stated where the list is rather than only in the
+          footer. It is the reason to trust this page over a search result, and
+          it is count-free by decision — see `coverageClaim`. Neutrality
+          ("nitko nam ne plaća") stays in the footer so the two claims are not
+          said twice on one screen.
+        */}
+        <p className={styles.coverage}>{coverageClaim(areaLocative)}.</p>
         {chosen.length > 0 && (
           <p className={styles.chosen}>
             <span className={styles.chosenLabel}>odabrali ste</span>{' '}
@@ -180,16 +188,20 @@ export default async function ResultsPage({ params, searchParams }: PageProps) {
       )}
 
       <footer className={styles.footer}>
-        <p>
-          Prikazujemo sve registrirane pogrebnike u {areaLocative}. Nitko nam ne
-          plaća za bolju poziciju.
-        </p>
+        {/* Coverage is claimed in the header now; the footer carries what
+            qualifies it — neutrality, the settlement list, and the rules. */}
+        <p>Nitko nam ne plaća za bolju poziciju i nitko nije izostavljen.</p>
         <p className={styles.settlements}>
           {/* No verb — see Landing: the accusative would be "okolicu". */}
           {catchment ? `${areaLabel} — ${catchment.settlements.join(', ')}.` : null}
         </p>
+        {/* Both links also sit in the desktop rail; on a phone this footer is
+            the only route to them from the list. */}
         <Link className={styles.footerLink} href="/kako-rangiramo">
           Kako rangiramo
+        </Link>
+        <Link className={styles.footerLink} href="/nase-obecanje">
+          Naše obećanje
         </Link>
       </footer>
     </main>

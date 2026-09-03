@@ -47,6 +47,20 @@
   color: var(--gold-link-hover);
 }
 
+/* Desktop: the rail is the masthead, so the header stops being one. It keeps
+   the contextual back link and the step counter, which are per-page and cannot
+   live in a route-independent rail. */
+@media (min-width: 1024px) {
+  .wordmark {
+    display: none;
+  }
+
+  /* Nothing but the wordmark was in it — see SiteHeader's `bare`. */
+  .bare {
+    display: none;
+  }
+}
+
 /* Step counter in the flow — "2 / 3". Navigational, so 10.5px is permitted. */
 .step {
   font-family: var(--font-text);

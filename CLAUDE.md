@@ -17,7 +17,11 @@ The frontend is **built and running locally** — landing page, the three-screen
 
 Two visual-system decisions are settled and recorded in `SPEC_frontend.md`: contrast measurement corrected four colour tokens that were below WCAG AA in the approved mockup, and Cinzel was replaced by **Spectral SC** because it draws `Đ`/`đ` with a macron instead of a stroke. Both faces are vendored in `web/public/fonts/`, so check `Đ`/`đ` by eye on `/specimen` if a face is ever swapped.
 
-**Known gaps, deliberately deferred** (see `SPEC_frontend.md` → Known gaps): the app is mobile-*only* and needs a real desktop pass; the `planiram unaprijed` path is hidden but still wired; the landing image band has no image yet; and the sourced Croatian guidance text still needs a native-speaker read.
+The **desktop layout is built** — above 1024px the pages are a sticky 220px masthead rail beside a 620px content column (`components/SiteRail.tsx` and the `.shell` grid in `app/globals.css`), while the provider list stays one column at every width. The landing page and the results header now claim **coverage of the city area rather than a provider count** (`coverageClaim` in `web/lib/copy.ts`), and `/nase-obecanje` states the four promises in full with what each one rules out.
+
+`RESEARCH_market.md` holds the survey of comparable platforms worldwide and the monetization options, with a staged recommendation. It is research, not decisions — nothing in it is authorised beyond what the project owner has picked, and the items it flags **ask-first** stay unbuilt.
+
+**Known gaps, deliberately deferred** (see `SPEC_frontend.md` → Known gaps): no named owner and no contact route, while two pages say *"javite nam"*; tablet portrait (560–1024px) is still the centred mobile column; the `planiram unaprijed` path is hidden but still wired; the landing image band has no image yet; and the sourced Croatian guidance text — now including the promise page — still needs a native-speaker read.
 
 Read `SPEC.md`, `SPEC_database.md` and `SPEC_frontend.md` before doing any work here. They are the source of truth and are living documents, updated as decisions are made, not static references. For frontend work `SPEC_frontend.md` is the operative one: it carries the user story, the three-screen flow, the results page and its ranking rules, the routing, and the **Kamen** visual system down to colour and type tokens.
 

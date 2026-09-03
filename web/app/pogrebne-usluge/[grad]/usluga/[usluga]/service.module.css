@@ -85,3 +85,16 @@
   min-height: 44px;
   color: var(--gold-link);
 }
+
+/* --- desktop --- */
+
+@media (min-width: 1024px) {
+  .page {
+    gap: 34px;
+    padding-block: 28px 88px;
+  }
+
+  .title {
+    font-size: 26px;
+  }
+}

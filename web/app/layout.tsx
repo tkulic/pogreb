@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import { SiteRail } from '@/components/SiteRail';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -50,7 +51,23 @@ export default function RootLayout({
           crossOrigin="anonymous"
         />
       </head>
-      <body>{children}</body>
+      <body>
+        {/*
+          The shell is a plain wrapper on a phone and a two-column grid on a
+          desktop viewport — rail beside content, both centred as one block.
+
+          It lives in the root layout rather than in each page because the rail
+          is identical on every route and carries nothing route-specific: no
+          city, no count, no back link. That is what keeps this free of a
+          database query, which matters because a fetch here would land on
+          every page in the product, including the statically rendered prose
+          pages.
+        */}
+        <div className="shell">
+          <SiteRail />
+          {children}
+        </div>
+      </body>
     </html>
   );
 }

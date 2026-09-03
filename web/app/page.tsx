@@ -12,7 +12,7 @@ import {
   SITUACIJA_LABEL,
   VISIBLE_SITUACIJA,
 } from '@/lib/copy';
-import { getCities, getCityProviders } from '@/lib/queries';
+import { getCities } from '@/lib/queries';
 import styles from './flow.module.css';
 
 /**
@@ -76,8 +76,11 @@ export default async function HomePage({ searchParams }: PageProps) {
   const catchment = pilot ? CATCHMENT[pilot.slug] : undefined;
 
   if (korak === null) {
-    const providers = pilot ? await getCityProviders(pilot.id) : [];
-    return <Landing city={pilot} providerTotal={providers.length} />;
+    // No provider query here, deliberately: the landing page's claim is
+    // coverage rather than a count (see `coverageClaim`), so it needs the city
+    // and its catchment copy and nothing else. One fewer query on the page
+    // most visitors arrive at.
+    return <Landing city={pilot} />;
   }
 
   const resultsHref = pilot ? `/pogrebne-usluge/${pilot.slug}${query}` : '/';

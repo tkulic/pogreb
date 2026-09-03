@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { ActionLink } from './ActionLink';
 import { SiteHeader } from './SiteHeader';
-import { CATCHMENT, providerCount } from '@/lib/copy';
+import { CATCHMENT, coverageClaim } from '@/lib/copy';
 import type { City } from '@/lib/database.types';
 import styles from '@/app/landing.module.css';
 
@@ -17,14 +17,15 @@ import styles from '@/app/landing.module.css';
  * we promise. The primary action sits above the fold and is the heaviest thing
  * on the screen; everything below it supports the decision to tap it rather
  * than competing with it.
+ *
+ * **The claim is coverage, not a count.** The page used to open with "popis
+ * svih sedam pogrebnika", which said the true thing in the weakest available
+ * way — see `coverageClaim`. The settlement list moved up out of the footer to
+ * sit directly under the action, because it is the evidence for the claim in
+ * the heading and it is the line that tells a stranger whether this site is
+ * about their town at all.
  */
-export function Landing({
-  city,
-  providerTotal,
-}: {
-  city: City | undefined;
-  providerTotal: number;
-}) {
+export function Landing({ city }: { city: City | undefined }) {
   const catchment = city ? CATCHMENT[city.slug] : undefined;
   const area = catchment?.label ?? city?.name ?? '';
   const areaLocative = catchment?.locative ?? city?.name ?? '';
@@ -35,22 +36,12 @@ export function Landing({
 
       <section className={styles.hero}>
         <h1 className={styles.title}>
-          Pogrebnici u {areaLocative} — na jednom mjestu
+          {areaLocative ? coverageClaim(areaLocative) : 'Svi registrirani pogrebnici'}
         </h1>
         <p className={styles.lede}>
-          {providerTotal > 0 ? (
-            <>
-              Popis svih {providerCount(providerTotal)} u {areaLocative}, s
-              telefonom, radnim vremenom i uslugama. Odgovorite na dva pitanja i
-              recimo vam koga nazvati prvog — i zašto baš njega.
-            </>
-          ) : (
-            <>
-              Popis registriranih pogrebnika s telefonom, radnim vremenom i
-              uslugama. Odgovorite na dva pitanja i recimo vam koga nazvati
-              prvog — i zašto baš njega.
-            </>
-          )}
+          Nijedan nije izostavljen. Uz svakog piše telefon, radno vrijeme i
+          usluge. Odgovorite na dva pitanja i recimo vam koga nazvati prvog — i
+          zašto baš njega.
         </p>
 
         <div className={styles.actions}>
@@ -64,6 +55,24 @@ export function Landing({
           )}
         </div>
       </section>
+
+      {/*
+        The coverage strip — the evidence for the heading, and the answer to
+        "is this site about my town?".
+
+        It carries no verb, deliberately: "Pokrivamo Split i okolica" needs the
+        accusative ("okolicu"), and a fourth stored case form to say one line is
+        not worth it. Label plus area plus settlements reads correctly as a
+        statement of coverage.
+      */}
+      {catchment && (
+        <section className={styles.coverage} aria-label="Pokriveno područje">
+          <span className={styles.coverageLabel}>pokriveno područje</span>
+          <p className={styles.coverageValue}>
+            {area} — {catchment.settlements.join(', ')}.
+          </p>
+        </section>
+      )}
 
       {/*
         The one image slot on this page. Until an image is chosen it renders as
@@ -105,8 +114,14 @@ export function Landing({
         </ol>
       </section>
 
+      {/*
+        The promises are the product's actual differentiators, and they are now
+        the short form of a page that states each one in full — including what
+        it rules out, and what we do if we break it. Four here, four there, in
+        the same order.
+      */}
       <section className={styles.section}>
-        <h2 className={styles.heading}>Što obećavamo</h2>
+        <h2 className={styles.heading}>Naše obećanje</h2>
         <ul className={styles.promises}>
           <li className={styles.promise}>
             <span className={styles.promiseTitle}>Svi, ne samo neki</span>
@@ -129,23 +144,29 @@ export function Landing({
               upite.
             </span>
           </li>
+          <li className={styles.promise}>
+            <span className={styles.promiseTitle}>Provjerljivo</span>
+            <span className={styles.promiseBody}>
+              Pravila po kojima rangiramo objavljena su, a ne opisana općenito.
+              Možete ih pročitati i reći nam da su pogrešna.
+            </span>
+          </li>
         </ul>
+        <Link href="/nase-obecanje" className={styles.sectionLink}>
+          Cijelo obećanje, i što isključuje
+        </Link>
       </section>
 
       <div className={styles.foot}>
-        <p className={styles.footNote}>
-          {/* No verb, deliberately: "Pokrivamo Split i okolica" needs the
-              accusative ("okolicu"), and a fourth stored case form to say one
-              line is not worth it. The bare label reads correctly as a
-              heading-like statement of coverage. */}
-          {catchment ? `${area} — ${catchment.settlements.join(', ')}.` : null}
-        </p>
         <div className={styles.footLinks}>
           <Link href="/sto-uciniti-prvo" className={styles.footLink}>
             Što učiniti prvo
           </Link>
           <Link href="/kako-rangiramo" className={styles.footLink}>
             Kako rangiramo
+          </Link>
+          <Link href="/nase-obecanje" className={styles.footLink}>
+            Naše obećanje
           </Link>
         </div>
       </div>

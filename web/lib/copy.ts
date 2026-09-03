@@ -102,6 +102,32 @@ export const CATCHMENT: Record<
 };
 
 /**
+ * The product's headline claim, in the one wording the data actually supports:
+ * every entity registered under NKD 96.03 in the pilot city, none omitted.
+ *
+ * **Deliberately count-free.** Stating "svih sedam" made the strongest fact we
+ * have — that nobody is missing — read as a small number, and a visitor who
+ * has never heard of us reads "seven" as the size of our database rather than
+ * the size of the market. Coverage is the claim; the count is a detail, and it
+ * still appears where it does real work (a service page's "šest od sedam", the
+ * `· N` on a section heading).
+ *
+ * Centralised because it now appears on the landing page, the results header,
+ * the rail and the promise page. If it is ever hedged or widened it has to
+ * change in all of them at once — a claim stated absolutely on one page and
+ * hedged on the next reads as the hedge.
+ *
+ * Two limits carried over from CATCHMENT, both still binding: the claim is
+ * about **the pilot area, not about any individual provider's service radius**,
+ * and it says "registrirani" rather than "svi" because that is what we can
+ * stand behind — a provider operating without a registry entry we could not
+ * find is exactly the case the qualifier is honest about.
+ */
+export function coverageClaim(areaLocative: string): string {
+  return `Svi registrirani pogrebnici u ${areaLocative}`;
+}
+
+/**
  * Croatian number words, for the context strip's count.
  *
  * Spelled out to twenty and then numeric, which is ordinary Croatian

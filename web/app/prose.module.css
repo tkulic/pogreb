@@ -98,6 +98,21 @@
   color: var(--ink-body);
 }
 
+/* The half of a promise that makes it one: what it rules out.
+
+   Quieter than the promise above it and marked by a hairline on the inside
+   edge, so it reads as attached to that item rather than as a second claim
+   competing with it. */
+.itemExcludes {
+  font-family: var(--font-text);
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--text-secondary);
+  margin-top: 4px;
+  padding-left: 12px;
+  border-left: 1px solid var(--rule-quiet);
+}
+
 .note {
   font-family: var(--font-text);
   font-size: 12.5px;
@@ -115,6 +130,14 @@
   font-family: var(--font-text);
   font-size: 13.5px;
   color: var(--gold-link);
+}
+
+/* Two or more exit links belong to each other, so they sit in their own group
+   rather than inheriting the page's section gap — which reads as two unrelated
+   sections a link long. */
+.footerLinks {
+  display: flex;
+  flex-direction: column;
 }
 
 /* Sources — quiet, but present. A procedural claim a reader cannot check is
@@ -143,4 +166,25 @@
   font-size: 12.5px;
   line-height: 1.6;
   color: var(--gold-link);
+}
+
+/* --- desktop ---
+
+   Prose is the one place where the wider column does real work: 620px at 13.5px
+   Archivo is a comfortable measure for continuous reading, which the 560px cap
+   was not quite. Body sizes are unchanged; the title and lede step up. */
+
+@media (min-width: 1024px) {
+  .page {
+    gap: 30px;
+    padding-block: 28px 96px;
+  }
+
+  .title {
+    font-size: 26px;
+  }
+
+  .lede {
+    font-size: 15.5px;
+  }
 }

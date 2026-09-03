@@ -65,3 +65,15 @@
 .fullWidth {
   width: 100%;
 }
+
+/* Desktop: a 620px-wide button stops reading as a button.
+
+   `fullWidth` means "fill the thing you are in", and on a phone that thing is
+   the screen. Beside the rail it is a 620px column, so the action needs a size
+   of its own. Buttons that fill a grid column instead — the contact row on a
+   card — are unaffected, because that column is narrower than this cap. */
+@media (min-width: 1024px) {
+  .fullWidth {
+    max-width: 360px;
+  }
+}

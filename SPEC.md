@@ -1,6 +1,6 @@
 # Project Spec: Funeral Services Portal (working name)
 
-> Status: Phase 1 — **the database schema is complete and applied** to the hosted Supabase project, including `entities.slug`, Croatian `services.slug` values, and anonymous usage logging (`events` + `log_event`). Seven Split pilot providers are loaded. The frontend is fully specified in [SPEC_frontend.md](SPEC_frontend.md) and **not yet built** — that is the next step.
+> Status: Phase 1 — **the database schema is complete and applied** to the hosted Supabase project, including `entities.slug`, Croatian `services.slug` values, and anonymous usage logging (`events` + `log_event`). Seven Split pilot providers are loaded. The frontend is **built and running locally**, desktop layout included — see [SPEC_frontend.md](SPEC_frontend.md). The next step is expanding coverage beyond the one pilot city.
 > This document is a living artifact — updated as decisions are made. See also [SPEC_database.md](SPEC_database.md) for database schema details and [SPEC_frontend.md](SPEC_frontend.md) for the frontend user story, flow and visual system.
 >
 > Note: the product itself targets Croatian-speaking users (Croatian market), but this spec and all engineering docs are written in English. Croatian legal/registry terms (OIB, MBS, NKD, Sudreg, obrt) are kept as-is — they're domain identifiers without a real English equivalent.
@@ -34,7 +34,7 @@ Phase 1 goal: a free, public portal with a database of all business entities reg
 - Database of business entities (companies + obrti) for 1-2 pilot cities
 - Manual data entry into Supabase
 - Structure prepared for future SEO pages per city
-- Public read-only frontend (Next.js), run locally against the hosted Supabase project — specified in [SPEC_frontend.md](SPEC_frontend.md): user story, three-screen flow, results page and ranking rules, routing, and the **Kamen** visual system. Nothing built yet
+- Public read-only frontend (Next.js), run locally against the hosted Supabase project — specified in [SPEC_frontend.md](SPEC_frontend.md): user story, three-screen flow, results page and ranking rules, routing, and the **Kamen** visual system. Built, including the desktop layout
 - **Anonymous usage logging** — per-provider view and click counts, via the `events` table and the `log_event` function. See [SPEC_database.md](SPEC_database.md) → Usage logging. In scope because a free portal with no usage signal cannot tell *"nobody needs this"* from *"nobody found it"*, and those imply opposite next moves. Per-provider click counts are also the evidence base for any future pay-per-lead pricing, so the data belongs in Postgres alongside `entities` rather than in a third-party analytics silo
 
 **Out of scope (deliberately deferred):**
@@ -55,11 +55,13 @@ Phase 1 goal: a free, public portal with a database of all business entities reg
 ```
 SPEC.md, SPEC_database.md,
 SPEC_frontend.md            specs — source of truth
+RESEARCH_market.md          comparable platforms worldwide, and
+                            monetization options — research, not decisions
 CLAUDE.md                   agent working rules
 web/                        the Next.js app
   app/                      App Router routes
   lib/                      env, Supabase client, database types
-  public/fonts/             self-hosted Cinzel + Archivo, with their OFL licences
+  public/fonts/             self-hosted Spectral SC + Archivo, with their OFL licences
   .env.example              frontend env vars to copy to web/.env.local
 supabase/
   config.toml               CLI config, linked to the hosted project

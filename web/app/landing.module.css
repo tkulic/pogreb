@@ -55,6 +55,35 @@
   color: var(--gold-link);
 }
 
+/* --- coverage strip ---
+
+   Directly under the action, because it is the evidence for the claim in the
+   heading and the line that tells a stranger whether this site covers their
+   town. It sits on plain --stone: --stone-inset is decorative only and no text
+   token clears AA on it. */
+
+.coverage {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding-top: 4px;
+}
+
+.coverageLabel {
+  font-family: var(--font-text);
+  font-size: 10.5px;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+  color: var(--text-label);
+}
+
+.coverageValue {
+  font-family: var(--font-text);
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--ink-body);
+}
+
 /* --- the band ---
    The one image slot on this page. Renders as texture alone when no image has
    been chosen, which is the state it ships in. */
@@ -166,6 +195,18 @@
   color: var(--ink-body);
 }
 
+/* Reads on from the last promise rather than sitting apart from it, so the
+   section has one exit rather than a competing action. */
+.sectionLink {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  min-height: 44px;
+  font-family: var(--font-text);
+  font-size: 13px;
+  color: var(--gold-link);
+}
+
 /* --- foot --- */
 
 .foot {
@@ -174,13 +215,6 @@
   gap: 10px;
   padding-top: 18px;
   border-top: 1px solid var(--rule-gold);
-}
-
-.footNote {
-  font-family: var(--font-text);
-  font-size: 12px;
-  line-height: 1.8;
-  color: var(--text-secondary);
 }
 
 .footLinks {
@@ -196,4 +230,46 @@
   font-family: var(--font-text);
   font-size: 13px;
   color: var(--gold-link);
+}
+
+/* --- desktop ---
+
+   Beside the rail the page has room to breathe: more air between sections, a
+   larger hero, a taller band. The body type scale is unchanged — only the
+   display sizes step up, and the lede with them. */
+
+@media (min-width: 1024px) {
+  .page {
+    gap: 44px;
+    padding-block: 24px 96px;
+  }
+
+  .hero {
+    gap: 16px;
+    padding-top: 24px;
+  }
+
+  .title {
+    font-size: 30px;
+    line-height: 1.24;
+  }
+
+  .lede {
+    font-size: 15.5px;
+  }
+
+  .coverage {
+    padding-top: 8px;
+  }
+
+  .band {
+    height: 200px;
+  }
+
+  /* The rail carries the wordmark and these three links at this width, and the
+     foot held nothing else once the settlement list moved up into the coverage
+     strip. */
+  .foot {
+    display: none;
+  }
 }

@@ -38,6 +38,20 @@
   color: var(--text-secondary);
 }
 
+/* The coverage claim.
+
+   Archivo rather than Spectral SC, and ink rather than gold: it is a statement
+   to be read, and gold at this position would compete with the reason lines on
+   the cards below — gold is a cut line, and the reason line already owns it on
+   this page. */
+.coverage {
+  font-family: var(--font-text);
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ink-body);
+  padding-top: 3px;
+}
+
 /* What the user picked, read back on one line with the way to change it.
 
    The provider count that used to lead this block is gone: the section
@@ -150,4 +164,25 @@
   font-size: 13px;
   line-height: 1.7;
   color: var(--text-secondary);
+}
+
+/* --- desktop ---
+
+   The list stays one column at every width, deliberately: cards in a grid
+   would put the design back into containers, and the calm-at-forty-providers
+   property goes with them. What changes is air and the size of the heading. */
+
+@media (min-width: 1024px) {
+  .page {
+    gap: 34px;
+    padding-block: 24px 88px;
+  }
+
+  .header {
+    padding-bottom: 18px;
+  }
+
+  .title {
+    font-size: 24px;
+  }
 }

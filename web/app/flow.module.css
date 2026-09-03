@@ -127,3 +127,32 @@
   line-height: 1.8;
   color: var(--text-muted);
 }
+
+/* --- desktop ---
+
+   The tiles stop being full-width: a 620px-wide answer reads as a bar rather
+   than a choice, and a column of them stops scanning as a set. */
+
+@media (min-width: 1024px) {
+  .screen {
+    gap: 26px;
+    padding-block: 36px 72px;
+    /* The full-height screen with the bypass pinned to the bottom is a phone
+       pattern: it puts the escape hatch under the thumb. On a desktop window
+       it opens a screenful of nothing between the answers and that link, so
+       the page becomes content-height and the bypass follows the questions. */
+    min-height: 0;
+  }
+
+  .spacer {
+    display: none;
+  }
+
+  .title {
+    font-size: 26px;
+  }
+
+  .options {
+    max-width: 420px;
+  }
+}
