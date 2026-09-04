@@ -178,7 +178,7 @@ The 16 rows in `services` are a **supply-side taxonomy** — what a provider sel
 
 So screen 3 asks what the family is actually facing.
 
-### Question 3a — always shown
+### Question 3a — the whole screen
 
 **Question:** *Kremiranje ili ukop?*
 
@@ -192,7 +192,17 @@ This is the one genuine either/or, it is the first thing every provider asks, an
 
 **`ukop` filters nothing, and the UI must not imply otherwise.** All 7 providers do burials — `organizacija-pogreba` is universal and there is no `ukop` service row. `ukop` and *"Još ne znam"* therefore produce an identical list; what differs is the reason lines and the copy. Stating this here so nobody later "fixes" it by inventing a service row.
 
-### Question 3b — conditional on sourcing
+**Answering is the submit, as of 2026-09-04.** All three tiles link straight to the results, so nothing stands between choosing and seeing the list. The `Prikažite pogrebnike` button that used to sit at the foot of this screen is gone: it could only ever lead to one place, and on a screen a family reads in a hurry, a tap that changes nothing is a tap worth removing.
+
+That change also repaired *"Još ne znam"*, which was a real defect rather than a style choice. It linked to `?korak=potrebe` with `nacin` cleared — the URL the reader was already on — so the tile rendered in the quiet grey style and then visibly did nothing when tapped. It now goes where the other two go, carrying no `nacin`, which is what it always meant.
+
+### Question 3b — *Gdje je pokojnik sada?* — pulled 2026-09-04
+
+**Not rendered.** The project owner removed it to cut screen 3 to a single question and a single tap. Everything behind it survives untouched — `Pokojnik` and its parsing in `lib/answers.ts`, `POKOJNIK_LABEL` in `lib/copy.ts`, `BY_POKOJNIK` in `lib/guidance.ts` — in exactly the state the hidden `planiranje` situation is in. **Restoring it is markup on screen 3 and nothing else.**
+
+Two consequences while it is out: `pokojnik` is never set, so its guidance line never fires and the strip falls back to whatever `situacija` contributes; and a shared or bookmarked link that still carries `?pokojnik=` keeps working exactly as before, because the parser never stopped reading it.
+
+The rest of this section records why it was built and what its text rests on. It stays accurate for whoever restores it.
 
 **Question:** *Gdje je pokojnik sada?*
 
@@ -255,7 +265,7 @@ The destination of the flow, and the page the whole product exists to render.
    The coverage line is here rather than only in the footer because it is the reason to trust this page over a page of search results, and it is the page's own claim rather than the site's — which is why neither the masthead nor the footer may repeat it ([Layout and shape](#layout-and-shape)). It is set in Archivo and ink, not Spectral SC and gold: on this page gold belongs to the reason lines, and a gold claim above them would compete with the thing that justifies the shortlist.
 3. **`NAJBOLJE ODGOVARA · N`** — the shortlist.
 4. **`OSTALI POGREBNICI · N`** — everyone else, quieter but complete.
-5. **Guidance strip** — conditional on `situacija` and `pokojnik`; links to `/sto-uciniti-prvo`. Text is sourced from the primary references listed under [screen 3b](#question-3b--conditional-on-sourcing). Omitted entirely — rules and link included — when neither answer has guidance attached, rather than rendering an empty bordered strip.
+5. **Guidance strip** — conditional on `situacija` and `pokojnik`; links to `/sto-uciniti-prvo`. Text is sourced from the primary references listed under [screen 3b](#question-3b--gdje-je-pokojnik-sada--pulled-2026-09-04). Omitted entirely — rules and link included — when neither answer has guidance attached, rather than rendering an empty bordered strip. **Since 3b was pulled, `pokojnik` is never set**, so in practice the strip now renders on `situacija` alone.
 6. **Transparency footer** — *"Nitko nam ne plaća za bolju poziciju i nitko nije izostavljen."*, then the settlement list, then links to `/kako-rangiramo` and `/nase-obecanje`. The coverage sentence it used to open with moved up into the header (2); the footer now carries what *qualifies* the claim rather than restating it.
 
 **Two things moved here after the page was built and reviewed, and both were hierarchy problems rather than content problems:**
@@ -527,11 +537,13 @@ Five rules on it, all binding:
 
 Netlify discovers forms by scanning the static HTML a build emits. An App Router page is rendered by the runtime rather than written out as a plain file the scanner reads, so a form declared only inside a React component is **never registered and its submissions are silently dropped**. The documented workaround, and what is implemented:
 
-- `public/__forms.html` holds the field definitions, `data-netlify`, the honeypot, and the `action` that decides where a successful submission lands.
-- The real form POSTs to `/__forms.html` with a matching `form-name`.
+- `public/__forms.html` holds the field definitions, `data-netlify` and the honeypot. **That is all it does.** It exists to be scanned at build time; no browser ever submits it.
+- **The React form POSTs to its own `action`, and that `action` is the success page** — `/za-pogrebnike/hvala`. Netlify intercepts the POST at the edge, matches `form-name` against the scanned definition, stores the submission, and redirects there.
 - **The two field lists must stay identical.** A field added to the React form and not to `public/__forms.html` arrives empty, with no error anywhere — which is the failure mode worth writing down, because nothing surfaces it.
 
-⚠️ **Still unverified.** Form handling is a Netlify build-and-runtime feature, and the app has never been deployed. The page renders and validates in development; the submission path itself has never executed anywhere. **It remains the only part of the frontend in that state, and the first deploy must include an end-to-end test submission** — see [Deployment](#deployment) for what to check.
+**Corrected 2026-09-04 by the first live submission.** This section previously had it backwards: it said the `action` in `__forms.html` decided where a submission lands, and the React form accordingly POSTed to `/__forms.html`. Submissions were stored correctly, but the sender was dropped on Netlify's generic confirmation page instead of `/za-pogrebnike/hvala`. The redirect follows the `action` of the form the browser actually submits, so it has to live on the React form. The two files are kept identical anyway, so that reading either one alone does not mislead.
+
+✅ **Verified 2026-09-04.** Submissions reach Netlify → Forms → `pogrebnici`. The event log fires from the live domain as well. What the first submission also surfaced is the redirect defect recorded above.
 
 ### The gate: opened on 2026-09-04
 
@@ -890,5 +902,5 @@ The schema is complete as of 2026-09-02 — nothing in the database blocks a bui
 - ~~**`available_24_7` contradicts `phones` for two providers**~~ — resolved by the project owner at the data level. The phone-selection rule can rely on `available_24_7` and `phones[].type` agreeing.
 
 - ~~**Croatian copy review**~~ — confirmed by the project owner: `ukop`, *"Osoba je u posljednjim danima"*, and the settlement list all stand.
-- ~~**Whether screen 3b ships**~~ — it ships; see above.
+- ~~**Whether screen 3b ships**~~ — it shipped, and was then **pulled on 2026-09-04** to cut screen 3 to one question and one tap. Its code is intact and restoring it is markup only; see [screen 3b](#question-3b--gdje-je-pokojnik-sada--pulled-2026-09-04).
 - ~~**Entity/service URL namespace collision**~~ — resolved above as `/usluga/{slug}`, closing the open question carried in [SPEC_database.md](SPEC_database.md).
