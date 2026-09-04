@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { ActionLink } from '@/components/ActionLink';
 import { Landing } from '@/components/Landing';
 import { OptionTile } from '@/components/OptionTile';
 import { PageBack } from '@/components/PageBack';
@@ -17,7 +16,6 @@ import {
 import {
   CATCHMENT,
   NACIN_LABEL,
-  POKOJNIK_LABEL,
   SITUACIJA_LABEL,
   VISIBLE_SITUACIJA,
 } from '@/lib/copy';
@@ -159,50 +157,44 @@ export default async function HomePage({ searchParams }: PageProps) {
         </>
       )}
 
+      {/*
+        The last question, and answering it *is* the submit: every tile links
+        straight to the results rather than to another `?korak=potrebe` URL, so
+        nothing sits between choosing and seeing the list. The
+        `Prikažite pogrebnike` button this replaces was a second tap that could
+        only ever lead to one place.
+
+        `Gdje je pokojnik sada?` used to be a second question on this screen and
+        is out for now. `pokojnik` stays parsed, typed and wired into
+        `lib/guidance.ts`, exactly as the hidden `planiranje` situation is, so
+        restoring it is markup here and nothing else — its guidance line simply
+        never fires meanwhile.
+      */}
       {korak === 'potrebe' && grad && (
         <>
-          <div className={styles.section}>
-            <div className={styles.question}>
-              <h1 className={styles.title}>Kremiranje ili ukop?</h1>
-            </div>
-            <div className={styles.options}>
-              {(['kremiranje', 'ukop'] as const).map((value) => (
-                <OptionTile
-                  key={value}
-                  href={step('potrebe', { nacin: value })}
-                  selected={answers.nacin === value}
-                >
-                  {NACIN_LABEL[value]}
-                </OptionTile>
-              ))}
-              {/* Every question carries an explicit escape. */}
-              <OptionTile href={step('potrebe', { nacin: undefined })} quiet>
-                Još ne znam
-              </OptionTile>
-            </div>
+          <div className={styles.question}>
+            <h1 className={styles.title}>Kremiranje ili ukop?</h1>
           </div>
-
-          <div className={styles.section}>
-            <h2 className={styles.subTitle}>Gdje je pokojnik sada?</h2>
-            <div className={styles.options}>
-              {(['kuca', 'bolnica', 'dom', 'inozemstvo'] as const).map((value) => (
-                <OptionTile
-                  key={value}
-                  href={step('potrebe', { pokojnik: value })}
-                  selected={answers.pokojnik === value}
-                >
-                  {POKOJNIK_LABEL[value]}
-                </OptionTile>
-              ))}
-              <OptionTile href={step('potrebe', { pokojnik: undefined })} quiet>
-                Ne znam
+          <div className={styles.options}>
+            {(['kremiranje', 'ukop'] as const).map((value) => (
+              <OptionTile
+                key={value}
+                href={resultsHref(grad, { ...answers, nacin: value })}
+                selected={answers.nacin === value}
+              >
+                {NACIN_LABEL[value]}
               </OptionTile>
-            </div>
+            ))}
+            {/*
+              Every question carries an explicit escape, and this one now goes
+              where the two answers go. As a `step('potrebe', …)` link it
+              rewrote the URL the reader was already on, so it rendered as a
+              grey tile that visibly did nothing — the defect this fixes.
+            */}
+            <OptionTile href={resultsHref(grad, { ...answers, nacin: undefined })} quiet>
+              Još ne znam
+            </OptionTile>
           </div>
-
-          <ActionLink variant="primary" href={resultsHref(grad, answers)} fullWidth>
-            Prikažite pogrebnike
-          </ActionLink>
         </>
       )}
 

@@ -14,7 +14,7 @@
       a plain file the scanner reads, so a form declared only inside a React
       component is never registered and its submissions are silently dropped.
       The documented workaround is this file: a static page holding the field
-      definitions, which the real form POSTs to.
+      definitions, so the scanner has something to register.
 
       Two consequences worth knowing before editing:
 
@@ -22,15 +22,23 @@
          same field names.** Netlify records only the fields declared here — a
          field added to the React form and not to this one arrives empty, with
          no error anywhere.
-      2. **`action` here is where a successful submission lands**, not where the
-         form posts. The React form posts to `/__forms.html`; Netlify matches on
-         `form-name`, stores the submission, and then redirects the visitor to
-         the URL below.
+      2. **This file declares fields and nothing else.** Everything about a
+         live submission is decided by the React form, because that is the one
+         a browser actually submits: it POSTs to its own `action`, Netlify
+         intercepts at the edge, matches `form-name` against the definition
+         below, stores the submission, and redirects to that same `action`.
+         The `action` written here is never read by anything.
 
-      None of this can be verified locally: form handling is a Netlify build
-      and runtime feature, and Phase 1 runs the app locally against the hosted
-      Supabase project with no deploy (SPEC.md → Out of scope). The form renders
-      and validates in dev; it begins recording on first deploy.
+         An earlier revision had this backwards — it claimed the `action` below
+         was the success page and had the React form POST to `/__forms.html`.
+         The first live submission landed on Netlify's generic confirmation
+         page rather than on `/za-pogrebnike/hvala`, which is what corrected it.
+         The two are kept identical anyway, so that reading either file alone
+         does not mislead the next person.
+
+      The submission path cannot be exercised locally: form handling is a
+      Netlify build-and-runtime feature, so it is only ever verifiable against
+      a deploy.
     -->
     <form
       name="pogrebnici"

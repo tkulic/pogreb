@@ -112,12 +112,22 @@ export default function ProviderPage() {
           A plain HTML POST — no JavaScript, no client component, no validation
           that can fail silently. `form-name` is what Netlify matches on; the
           honeypot is a field a person never sees and a bot fills in.
+
+          **`action` is the success page, and it has to be on this form** —
+          the one the browser actually submits. Netlify intercepts the POST at
+          the edge, matches `form-name` against the definition in
+          `public/__forms.html`, stores the submission, and then redirects to
+          this URL. Posting to `/__forms.html` instead put the sender on
+          Netlify's generic confirmation page, because that is what an action
+          Netlify does not recognise as a success page falls back to; the
+          `action` written in `__forms.html` is inert, since no browser ever
+          submits that form.
         */}
         <form
           className={styles.form}
           name="pogrebnici"
           method="POST"
-          action="/__forms.html"
+          action="/za-pogrebnike/hvala"
         >
           <input type="hidden" name="form-name" value="pogrebnici" />
           <p className={styles.honeypot} aria-hidden="true">
