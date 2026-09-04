@@ -1,16 +1,38 @@
 import type { Metadata, Viewport } from 'next';
+import { SITE_ORIGIN } from '@/lib/env';
 import { SiteFooter } from '@/components/SiteFooter';
 import { SiteHeader } from '@/components/SiteHeader';
 import './globals.css';
 
 export const metadata: Metadata = {
+  /**
+   * What every page's relative `alternates.canonical` is resolved against.
+   *
+   * Without it Next emits the canonical exactly as written -- `/kako-rangiramo`
+   * rather than an absolute URL. A relative canonical is legal and self-refers,
+   * which is survivable, but it also means every host that can serve this app
+   * declares itself canonical: the `.netlify.app` deploy domain, `www`, and the
+   * apex each vouch for their own copy. Netlify's redirect to the primary
+   * domain is what keeps that from mattering in practice; this is what keeps it
+   * from mattering in principle, and it costs one line.
+   */
+  metadataBase: new URL(SITE_ORIGIN),
   title: {
     default: 'Pogrebne usluge',
     template: '%s · Pogrebne usluge',
   },
+  /**
+   * The fallback description, shown for any page that does not set its own.
+   *
+   * It says "Popis", not "Svi": the completeness promise belongs to
+   * `coverageClaim` in lib/copy.ts, on the city pages where a reader can
+   * actually check it. Naming the country here is a statement of what the
+   * product is, not a claim to hold every provider in it -- which is also why
+   * this line does not need editing each time a city is added.
+   */
   description:
-    'Popis registriranih pogrebnika u Splitu i okolici. Besplatno, bez ' +
-    'prijave i bez posrednika.',
+    'Popis registriranih pogrebnika u Hrvatskoj. Besplatno, bez prijave ' +
+    'i bez posrednika.',
 };
 
 export const viewport: Viewport = {

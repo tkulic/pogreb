@@ -1,7 +1,5 @@
 import type { MetadataRoute } from 'next';
-import { SITE_HOST } from '@/lib/env';
-
-const BASE = SITE_HOST ? `https://${SITE_HOST}` : 'http://localhost:3000';
+import { SITE_ORIGIN } from '@/lib/env';
 
 /**
  * Crawling is welcome — search is this product's entire distribution channel.
@@ -19,6 +17,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: '/',
       disallow: ['/specimen', '/*?situacija=', '/*?nacin=', '/*?korak='],
     },
-    sitemap: `${BASE}/sitemap.xml`,
+    sitemap: `${SITE_ORIGIN}/sitemap.xml`,
   };
 }

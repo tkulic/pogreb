@@ -146,8 +146,11 @@ export default async function ProviderPage({ params, searchParams }: PageProps) 
             {provider.services.map((service) => (
               <li key={service.id} className={styles.service}>
                 <span>{service.name}</span>
-                {/* A price appears only where one is stored. Currently this
-                    renders for nobody — no pilot provider publishes one. */}
+                {/* A price appears only where one is stored, and it was written
+                    when the Split-only pilot had none. Whether any of the 45
+                    providers now carries one has not been checked, so do not
+                    read this as "renders for nobody" — `/nase-obecanje` is
+                    worded to hold either way. */}
                 {service.price_from !== null && (
                   <span className={styles.price}>
                     <span>

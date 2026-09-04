@@ -121,6 +121,16 @@
   color: var(--text-secondary);
 }
 
+/* The privacy notice, set inside the baseline sentence rather than given a
+   column of its own: it concerns only the funeral directors who use the form,
+   and the visitors this footer mostly serves are asked for nothing. Inherits
+   the baseline's 12px so it stays the quietest link on the page. */
+.baselineLink {
+  font-size: inherit;
+  color: var(--gold-link);
+  white-space: nowrap;
+}
+
 /* --- desktop ---
 
    Three columns: the brand block takes the room it needs for a readable line,

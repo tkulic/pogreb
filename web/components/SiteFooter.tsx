@@ -11,9 +11,9 @@ import styles from './SiteFooter.module.css';
  * data came from, what the site will and will not do, and a way to reach
  * somebody about it.
  *
- * **The `Službeni izvori` column is the load-bearing one.** Those four are the
+ * **The `Službeni izvori` column is the load-bearing one.** Those three are the
  * primary sources the guidance text is written against (SPEC_frontend.md →
- * Question 3b) plus the registry the listings are drawn from. A family that
+ * Question 3b). A family that
  * needs the *procedure* rather than a provider should be able to leave for
  * gov.hr from any page — sending them to the source is the honest outcome, and
  * a portal that hoards the reader is the pattern this product is defined
@@ -32,9 +32,15 @@ import styles from './SiteFooter.module.css';
  *
  * **No named owner and no copyright line.** Both would have to be invented
  * (SPEC.md → Never: fabricating data), and an invented legal entity in a
- * footer is worse than an absent one. It is tracked as a known gap, and it is
- * also what currently keeps `/za-pogrebnike` out of `MENU` — see
- * `PROVIDER_FORM_PUBLIC`.
+ * footer is worse than an absent one. It is tracked as a known gap.
+ *
+ * **`/privatnost` is in the baseline row, not in the `Stranice` column, and
+ * that is where it belongs.** It concerns only people who submit the provider
+ * form, so promoting it into the menu would advertise a data question to
+ * grieving visitors of whom nothing is asked. It is deliberately not in
+ * `lib/nav.ts` either: that file exists to stop the masthead and the footer
+ * drifting apart, and a link that belongs to exactly one of them would invite
+ * the opposite conclusion.
  */
 export function SiteFooter() {
   return (
@@ -84,7 +90,10 @@ export function SiteFooter() {
         <p className={styles.baselineText}>
           Podaci su prikupljeni iz Sudskog registra i javno dostupnih izvora, i
           unose se ručno. Ne procjenjujemo kvalitetu, ne objavljujemo recenzije
-          i ne navodimo cijene.
+          i ne navodimo cijene.{' '}
+          <Link href="/privatnost" className={styles.baselineLink}>
+            Privatnost
+          </Link>
         </p>
       </div>
     </footer>

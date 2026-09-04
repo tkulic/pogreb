@@ -37,11 +37,12 @@ export const metadata: Metadata = {
   description:
     'Ispravak podataka, dodavanje na popis i suradnja — za pogrebna poduzeća ' +
     'i obrte. Uvrštenje je besplatno i pozicija se ne plaća.',
-  // `noindex` while PROVIDER_FORM_PUBLIC is false. The page is built and still
-  // reachable by URL, but it is offered to nobody until `/privatnost` exists —
-  // keeping it out of the menu while handing it to a crawler would defeat the
-  // point of the gate. Remove this in the same change that flips the flag.
-  robots: { index: false, follow: false },
+  alternates: { canonical: '/za-pogrebnike' },
+  // Indexable as of the change that flipped PROVIDER_FORM_PUBLIC. It was
+  // `noindex` while the flag was false, because keeping the page out of the
+  // menu while handing it to a crawler would have defeated the point of the
+  // gate. Finding this page in a search is now the intended route for a
+  // funeral director who is not on the list.
 };
 
 const REASONS = [
@@ -258,6 +259,20 @@ export default function ProviderPage() {
             koristimo za slanje ponuda. Obrazac postoji samo na ovoj stranici —
             posjetitelji koji traže pogrebnika ne ispunjavaju ništa i od njih ne
             tražimo nikakve podatke.
+          </p>
+          {/*
+            The notice, at the point of collection rather than only in the
+            footer. GDPR art. 13 is about what the person knows *before* they
+            submit, so this link sits with the submit button and not on a page
+            they would have to go looking for.
+          */}
+          <p className={styles.privacy}>
+            Sve o tome — koja polja čuvamo, gdje, koliko dugo i koja su vaša
+            prava — piše na stranici{' '}
+            <Link href="/privatnost" className={styles.privacyLink}>
+              Privatnost
+            </Link>
+            .
           </p>
         </form>
       </section>

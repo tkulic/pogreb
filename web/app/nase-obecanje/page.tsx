@@ -18,9 +18,16 @@ import styles from '../prose.module.css';
  * therefore not a disclaimer bolted on — it is the promise being honest about
  * its own edge, and it must stay in step with SPEC_database.md → Usage logging.
  *
- * Deliberately absent: a named owner and a contact address. Both belong here —
- * a promise page with nobody behind it is the weakest kind — but neither can be
- * invented (SPEC.md → Never: fabricating data). They land with `/o-nama`.
+ * **Still absent: a named owner.** A promise page with nobody behind it is the
+ * weakest kind, but a name cannot be invented (SPEC.md → Never: fabricating
+ * data) and the project owner has chosen not to publish one. It waits on
+ * `/o-nama`.
+ *
+ * A contact route no longer is absent. `/za-pogrebnike` takes corrections and
+ * `/privatnost` says what happens to them, and the "javite nam" limit below
+ * points at the first of those — for funeral directors. There is still no route
+ * for a member of the public who is not one, which is the other half of the
+ * same tracked gap.
  */
 export const metadata: Metadata = {
   title: 'Naše obećanje',
@@ -89,7 +96,7 @@ const PROMISES: { title: string; body: string; excludes: string }[] = [
 /** What the promise does not cover. Stated by us, before anyone asks. */
 const LIMITS: string[] = [
   'Ne ocjenjujemo kvalitetu usluge. Nemamo ocjene ni recenzije jer ih nemamo od koga dobiti, a izmišljene bi bile gore od nikakvih.',
-  'Ne znamo cijene. Nijedan pogrebnik u području koje pokrivamo ne objavljuje cjenik, pa ga ne prikazujemo ni približno.',
+  'Ne uspoređujemo cijene i ne rangiramo po njima. Pogrebnici u pravilu ne objavljuju cjenike; gdje cijenu ipak znamo, stoji na stranici pogrebnika i označena je kao orijentacijska.',
   'Ne znamo koji pogrebnik dolazi u koje mjesto. Područje koje navodimo je područje popisa, a ne obećanje da svaki pogrebnik s popisa radi u svakom naselju.',
   'Podatke unosimo ručno i mogu zastarjeti. Ako je neki broj, radno vrijeme ili usluga netočna, javite nam i ispravit ćemo — ispravak je pravi lijek za to.',
 ];
@@ -159,13 +166,32 @@ export default function PromisePage() {
             </li>
           ))}
         </ul>
+        {/*
+          The last limit above says "javite nam", and until now there was
+          nowhere to write. LIMITS is a list of plain strings, so the address
+          lands here rather than inside the sentence that promises it.
+        */}
+        <p className={styles.note}>
+          Ako ste pogrebnik i nešto o vama nije točno, ispravak se traži na
+          stranici{' '}
+          <Link href="/za-pogrebnike" className={styles.footerLink}>
+            Za pogrebnike
+          </Link>
+          .
+        </p>
       </section>
 
+      {/*
+        No count in this sentence, on purpose. It said "jedno područje" through
+        the seven-city expansion, and a number written by hand here would go
+        stale the same way — the landing page counts cities from the live rows
+        precisely so that copy like this does not have to.
+      */}
       <p className={styles.note}>
-        Ovo je popis u pilot-fazi: jedno područje i mali broj pogrebnika. Sve
-        gore navedeno vrijedi od prvog dana, a ne od trenutka kada popis
-        naraste — obećanje koje bi vrijedilo tek kasnije ne bi vrijedilo ni
-        sada.
+        Popis još raste: pokrivamo dio Hrvatske, a ne cijelu zemlju, i svaki
+        novi grad dodajemo po istim pravilima. Sve gore navedeno vrijedi od
+        prvog dana, a ne od trenutka kada popis naraste — obećanje koje bi
+        vrijedilo tek kasnije ne bi vrijedilo ni sada.
       </p>
 
       <div className={styles.footerLinks}>

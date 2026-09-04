@@ -12,21 +12,24 @@ export type NavLink = { href: string; label: string };
 /**
  * Whether `/za-pogrebnike` is linked anywhere a stranger can reach it.
  *
- * **Currently false, and it is a compliance gate rather than a soft launch.**
- * The page carries the product's only form, and that form collects a name, an
- * e-mail address and a phone number. GDPR art. 13 requires telling the person
- * who the controller is, the legal basis, how long it is kept, what rights they
- * have and how to complain to AZOP. The note under the form covers roughly a
- * third of that, and there is no named legal entity to put in the controller
- * field — which is the same `/o-nama` decision that is blocking `/privatnost`.
+ * **Now true.** It was false as a compliance gate rather than a soft launch:
+ * the page carries the product's only form, that form collects a name, an
+ * e-mail address and a phone number, and GDPR art. 13 requires telling the
+ * person who the controller is, the legal basis, how long it is kept, what
+ * rights they have and how to complain to AZOP. The note under the form covered
+ * roughly a third of that and nothing covered the rest.
  *
- * So the route stays built and reachable by anyone who has the URL, and is
- * removed from the menu, the footer, the landing page, the sitemap and the two
- * prose pages that would otherwise link to it, and the page itself is
- * `noindex`. Flipping this to `true` re-links it everywhere at once, and it may
- * only be flipped once `/privatnost` exists and the form's note points at it.
+ * `/privatnost` now covers it, the form's note points at it, and the flag is
+ * flipped — which re-links the route in the menu, the footer, the landing page,
+ * the sitemap and the two prose pages all at once, and drops its `noindex`.
+ *
+ * **One part of the gate is still open, by the project owner's decision on
+ * 2026-09-04: the controller is not named.** `/privatnost` gives a contact
+ * address and states plainly that no legal person stands behind the site, which
+ * is honest but is not the identity half of art. 13(1)(a). Naming a controller
+ * is a one-line change in that page's `Tko obrađuje podatke` section.
  */
-export const PROVIDER_FORM_PUBLIC = false;
+export const PROVIDER_FORM_PUBLIC = true;
 
 /**
  * The masthead menu, and the first footer column.

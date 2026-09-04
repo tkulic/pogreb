@@ -32,3 +32,22 @@ export const SUPABASE_ANON_KEY = required(
  * point: without a match, nothing is logged.
  */
 export const SITE_HOST = process.env.NEXT_PUBLIC_SITE_HOST ?? '';
+
+/**
+ * The site's origin, and the single place the localhost fallback is decided.
+ *
+ * Three consumers need an absolute base -- `robots.ts` for the sitemap line,
+ * `sitemap.ts` for every entry, and `metadataBase` in the root layout, which
+ * is what turns each page's relative `alternates.canonical` into an absolute
+ * URL. They must agree: a sitemap on one host and a canonical tag on another
+ * is a self-contradiction handed to a crawler, and search is this product's
+ * entire distribution channel.
+ *
+ * The fallback is deliberately `localhost` rather than a hardcoded production
+ * host. An unset `NEXT_PUBLIC_SITE_HOST` means "not the real site" -- the same
+ * reading the instrumentation guard takes -- and a wrong absolute host is
+ * worse than an obviously local one.
+ */
+export const SITE_ORIGIN = SITE_HOST
+  ? `https://${SITE_HOST}`
+  : 'http://localhost:3000';

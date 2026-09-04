@@ -120,8 +120,11 @@ export default function RankingPage() {
         Jedno ograničenje vrijedi reći naglas: potpunost podataka djelomično
         mjeri koliko smo temeljito mi istražili nekog pogrebnika, a ne što je on
         učinio. Zato je taj kriterij posljednji, iza dostupnosti. Ako ste
-        pogrebnik i mislite da su vaši podaci nepotpuni, javite nam — ispravak
-        podataka je pravi lijek za to, a ne drugačije bodovanje.
+        pogrebnik i mislite da su vaši podaci nepotpuni,{' '}
+        <Link href="/za-pogrebnike" className={styles.footerLink}>
+          javite nam
+        </Link>{' '}
+        — ispravak podataka je pravi lijek za to, a ne drugačije bodovanje.
       </p>
 
       <Link href="/" className={styles.footerLink}>

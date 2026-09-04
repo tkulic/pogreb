@@ -223,6 +223,14 @@
   padding-top: 4px;
 }
 
+/* The link to the notice, inside the note beside the submit button. Same size
+   as the note it sits in — it has to be findable before submitting, not
+   prominent. */
+.privacyLink {
+  font-size: inherit;
+  color: var(--gold-link);
+}
+
 /* --- desktop --- */
 
 @media (min-width: 720px) {
