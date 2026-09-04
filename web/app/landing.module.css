@@ -25,13 +25,30 @@
   gap: 26px;
 }
 
-/* The measure the hero's prose is read at, inside the wider frame. */
+/* The measure the hero's prose is read at, inside the wider frame.
+
+   The hero is the one centred block on the site: heading, second clause and
+   the single action sit on a shared axis, with nothing beside them. Everything
+   below it stays left-aligned, which is what keeps this section reading as the
+   opening rather than as another row. */
 .heroText {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 14px;
   width: 100%;
   max-width: 34em;
+  margin-inline: auto;
+  text-align: center;
+}
+
+/* Scoped to the hero: the close at the foot of the page keeps its left edge,
+   because its action sits under a line of prose rather than alone. */
+.heroText .actions {
+  align-items: center;
+  /* The parent centres its children, which would otherwise shrink this row to
+     the button's label and lose the full-width action on a phone. */
+  width: 100%;
 }
 
 .title {
@@ -59,13 +76,6 @@
   font-size: 16px;
   line-height: 1.5;
   letter-spacing: 0;
-  color: var(--ink-body);
-}
-
-.lede {
-  font-family: var(--font-text);
-  font-size: 15px;
-  line-height: 1.65;
   color: var(--ink-body);
 }
 

@@ -77,17 +77,6 @@ export function Landing({ cities }: { cities: CityCoverage[] }) {
             </span>
           </h1>
 
-          {/*
-            Screen 1 offers "posljednji dani" as well, so the lede has to widen
-            the door the heading opened: someone whose relative is dying is in
-            the same hours and needs the same list.
-          */}
-          <p className={styles.lede}>
-            Ili je osoba u posljednjim danima, a vi ne znate što slijedi.
-            Odgovorite na dva pitanja i recimo vam koga nazvati prvog — i zašto
-            baš njega. Bez prijave, bez obrasca i bez posrednika.
-          </p>
-
           <div className={styles.actions}>
             <ActionLink variant="primary" href="/?korak=situacija" fullWidth>
               Pronađite pogrebnika

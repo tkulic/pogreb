@@ -78,8 +78,4 @@ export const SOURCES: readonly NavLink[] = [
     href: 'https://mvep.gov.hr/konzularne-informacije-99074/maticarstvo-prijava-rodjenja-braka-ili-smrti/prijava-smrti-179979/179979',
     label: 'MVEP — Prijava smrti u inozemstvu',
   },
-  {
-    href: 'https://sudreg.pravosudje.hr/',
-    label: 'Sudski registar — provjera tvrtke',
-  },
 ];
