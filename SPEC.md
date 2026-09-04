@@ -1,7 +1,7 @@
 # Project Spec: Funeral Services Portal (working name)
 
-> Status: Phase 1 — **the database schema is complete and applied** to the hosted Supabase project, including `entities.slug`, Croatian `services.slug` values, and anonymous usage logging (`events` + `log_event`). **Seven cities and 45 providers are loaded** — Zagreb, Split, Rijeka, Zadar, Osijek, Pula, Dubrovnik (expanded 2026-09-03). The frontend is **built and running locally** — masthead, reading column and footer at every width, a rebuilt landing page, and a provider page carrying the product's only form — see [SPEC_frontend.md](SPEC_frontend.md).
-> **Coverage expansion is written but not applied (2026-09-03):** six further cities — Zagreb, Rijeka, Zadar, Osijek, Pula, Dubrovnik — as 38 providers, 163 service rows, two `services` additions and two corrections to the Split data. All data, no schema change. Reviewed decision by decision with the project owner; the data and its provenance live in `data/` (gitignored) and the conventions are recorded in [SPEC_database.md](SPEC_database.md). Nothing is pushed: `db push` reaches production directly.
+> Status: Phase 1 — **the database schema is complete and applied** to the hosted Supabase project, including `entities.slug`, Croatian `services.slug` values, and anonymous usage logging (`events` + `log_event`). **Seven cities and 45 providers are loaded** — Zagreb, Split, Rijeka, Zadar, Osijek, Pula, Dubrovnik (expanded 2026-09-03). The frontend is **built and being deployed** — masthead, reading column and footer at every width, a rebuilt landing page, `/privatnost`, and a provider page carrying the product's only form — see [SPEC_frontend.md](SPEC_frontend.md).
+> **First deploy is in progress (2026-09-04), not finished.** The domain is **`pogreb.net`**, registered at Namecheap; `netlify.toml` is committed; `/privatnost` exists and `PROVIDER_FORM_PUBLIC` is `true`. Still outstanding: the Netlify site itself, the nameserver change, the HTTPS certificate, and the end-to-end form submission that has never executed anywhere. **Nothing about the deploy is verified until those are done** — see [SPEC_frontend.md](SPEC_frontend.md) → Deployment.
 > This document is a living artifact — updated as decisions are made. See also [SPEC_database.md](SPEC_database.md) for database schema details and [SPEC_frontend.md](SPEC_frontend.md) for the frontend user story, flow and visual system.
 >
 > Note: the product itself targets Croatian-speaking users (Croatian market), but this spec and all engineering docs are written in English. Croatian legal/registry terms (OIB, MBS, NKD, Sudreg, obrt) are kept as-is — they're domain identifiers without a real English equivalent.
@@ -37,7 +37,8 @@ The pilot began as 1–2 cities (Split). As of 2026-09-03 it is **seven**: Split
 - Database of business entities (companies + obrti) for the pilot cities — seven as of 2026-09-03, from an initial scope of 1–2
 - Manual data entry into Supabase
 - Structure prepared for future SEO pages per city
-- Public read-only frontend (Next.js), run locally against the hosted Supabase project — specified in [SPEC_frontend.md](SPEC_frontend.md): user story, three-screen flow, results page and ranking rules, routing, and the **Kamen** visual system. Built, including the desktop layout
+- Public read-only frontend (Next.js), against the hosted Supabase project — specified in [SPEC_frontend.md](SPEC_frontend.md): user story, three-screen flow, results page and ranking rules, routing, and the **Kamen** visual system. Built, including the desktop layout
+- **Deploy to Netlify on `pogreb.net`** — moved into scope on 2026-09-04 by the project owner. It was deferred as a separate decision, and this is that decision. Build configuration is in `netlify.toml`; the procedure and its verification steps are in [SPEC_frontend.md](SPEC_frontend.md) → Deployment
 - **Anonymous usage logging** — per-provider view and click counts, via the `events` table and the `log_event` function. See [SPEC_database.md](SPEC_database.md) → Usage logging. In scope because a free portal with no usage signal cannot tell *"nobody needs this"* from *"nobody found it"*, and those imply opposite next moves. Per-provider click counts are also the evidence base for any future pay-per-lead pricing, so the data belongs in Postgres alongside `entities` rather than in a third-party analytics silo
 
 **Out of scope (deliberately deferred):**
@@ -47,12 +48,13 @@ The pilot began as 1–2 cities (Split). As of 2026-09-03 it is **seven**: Split
 
   **Not this:** the provider form on `/za-pogrebnike`, added at the project owner's direction. It points the other way — a listed business writing to us about its own listing, for a correction, a missing entry or collaboration — and a family never meets it. It is the product's only form, and the constraint that it must never become a lead form is written down in [SPEC_frontend.md](SPEC_frontend.md) → The provider page
 - Automated sync with Sudreg
-- Netlify deploy / public launch — the Phase 1 frontend runs locally against the hosted Supabase project. Deploying is a separate decision, not folded into building the pages
+- ~~Netlify deploy / public launch~~ — **no longer out of scope as of 2026-09-04.** It was deferred so that deploying stayed a separate decision rather than being folded into building the pages; the project owner has now taken it. See In scope above.
+- **Anything that would make the site announce itself.** Deploying puts the pages on a public domain; it does not authorise submitting to search consoles, buying a listing, contacting providers, or any other outreach. Those are separate decisions and none has been made.
 
 ## Tech Stack
 
-- Frontend: Next.js — next build step, run locally in Phase 1
-- Hosting: Netlify (planned, deferred — see Out of scope)
+- Frontend: Next.js — next build step
+- Hosting: Netlify. Deploy configuration in `netlify.toml` at the repo root: `base = "web"`, Node pinned, `NEXT_TELEMETRY_DISABLED` set — the last of those is the one-origin guarantee, which was previously true only because of a machine-local Next config that no build container has
 - Database / auth: Supabase (Postgres). The public write path is a `security definer` Postgres function, not a server runtime — so Phase 1 ships **one Next.js app and one Supabase project**, with no separate backend service to build or deploy
 
 ## Project Structure
@@ -63,6 +65,8 @@ SPEC_frontend.md            specs — source of truth
 .research/                  comparable platforms worldwide and monetization
                             options — research, not decisions; gitignored
 CLAUDE.md                   agent working rules
+netlify.toml                deploy configuration — base dir, Node pin,
+                            telemetry off, Next runtime plugin
 web/                        the Next.js app
   app/                      App Router routes
   lib/                      env, Supabase client, database types
@@ -80,6 +84,10 @@ data/                       curated pilot data and the provenance trail for
 The Supabase CLI runs without Docker (no local database) — migrations are pushed straight to the hosted project.
 
 **The app ships from one origin.** Fonts are self-hosted rather than loaded from Google, because a Google Fonts request sends the visitor’s IP to a third party on every page load — the same reasoning that keeps the product free of a consent banner ([SPEC_frontend.md](SPEC_frontend.md) → Typography). Next.js telemetry is disabled for the same reason. Adding any third-party asset host, analytics script or embedded map is an **Ask first** decision with a GDPR consequence, not a build detail.
+
+**The telemetry half of that lived outside the repo until 2026-09-04**, and it is worth knowing why. `next telemetry disable` writes to the developer's own user config — a machine-local file that is neither committed nor present on a build container. The guarantee therefore held on one laptop and would have failed on the first CI build. `NEXT_TELEMETRY_DISABLED = "1"` in `netlify.toml` is what makes it a property of the project rather than of a workstation. Any second build environment needs the same variable set.
+
+**The one deployed exception to the single origin is Netlify Forms**, and only on `/za-pogrebnike`. It loads no third-party script — the POST goes to the site's own host, which is Netlify either way — but the submission is *stored* by Netlify, Inc. in the United States, which is a third-country transfer and is disclosed on `/privatnost`.
 
 ## Boundaries
 

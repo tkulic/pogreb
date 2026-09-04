@@ -1,0 +1,34 @@
+# Netlify build configuration.
+#
+# This file lives at the repo root while the app lives in `web/`, so `base`
+# does the work: Netlify changes into that directory before installing or
+# building, and `publish` is still written from the repo root.
+#
+# Everything here is deliberately also settable in the Netlify UI. It is in the
+# repo because a setting that exists only in a dashboard is a setting nobody
+# reviews — and one of the values below is a GDPR guarantee, not a preference.
+
+[build]
+  base = "web"
+  command = "npm run build"
+  publish = "web/.next"
+
+[build.environment]
+  # Next 16 requires Node 20.9+. Pinned rather than inherited so a change in
+  # Netlify's default image cannot move the runtime under the app silently.
+  NODE_VERSION = "22"
+
+  # SPEC.md → "The app ships from one origin": Next.js telemetry is off for the
+  # same reason the fonts are self-hosted. Locally that is true because
+  # `next telemetry disable` wrote to the developer's own user config — a
+  # machine-local file that is not in this repo and does not exist on a build
+  # container. Without this line the guarantee holds on one laptop and nowhere
+  # else, starting with the first CI build.
+  NEXT_TELEMETRY_DISABLED = "1"
+
+# The Next.js runtime. Netlify installs it automatically on detecting Next, but
+# an automatic dependency is one that can stop being automatic; the app has
+# server-rendered routes (`/`, the city and provider pages) and cannot be served
+# as a static export, so this is load-bearing.
+[[plugins]]
+  package = "@netlify/plugin-nextjs"

@@ -8,7 +8,9 @@
 >
 > **The product covers seven cities** — Zagreb, Split, Rijeka, Zadar, Osijek, Pula and Dubrovnik, 45 providers — since the 2026-09-03 expansion ([SPEC_database.md](SPEC_database.md)). That turned screen 2 into a real question, replaced the landing page's single-city coverage strip with a city list, and made `cities[0]` a bug rather than a shorthand.
 >
-> `/za-pogrebnike` is the product's **only form**, for funeral directors. **Nothing links to it**: it is gated behind `PROVIDER_FORM_PUBLIC` until `/privatnost` exists, because it collects personal data and there is no named controller. See [The provider page](#the-provider-page). What remains open is listed under [Open questions](#open-questions), and what still degrades the build under [Data dependencies](#data-dependencies-that-gate-the-build).
+> `/za-pogrebnike` is the product's **only form**, for funeral directors. **It is now linked and indexable**: `PROVIDER_FORM_PUBLIC` was flipped to `true` on 2026-09-04, once `/privatnost` existed and the note beside the submit button pointed at it. See [The provider page](#the-provider-page). What remains open is listed under [Open questions](#open-questions), and what still degrades the build under [Data dependencies](#data-dependencies-that-gate-the-build).
+>
+> **One part of that gate is still open by decision.** `/privatnost` names no controller — it gives a contact address and states that no legal person stands behind the site. That is the contact half of GDPR art. 13(1)(a) and not the identity half. The project owner was shown the gap and chose to flip the flag anyway; it closes with a name, which is a one-line change in that page's `Tko obrađuje podatke` section.
 >
 > **Naming convention:** UI copy and all URL paths/query parameters are Croatian; code, component names and identifiers are English. See [SPEC.md](SPEC.md) → Naming Convention.
 
@@ -452,6 +454,7 @@ That is a deliberate exception. Choosing between a provider's office and dežurn
 | `/nase-obecanje` | the four promises in full, each with what it rules out |
 | `/za-pogrebnike` | the provider page — corrections, missing listings, collaboration, and the product's only form |
 | `/za-pogrebnike/hvala` | where a submission lands. Reached only by Netlify's redirect; `noindex`, and absent from the sitemap |
+| `/privatnost` | the privacy notice, covering the provider form only. `noindex` and absent from the sitemap, by decision — it helps nobody who is searching. Linked from the footer baseline and from beside the form's submit button, which is where art. 13 needs it. **Deliberately not disallowed in `robots.txt`**: a disallowed URL is never fetched, so its `noindex` is never read, and the two mechanisms cancel rather than reinforce |
 
 ### Resolving the entity/service slug collision
 
@@ -492,7 +495,11 @@ Three rules on it:
 2. **A promise wording exists once.** The landing page's short form and this page must not drift; a promise worded one way there and another way here reads as the weaker of the two.
 3. **The four promises are the product's constraints written down**, so a change to any of them is a change to the product, not to copy. Monetisation in particular touches the first and third directly — see [SPEC.md](SPEC.md) → Boundaries, where charging anyone in Phase 1 is a Never, and `.research/RESEARCH_market.md` § 3, where the reason the highest-revenue model in the field is unavailable to us is precisely promise one.
 
-**Deliberately absent, and both belong here:** a named owner and a contact route. A promise page with nobody behind it is the weakest kind, and *"javite nam"* appears on both this page and `/kako-rangiramo` with no address to write to. Neither can be invented ([SPEC.md](SPEC.md) → Never: fabricating data), so both wait on an `/o-nama` decision by the project owner. Tracked under [Known gaps](#known-gaps-deliberately-deferred).
+**Still absent: a named owner.** A promise page with nobody behind it is the weakest kind, and a name cannot be invented ([SPEC.md](SPEC.md) → Never: fabricating data); the project owner has chosen not to publish one. It waits on `/o-nama`. Tracked under [Known gaps](#known-gaps-deliberately-deferred).
+
+**The contact route is half closed as of 2026-09-04.** *"Javite nam"* appears on this page and on `/kako-rangiramo`, and until that date neither actually linked anywhere — a defect, since earlier revisions of this spec and of `CLAUDE.md` both claimed they did. Both now link to `/za-pogrebnike`. On this page the phrase lives inside a plain-string array, so the address sits in a sentence below the list rather than inside the sentence that promises it. What is still missing is a route for a member of the public who is not a funeral director; that half is untouched.
+
+**The closing note carries no count**, deliberately. It read *"jedno područje i mali broj pogrebnika"* straight through the seven-city expansion. A hand-written number here goes stale exactly the way `cities[0]` did; the landing page counts cities from the live rows so that prose like this does not have to.
 
 ## The provider page
 
@@ -524,15 +531,17 @@ Netlify discovers forms by scanning the static HTML a build emits. An App Router
 - The real form POSTs to `/__forms.html` with a matching `form-name`.
 - **The two field lists must stay identical.** A field added to the React form and not to `public/__forms.html` arrives empty, with no error anywhere — which is the failure mode worth writing down, because nothing surfaces it.
 
-⚠️ **Unverified until deploy.** Form handling is a Netlify build-and-runtime feature and Phase 1 runs locally with no deploy ([SPEC.md](SPEC.md) → Out of scope). The page renders and validates in development; the submission path itself has never executed. It is the only part of the frontend in that state.
+⚠️ **Still unverified.** Form handling is a Netlify build-and-runtime feature, and the app has never been deployed. The page renders and validates in development; the submission path itself has never executed anywhere. **It remains the only part of the frontend in that state, and the first deploy must include an end-to-end test submission** — see [Deployment](#deployment) for what to check.
 
-### The gate: nothing links here yet
+### The gate: opened on 2026-09-04
 
-**`PROVIDER_FORM_PUBLIC` in `lib/nav.ts` is `false`, and it is a compliance gate rather than a soft launch.** The form collects a name, an e-mail address and a phone number. GDPR art. 13 requires telling that person who the controller is, the legal basis, the retention period, their rights and how to complain to AZOP. The note under the form covers roughly a third of it, and **there is no named legal entity to put in the controller field** — the same `/o-nama` decision that blocks `/privatnost`.
+**`PROVIDER_FORM_PUBLIC` in `lib/nav.ts` is now `true`.** It was `false` as a compliance gate rather than a soft launch: the form collects a name, an e-mail address and a phone number, and GDPR art. 13 requires telling that person who the controller is, the legal basis, the retention period, their rights and how to complain to AZOP. The note under the form covered roughly a third of it and nothing covered the rest.
 
-While the flag is `false`: the route is built and reachable by anyone holding the URL, and it is absent from the menu, the footer, the landing page, the sitemap and the two prose pages whose *"javite nam"* would otherwise link to it, and the page itself is `noindex`. Keeping it out of the navigation for a privacy reason while handing it to a crawler would defeat the point.
+What opened it: `/privatnost` now covers the rest, and a second note beside the submit button links to it — at the point of collection, since art. 13 is about what the person knows *before* they submit. Flipping the flag re-linked the route in the menu, the footer, the landing page, the sitemap and the two prose pages at once, and its `noindex` override was removed in the same change.
 
-**Flipping the flag to `true` re-links it everywhere at once, and may only happen once `/privatnost` exists** and the note under the form points at it. Remove the page's `robots` override in the same change.
+**What is still open, by the project owner's decision:** `/privatnost` names no controller. It publishes a contact address and states plainly that no legal person stands behind the site — honest, and the contact half of art. 13(1)(a), but not the identity half. The gap was put to the project owner explicitly before the flag was flipped. It closes with a name.
+
+Recorded for whoever reads this next: **while the flag was `false`, the route was still reachable by URL** — the gate was "offered to nobody", never "unreachable". Anyone reasoning about what was exposed before 2026-09-04 should read it that way.
 
 ## Visual system — Kamen
 
@@ -770,6 +779,54 @@ Applying [SPEC_database.md](SPEC_database.md) → Client-side rules to these spe
 
 **One consequence worth recording:** the shortlist means ranking position now affects clicks. That makes the deferred per-card impression event ([SPEC.md](SPEC.md) → Future considerations) more meaningful than its note implies — without it, a provider's click count cannot be separated from where the ranking put them. Still deferred; adding an enum value later stays a one-liner.
 
+## Deployment
+
+Netlify, on **`pogreb.net`** (Namecheap), with the **apex as the primary domain** and `www` redirecting to it. Moved into scope on 2026-09-04 ([SPEC.md](SPEC.md) → In scope). **In progress, not finished** — nothing below is verified until the checks at the end pass.
+
+### Build configuration
+
+`netlify.toml` at the repo root, because the app is in `web/` and a setting that lives only in a dashboard is a setting nobody reviews:
+
+| key | value | why it matters |
+|---|---|---|
+| `base` | `web` | the app is not at the repo root; without this the build fails on a missing `package.json` |
+| `command` / `publish` | `npm run build` / `web/.next` | `publish` is written repo-root-relative, matching what Netlify's UI fills in. If a deploy fails on a missing publish directory, it is resolving relative to `base` instead — change it to `.next` |
+| `NODE_VERSION` | `22` | Next 16 needs 20.9+. Pinned so a change to Netlify's default image cannot move the runtime silently |
+| `NEXT_TELEMETRY_DISABLED` | `1` | **a GDPR guarantee, not a preference.** See [SPEC.md](SPEC.md) → Project Structure: it was true only because of a machine-local Next config no build container has |
+| `@netlify/plugin-nextjs` | declared | Netlify installs it on detecting Next, but the app has server-rendered routes and cannot be served as a static export, so it is load-bearing rather than incidental |
+
+### Environment variables
+
+All three are `NEXT_PUBLIC_*`, so they are **inlined at build time** — changing one needs a redeploy, not a restart.
+
+| variable | consequence if missing |
+|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | **build fails.** `lib/env.ts` throws at module load |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | build fails, same path |
+| `NEXT_PUBLIC_SITE_HOST` | build *succeeds*, and the site is quietly wrong: `robots.txt`, `sitemap.xml` and every canonical fall back to `http://localhost:3000`, and **no event is ever logged** |
+
+`NEXT_PUBLIC_SITE_HOST` is the apex, `pogreb.net`, and that choice is load-bearing twice over:
+
+- **`shouldLog()` matches the host exactly or as a subdomain of it.** With the apex, both `pogreb.net` and `www.pogreb.net` log. With `www` as the value, apex hits log nothing, because the apex is not a subdomain of `www`.
+- **`SITE_ORIGIN` in `lib/env.ts` derives from it**, and is the single source for the `robots.txt` sitemap line, every sitemap entry, and `metadataBase` in the root layout. Before `metadataBase` existed, each page's relative `alternates.canonical` was emitted as written, which let every host serving the app declare itself canonical.
+
+Setting the variable for all deploy contexts is safe: deploy previews run on `*.netlify.app`, which fails the host check, so previews log nothing.
+
+### Netlify Forms
+
+**Form detection is opt-in per site** and must be enabled before a build that relies on it — a build that ran before the toggle does not register the form, and submissions then POST to a 404 with nothing surfaced anywhere. That is the same silent-drop failure `public/__forms.html` exists to avoid.
+
+### Verification, in order
+
+1. `robots.txt` — the `Sitemap:` line reads `https://pogreb.net/sitemap.xml`, not `localhost`.
+2. `sitemap.xml` — absolute URLs on the apex; contains `/za-pogrebnike`; does **not** contain `/privatnost`.
+3. `/privatnost` — carries `<meta name="robots" content="noindex, follow">`.
+4. **An end-to-end form submission.** Land on `/za-pogrebnike/hvala`, then confirm the submission appears in Netlify → Forms → `pogrebnici` **with every field populated**. An empty field means `public/__forms.html` and the React form have drifted. This is the first time this path has ever run.
+5. **Event logging** — click a provider's phone number from the real domain and confirm a row in `events`. This is the first time `shouldLog()` has ever returned `true`.
+6. The whole flow on a phone: landing → two questions → results → provider page.
+
+Netlify redirects the `*.netlify.app` deploy domain to the primary custom domain once it is set, which is what keeps a duplicate indexable copy of the site out of search.
+
 ## Known gaps, deliberately deferred
 
 Not out of scope — accepted as incomplete, and tracked here so they are not rediscovered as surprises.
@@ -777,8 +834,9 @@ Not out of scope — accepted as incomplete, and tracked here so they are not re
 | gap | state |
 |---|---|
 | **Named owner, and a contact route for the public** | **Half closed.** Providers now have [`/za-pogrebnike`](#the-provider-page), and both *"javite nam"* sentences link to it. What remains: no page names a human, and a member of the public who is not a funeral director still has no way to reach us. Both are E-E-A-T essentials and neither can be invented. Waiting on an `/o-nama` decision. |
-| **`/privatnost` does not exist, and the form is gated behind it** | The provider form collects personal data with no privacy notice and no named controller, so nothing links to it (`PROVIDER_FORM_PUBLIC`). This is the blocking item for `/za-pogrebnike`, and it resolves with the same `/o-nama` decision. |
-| **Provider form is unverified** | The submission path has never executed — Netlify Forms needs a deploy, and Phase 1 has none. First deploy must include an end-to-end test submission before the flag is flipped. |
+| ~~**`/privatnost` does not exist**~~ | **Closed 2026-09-04**, and `PROVIDER_FORM_PUBLIC` flipped with it. The notice is scoped to the provider form: it opens by saying it does not concern a searching family, names all eight fields and whether each is published, names Netlify as processor including the US transfer, states twelve months' retention, lists the six rights and names AZOP. |
+| **`/privatnost` names no controller** | The identity half of GDPR art. 13(1)(a). The page gives a contact address and states that no legal person stands behind the site; it does not name a person. The project owner was shown this before the flag was flipped and accepted it. Closes with a name — one line in that page's `Tko obrađuje podatke` section. Part of the same `/o-nama` decision as the row above. |
+| **Provider form is unverified** | The submission path has never executed anywhere — Netlify Forms needs a deploy. **The flag was flipped before this was verified**, so the live form is linked and indexable while its submission path is untested; the first deploy must include an end-to-end test submission. See [Deployment](#deployment). |
 | **`lib/__fixtures__/split-pilot.ts` is Split-only** | The 51 ranking and hours tests still pass and still test the right things — they exercise pure functions over a fixture, and the fixture being one city does not weaken that. But `serviceFrequency` now reasons over a very different distribution in production (`balzamiranje` has one provider nationally, `ekshumacija` four), and no test covers a city the size of Zagreb. |
 | ~~**Tablet portrait**~~ | **Closed** by the masthead. 560–1024px now gets the real menu and the horizontal rows; the constraint was the rail's width, and the rail is gone. |
 | ~~**Landing page imagery**~~ | **Closed** by `StoneEngraving`. A photograph may still replace it, but the band is a finished state rather than a pending one — see [Image policy](#image-policy). |
@@ -819,11 +877,12 @@ None of these are frontend work, and all of them block or degrade it.
 | Display-face diacritic gate | the whole type system | **resolved** — Cinzel failed (`Đ`/`đ` drawn with a macron) and was replaced by Spectral SC, which renders correctly along with Archivo. Payloads are vendored; checked by eye on `/specimen` after any font change. See [The diacritic constraint](#the-diacritic-constraint) |
 | Header-band imagery | nothing — pages render without it | **landing band filled** by engraved line art; the results header and `/sto-uciniti-prvo` bands are still texture alone |
 
-The schema is complete as of 2026-09-02 — nothing in the database blocks a build. What remains gating or degrading it is data and assets, not DDL. The one future migration is the production hostname, needed at deploy time rather than at build time.
+The schema is complete as of 2026-09-02 — nothing in the database blocks a build. What remains gating or degrading it is data and assets, not DDL. **No migration is outstanding for the deploy**: the production hostname went in on 2026-09-02 as `20260902143000_log_event_production_host.sql`, which matches `pogreb.net` as `(^|\.)pogreb\.net$` and so already covers the apex, `www` and any future subdomain. Earlier revisions of this section called that migration future work; it is not.
 
 ## Open questions
 
-- **Croatian phrasing review of the guidance text.** The procedural content for the *"Gdje je pokojnik sada?"* strip and for `/sto-uciniti-prvo` is written and every claim is sourced (see [screen 3b](#question-3b--conditional-on-sourcing)). What remains is not sourcing but language: a native speaker should read it, and the project owner should sign it off, before launch. Facts checked; phrasing unreviewed.
+- **Croatian phrasing review of the guidance text.** The procedural content for the *"Gdje je pokojnik sada?"* strip and for `/sto-uciniti-prvo` is written and every claim is sourced (see [screen 3b](#question-3b--conditional-on-sourcing)). What remains is not sourcing but language: a native speaker should read it, and the project owner should sign it off, before launch. Facts checked; phrasing unreviewed. **`/privatnost` now belongs to this list and is the most urgent entry on it**, because it is the only page making legal statements — its Croatian was written unreviewed, same as the rest.
+- **Whether any provider carries a price.** `/nase-obecanje` used to state that *no* provider in the covered area publishes a price list, and the provider page's code comment said the price element "renders for nobody". Both were written for the seven-provider Split pilot. `entity_services.price_from` exists and the provider page renders it where non-null, and nobody has checked the 45-provider dataset since. The promise wording has been rewritten to hold either way; a single read-only query settles it properly.
 - **No-JavaScript path on the list page.** The reveal-on-click behaviour means that with scripting unavailable, the list page's `Nazovi` still dials on mobile (it is a real `tel:` link) but reveals nothing on desktop. The detail page is the fallback, since it lists every number as plain markup. Acceptable, but worth a decision if analytics ever show meaningful no-JS traffic.
 
 ### Resolved

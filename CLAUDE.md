@@ -9,12 +9,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Never create a git commit automatically. Only commit when the user explicitly asks for it.
 - **Commit directly on `main`. Never create a feature branch and never propose a PR flow** — this is a single-developer project with no review workflow, so a branch only adds a merge step and hides the work from `main`. The general "branch before committing to the default branch" default does not apply here. Pushing stays separate: commit when asked, push only when asked.
 - When writing SQL migrations (or other multi-part code), build it in small reviewable chunks and present each chunk for approval before starting the next — don't write the whole thing in one step.
+- **Don't write file content with bash heredocs** (`cat > file <<'EOF'`). Use the Write and Edit tools. The content here is Croatian prose with typographic quotes („ ”), em dashes and diacritics embedded in TSX that also contains `${…}`, backticks and `{' '}`; the shell mangles or fails to parse it, and each failure costs a round trip. Bash stays right for reading, searching, and running builds and tests.
 
 ## Project status
 
 Spec-driven project, early implementation. The database schema is **complete and applied** to the hosted Supabase project — content tables, `entities.slug`, Croatian service slugs, and usage logging (`events` + `log_event`). It holds **seven cities and 45 providers**: Zagreb (20), Split (7), Rijeka (6), Zadar (5), Osijek (3), Pula (2), Dubrovnik (2), expanded from the Split-only pilot on 2026-09-03. Curated source data and the provenance trail for each city live in `data/` (gitignored).
 
-The frontend is **built and running locally** — landing page, the three-screen question flow, the results page, provider detail, indexable service listings, `/sto-uciniti-prvo`, `/kako-rangiramo`, sitemap and robots. Ranking, the block partition and the reason line are one pure function under unit test (`web/lib/ranking.ts`), as are opening hours and phone selection (`web/lib/hours.ts`) — 51 tests against a fixture captured from the live pilot data.
+The frontend is **built, and the first deploy is in progress as of 2026-09-04** — landing page, the three-screen question flow, the results page, provider detail, indexable service listings, `/sto-uciniti-prvo`, `/kako-rangiramo`, `/privatnost`, sitemap and robots. The domain is **`pogreb.net`** (Namecheap), apex as primary, DNS moving to Netlify nameservers; `netlify.toml` is at the repo root. **Nothing about the deploy is verified yet** — the Netlify site, the nameserver change, the certificate and the first form submission are all outstanding. The full procedure and its checks are in `SPEC_frontend.md` → Deployment; no migration is outstanding for it. Ranking, the block partition and the reason line are one pure function under unit test (`web/lib/ranking.ts`), as are opening hours and phone selection (`web/lib/hours.ts`) — 51 tests against a fixture captured from the live pilot data.
 
 Two visual-system decisions are settled and recorded in `SPEC_frontend.md`: contrast measurement corrected four colour tokens that were below WCAG AA in the approved mockup, and Cinzel was replaced by **Spectral SC** because it draws `Đ`/`đ` with a macron instead of a stroke. Both faces are vendored in `web/public/fonts/`, so check `Đ`/`đ` by eye on `/specimen` if a face is ever swapped.
 
@@ -26,7 +27,14 @@ The layout is **a masthead, a reading column and a footer**, at every width (`co
 - **The flow carries the chosen city as `?grad=`** (`parseGrad` / `flowHref` / `resultsHref` in `web/lib/answers.ts`). Screen 2 used to discard the answer because there was nothing to remember; at seven cities that sent a family who chose Zagreb to the Dubrovnik listing. Nothing else may hand-build a flow URL.
 - **`cities[0]` is not the pilot city.** The landing page and `/sto-uciniti-prvo` both counted it; both now count across every city (`getCityCoverage`, `getAllProviders`).
 
-`/za-pogrebnike` is the **product's only form** — for funeral directors, via Netlify Forms. **Nothing links to it.** `PROVIDER_FORM_PUBLIC` in `web/lib/nav.ts` is `false`, which removes it from the menu, footer, landing page, sitemap and the two prose pages, and the page itself is `noindex`. That is a compliance gate, not a soft launch: the form collects personal data, and there is no `/privatnost` and no named controller to put in it. **Do not flip the flag until `/privatnost` exists.** Its submission path has also never executed — Netlify Forms needs a deploy — so the first deploy must include a test submission. `public/__forms.html` holds the field definitions and must stay identical to the form in `app/za-pogrebnike/page.tsx`; a field in one and not the other arrives empty with no error anywhere.
+`/za-pogrebnike` is the **product's only form** — for funeral directors, via Netlify Forms. **It is now linked and indexable:** `PROVIDER_FORM_PUBLIC` in `web/lib/nav.ts` was flipped to `true` on 2026-09-04, which puts it in the menu, footer, landing page, sitemap and the two prose pages, and its `noindex` was removed in the same change. What opened the gate was `/privatnost`, which the form's note links to from beside the submit button — art. 13 is about what the person knows *before* submitting, so that link is not decoration.
+
+Two things about it that are easy to get wrong:
+
+- **`/privatnost` names no controller, and that is a decision, not an omission.** It gives a contact address and states that no legal person stands behind the site — the contact half of GDPR art. 13(1)(a), not the identity half. The project owner was shown the gap and chose to proceed. **Don't re-raise it**; if a name ever exists, it is one line in that page's `Tko obrađuje podatke` section. The page is `noindex` and deliberately *not* in `robots.txt` — a disallowed URL is never fetched, so its `noindex` is never read.
+- **The submission path has still never executed anywhere**, because Netlify Forms needs a deploy, so the flag was flipped ahead of verification. The first deploy must include a test submission, and **form detection is opt-in per Netlify site** — it must be enabled before the build that relies on it, or submissions POST to a 404 with nothing surfaced anywhere.
+
+`public/__forms.html` holds the field definitions and must stay identical to the form in `app/za-pogrebnike/page.tsx` — and now also to the field list on `/privatnost`, where a mismatch is a false statement rather than a bug. A field in one and not the other arrives empty with no error anywhere.
 
 `.research/RESEARCH_market.md` (gitignored) holds the survey of comparable platforms worldwide and the monetization options, with a staged recommendation. It is research, not decisions — nothing in it is authorised beyond what the project owner has picked, and the items it flags **ask-first** stay unbuilt.
 
@@ -60,7 +68,9 @@ The Supabase CLI lives at `.tools/supabase/supabase.exe` (gitignored — the npm
 
 ## Frontend
 
-Lives in `web/` — Next.js App Router, TypeScript, CSS Modules over a CSS-custom-property token layer, run locally against the hosted Supabase project (no deploy in Phase 1). Specified in `SPEC_frontend.md`, which is authoritative for tokens, type scale and behaviour.
+Lives in `web/` — Next.js App Router, TypeScript, CSS Modules over a CSS-custom-property token layer, against the hosted Supabase project. Deployed to Netlify from `netlify.toml` at the repo root (`base = "web"`). Specified in `SPEC_frontend.md`, which is authoritative for tokens, type scale and behaviour, and carries the deploy procedure.
+
+**`SITE_ORIGIN` in `web/lib/env.ts` is the only place the site's absolute base is decided** — `robots.txt`, every sitemap entry and `metadataBase` all read it, and they have to agree. It derives from `NEXT_PUBLIC_SITE_HOST`, which must be the **apex** (`pogreb.net`): the instrumentation guard matches the host exactly or as a subdomain, so an apex value covers `www` while a `www` value silently drops every apex hit.
 
 Commands run from `web/`: `npm run dev`, `npm run build`, `npm run lint`, `npm test`.
 
