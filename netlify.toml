@@ -2,7 +2,11 @@
 #
 # This file lives at the repo root while the app lives in `web/`, so `base`
 # does the work: Netlify changes into that directory before installing or
-# building, and `publish` is still written from the repo root.
+# building, and `publish` is resolved relative to it rather than to the repo
+# root. That last part is not what Netlify's UI implies and it cost the first
+# deploy: `web/.next` here resolved to `/opt/build/repo/web/web/.next`, and
+# @netlify/plugin-nextjs failed in onBuild on a publish directory that does
+# not exist. `base` is repo-root-relative; everything after it is not.
 #
 # Everything here is deliberately also settable in the Netlify UI. It is in the
 # repo because a setting that exists only in a dashboard is a setting nobody
@@ -11,7 +15,7 @@
 [build]
   base = "web"
   command = "npm run build"
-  publish = "web/.next"
+  publish = ".next"
 
 [build.environment]
   # Next 16 requires Node 20.9+. Pinned rather than inherited so a change in

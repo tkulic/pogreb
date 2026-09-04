@@ -790,7 +790,7 @@ Netlify, on **`pogreb.net`** (Namecheap), with the **apex as the primary domain*
 | key | value | why it matters |
 |---|---|---|
 | `base` | `web` | the app is not at the repo root; without this the build fails on a missing `package.json` |
-| `command` / `publish` | `npm run build` / `web/.next` | `publish` is written repo-root-relative, matching what Netlify's UI fills in. If a deploy fails on a missing publish directory, it is resolving relative to `base` instead — change it to `.next` |
+| `command` / `publish` | `npm run build` / `.next` | **`publish` resolves relative to `base`, not to the repo root** — settled by the first deploy, which failed on it. `web/.next` here became `/opt/build/repo/web/web/.next` and `@netlify/plugin-nextjs` failed in `onBuild` on a directory that does not exist. Netlify's UI implies the repo-root reading, and earlier revisions of this table asserted it; `base` is the only repo-root-relative key in the file |
 | `NODE_VERSION` | `22` | Next 16 needs 20.9+. Pinned so a change to Netlify's default image cannot move the runtime silently |
 | `NEXT_TELEMETRY_DISABLED` | `1` | **a GDPR guarantee, not a preference.** See [SPEC.md](SPEC.md) → Project Structure: it was true only because of a machine-local Next config no build container has |
 | `@netlify/plugin-nextjs` | declared | Netlify installs it on detecting Next, but the app has server-rendered routes and cannot be served as a static export, so it is load-bearing rather than incidental |
