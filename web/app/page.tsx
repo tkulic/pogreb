@@ -20,6 +20,7 @@ import {
   VISIBLE_SITUACIJA,
 } from '@/lib/copy';
 import { getCityCoverage } from '@/lib/queries';
+import { openGraph } from '@/lib/seo';
 import styles from './flow.module.css';
 
 /**
@@ -42,11 +43,28 @@ import styles from './flow.module.css';
  * family who chose Zagreb to the Dubrovnik listing, so the chosen city is now
  * carried in the URL like every other answer (`parseGrad`, `flowHref`).
  */
+const LANDING_DESCRIPTION =
+  'Popis svih registriranih pogrebnika u Zagrebu, Splitu, Rijeci, Osijeku, ' +
+  'Zadru, Puli i Dubrovniku. Besplatno, bez prijave i bez posrednika.';
+
 export const metadata: Metadata = {
-  title: 'Pogrebne usluge — svi registrirani pogrebnici',
-  description:
-    'Popis svih registriranih pogrebnika u Zagrebu, Splitu, Rijeci, Osijeku, ' +
-    'Zadru, Puli i Dubrovniku. Besplatno, bez prijave i bez posrednika.',
+  // `title.absolute`, not `title`: the root template appends "· Pogrebne
+  // usluge", and this title already opens with the phrase. Every other route
+  // takes the template; the home page is the one that must not.
+  title: { absolute: 'Pogrebne usluge — svi registrirani pogrebnici' },
+  description: LANDING_DESCRIPTION,
+  /**
+   * The home page was the only route emitting no canonical at all, while every
+   * other page emitted a correct absolute one. `metadataBase` exists precisely
+   * so that each host serving the app does not vouch for its own copy, and the
+   * page search matters most for was the page opted out of it.
+   */
+  alternates: { canonical: '/' },
+  openGraph: openGraph({
+    title: 'Pogrebne usluge — svi registrirani pogrebnici',
+    description: LANDING_DESCRIPTION,
+    path: '/',
+  }),
 };
 
 const STEP_NUMBER: Record<Korak, number> = { situacija: 1, mjesto: 2, potrebe: 3 };

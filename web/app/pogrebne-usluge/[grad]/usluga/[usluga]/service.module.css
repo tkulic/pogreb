@@ -23,7 +23,17 @@
   border-bottom: 1px solid var(--rule-gold);
 }
 
+/* Two lines in one `<h1>`, for the reason the city page's heading is built the
+   same way: this page has to rank for "{usluga} {grad}", and while the city sat
+   in a sibling `<p>` the heading named only the service. The 8px gap matches
+   `.header`, so this renders exactly as the two-element version did. */
 .title {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.titleName {
   font-family: var(--font-display);
   font-weight: 600;
   font-size: 22px;
@@ -94,7 +104,8 @@
     padding-block: 28px 88px;
   }
 
-  .title {
+  /* On `.titleName`: `.title` is now the flex column holding both lines. */
+  .titleName {
     font-size: 26px;
   }
 }

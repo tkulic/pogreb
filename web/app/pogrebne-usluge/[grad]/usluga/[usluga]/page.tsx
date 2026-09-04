@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { JsonLd } from '@/components/JsonLd';
 import { ProviderCard } from '@/components/ProviderCard';
 import { SectionHeading } from '@/components/SectionHeading';
 import { CATCHMENT, providerCount } from '@/lib/copy';
@@ -11,6 +12,8 @@ import {
   getServicePageParams,
 } from '@/lib/queries';
 import { rankProviders } from '@/lib/ranking';
+import { openGraph } from '@/lib/seo';
+import { breadcrumbs, providerItemList } from '@/lib/structured-data';
 import styles from './service.module.css';
 
 /**
@@ -52,12 +55,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!city || !service) return {};
 
   const area = CATCHMENT[city.slug];
+  const title = `${service.name} — ${area?.label ?? city.name}`;
+  const description = `Pogrebnici koji nude uslugu "${service.name.toLowerCase()}" u ${area?.locative ?? city.name}.`;
+  const path = `/pogrebne-usluge/${city.slug}/usluga/${service.slug}`;
+
   return {
-    title: `${service.name} — ${area?.label ?? city.name}`,
-    description: `Pogrebnici koji nude uslugu "${service.name.toLowerCase()}" u ${area?.locative ?? city.name}.`,
-    alternates: {
-      canonical: `/pogrebne-usluge/${city.slug}/usluga/${service.slug}`,
-    },
+    title,
+    description,
+    alternates: { canonical: path },
+    openGraph: openGraph({ title, description, path }),
   };
 }
 
@@ -88,13 +94,33 @@ export default async function ServiceListingPage({ params }: PageProps) {
 
   return (
     <main className={`page ${styles.page}`}>
+      <JsonLd
+        data={providerItemList(
+          ranked.map((r) => r.provider),
+          city.slug,
+        )}
+      />
+      <JsonLd
+        data={breadcrumbs([
+          { name: 'Pogrebne usluge', path: '/' },
+          { name: `Pogrebnici u ${areaLocative}`, path: `/pogrebne-usluge/${city.slug}` },
+          {
+            name: service.name,
+            path: `/pogrebne-usluge/${city.slug}/usluga/${service.slug}`,
+          },
+        ])}
+      />
+
       <Link href={`/pogrebne-usluge/${city.slug}`} className={styles.back}>
         ← Svi pogrebnici
       </Link>
 
       <header className={styles.header}>
-        <h1 className={styles.title}>{service.name}</h1>
-        <p className={styles.city}>{areaLabel}</p>
+        {/* Both lines inside the heading — see `service.module.css`. */}
+        <h1 className={styles.title}>
+          <span className={styles.titleName}>{service.name}</span>
+          <span className={styles.city}>{areaLabel}</span>
+        </h1>
         <p className={styles.lede}>
           Ovu uslugu nudi {providerCount(offering.length)} od{' '}
           {providerCount(all.length)} u {areaLocative}.

@@ -40,27 +40,42 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       : []),
   ];
 
-  const cityPages: MetadataRoute.Sitemap = cities.map((city) => ({
+  // Fetched once and reused for both the city and the provider entries, so a
+  // city's `lastModified` can be derived from the providers it actually lists
+  // rather than the sitemap querying the same rows twice.
+  const byCity = await Promise.all(
+    cities.map(async (city) => ({ city, providers: await getCityProviders(city.id) })),
+  );
+
+  /** The newest `updated_at` among a city's providers, or undefined if none. */
+  function latestChange(providers: readonly { updated_at: string }[]): Date | undefined {
+    const stamps = providers.map((p) => p.updated_at).filter(Boolean);
+    return stamps.length > 0
+      ? new Date(stamps.reduce((a, b) => (a > b ? a : b)))
+      : undefined;
+  }
+
+  const cityPages: MetadataRoute.Sitemap = byCity.map(({ city, providers }) => ({
     url: `${SITE_ORIGIN}/pogrebne-usluge/${city.slug}`,
+    // A city page *is* its provider list, so the honest signal for "when did
+    // this page last change" is the newest provider row it renders. Provider
+    // pages already carried this; the listing that aggregates them did not.
+    lastModified: latestChange(providers),
     changeFrequency: 'weekly',
     priority: 0.9,
   }));
 
-  const providerPages: MetadataRoute.Sitemap = (
-    await Promise.all(
-      cities.map(async (city) => {
-        const providers = await getCityProviders(city.id);
-        return providers.map((p) => ({
-          url: `${SITE_ORIGIN}/pogrebne-usluge/${city.slug}/${p.slug}`,
-          // `last_verified_at` is internal and never displayed, but it is the
-          // honest signal of when a record actually changed.
-          lastModified: p.updated_at ? new Date(p.updated_at) : undefined,
-          changeFrequency: 'monthly' as const,
-          priority: 0.7,
-        }));
-      }),
-    )
-  ).flat();
+  const providerPages: MetadataRoute.Sitemap = byCity
+    .flatMap(({ city, providers }) =>
+      providers.map((p) => ({
+        url: `${SITE_ORIGIN}/pogrebne-usluge/${city.slug}/${p.slug}`,
+        // `last_verified_at` is internal and never displayed, but it is the
+        // honest signal of when a record actually changed.
+        lastModified: p.updated_at ? new Date(p.updated_at) : undefined,
+        changeFrequency: 'monthly' as const,
+        priority: 0.7,
+      })),
+    );
 
   const servicePages: MetadataRoute.Sitemap = (await getServicePageParams()).map(
     ({ grad, usluga }) => ({

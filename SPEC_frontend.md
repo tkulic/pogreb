@@ -791,9 +791,76 @@ Applying [SPEC_database.md](SPEC_database.md) → Client-side rules to these spe
 
 **One consequence worth recording:** the shortlist means ranking position now affects clicks. That makes the deferred per-card impression event ([SPEC.md](SPEC.md) → Future considerations) more meaningful than its note implies — without it, a provider's click count cannot be separated from where the ranking put them. Still deferred; adding an enum value later stays a one-liner.
 
+## Search
+
+Search is this product's entire distribution channel, so this section is load-bearing rather than housekeeping. Everything below was implemented on 2026-09-04 and verified against a production build, not inferred from a passing compile.
+
+### Headings carry the city
+
+**The `<h1>` on both listing types is two lines inside one element**, the shape the landing page already used:
+
+```html
+<h1><span class="titleName">Organizacija pogreba</span>
+    <span class="city">Rijeka i okolica</span></h1>
+```
+
+Before this, the city sat in a sibling `<p>`, so the strongest on-page signal on `/pogrebne-usluge/zagreb` read only *"Pogrebnici"* — identical across all seven city pages, on the very page that has to rank for *"pogrebne usluge zagreb"*.
+
+**The change is visually null and must stay that way.** `.title` became a flex column reproducing the gap `.header` already applied between the two elements; the type moved to `.titleName`. **The desktop step-up rules move with it** — a `@media` block still targeting `.title` would silently stop applying, because the heading itself no longer carries type.
+
+### Titles do not repeat the brand phrase
+
+The root template is `%s · Pogrebne usluge`, so a page title opening with *"Pogrebne usluge"* rendered it twice and spent SERP width saying nothing the second time. City pages are `Pogrebnici u {locative}`; the landing page uses **`title.absolute`**, because it is the one route whose own title already is the brand phrase.
+
+### Structured data
+
+Built in `lib/structured-data.ts`, rendered by `components/JsonLd.tsx`:
+
+| type | where | what it is |
+|---|---|---|
+| `FuneralHome` | provider pages | the business — name, address, phone, email, `taxID` from `oib`, opening hours, services as offers |
+| `ItemList` | city and service listings | the providers **in the order the page renders them** |
+| `BreadcrumbList` | city, provider, service | the trail, with names matching the visible headings |
+
+Two rules govern this and neither is negotiable:
+
+- **Everything marked up is something the page already shows.** Marking up a fact the reader cannot see is the line between structured data and spam.
+- **A null column is omitted, never guessed** ([SPEC.md](SPEC.md) → Never: fabricating business data). This is also why `openingHoursSpecification` omits days absent from `working_hours`: absent means *unknown*, and emitting it as closed would tell a family a provider is shut when it is not.
+
+**Deliberately absent, each for a reason:** no `geo` (coordinates null for all 45); no `aggregateRating` or `review` (no review data exists, and it is the most abused property in local schema); no `priceRange` (almost every `price_from` is null, and a guessed price band on a funeral is the worst possible thing to be wrong about); no site-level `Organization` (it would have to name a publisher, and none exists — the same gap `/privatnost` records).
+
+`JsonLd` escapes `<` before serialising. Provider names and addresses come from the database, and a value containing `</script>` would otherwise close the element early.
+
+### OpenGraph, and the merge trap behind it
+
+Link previews exist because the product already assumes the behaviour: a family member sends the link to a sibling, and those links open in WhatsApp and Viber.
+
+⚠️ **Next merges `metadata` shallowly, and this cost real tags.** A page setting its own `openGraph` **replaces** the root layout's object outright instead of merging into it — so `og:site_name`, `og:locale`, `og:type` and the file-based `og:image` vanished from exactly the pages that bothered to write a good title, while `/kako-rangiramo`, which sets no `openGraph` at all, kept a complete set.
+
+**Therefore: no page hand-writes an `openGraph` object.** Every one goes through `openGraph()` in `lib/seo.ts`, which restates the site-wide parts alongside the per-page ones. A page that bypasses it will look correct in review and ship a broken preview card.
+
+The card image is `app/opengraph-image.tsx`, drawn with `next/og` rather than shipped as a binary — no third-party request, and the Kamen palette stays in one language. **Every string in it is deliberately free of Croatian diacritics**: it renders in the font bundled with `next/og`, which has not been through [the diacritic constraint](#the-diacritic-constraint), and a preview card rendering `Dakovo` for `Đakovo` would be the most visible possible instance of that failure. Vendor a TTF or OTF before putting a diacritic in it — the existing faces are `woff2`, which Satori cannot read.
+
+### Sitemap
+
+City entries carry `lastModified` derived from the newest `updated_at` among the providers they list — a city page *is* its provider list, so that is the honest signal. Provider entries already had it. `priority` and `changeFrequency` are present but not tuned, because Google ignores both.
+
+### Canonicals
+
+Every route emits an absolute canonical resolved against `metadataBase`. **The home page emitted none at all** until 2026-09-04 — the page search matters most for was the one route opted out of the mechanism that exists to stop each host vouching for its own copy.
+
 ## Deployment
 
-Netlify, on **`pogreb.net`** (Namecheap), with the **apex as the primary domain** and `www` redirecting to it. Moved into scope on 2026-09-04 ([SPEC.md](SPEC.md) → In scope). **In progress, not finished** — nothing below is verified until the checks at the end pass.
+Netlify, on **`pogreb.net`** (Namecheap), with the **apex as the primary domain** and `www` redirecting to it. Moved into scope on 2026-09-04 ([SPEC.md](SPEC.md) → In scope), and **live and verified the same day** — every check at the end of this section passed.
+
+**DNS stayed at Namecheap.** Earlier revisions of this section called for moving to Netlify nameservers; that was reversed on the day, because the zone carries five `MX` records and an SPF `TXT` for the domain's e-mail forwarding, and delegating would have required recreating them by hand inside Netlify DNS with a silent bounce as the failure mode. Instead: an **ALIAS at the apex** and a **CNAME on `www`**, both to `pogreb.netlify.app`, with the mail records untouched. Records propagate in minutes where a nameserver change takes hours, and reverting is one edit.
+
+Two failures on the way, both recorded because neither is guessable:
+
+- **The first deploy published the repository root.** `netlify.toml` was written but never staged, so Netlify cloned a repo with no build config, found no `package.json` at the root — the app is in `web/` — detected no framework, ran no build, and served the repo as a static folder. Every route returned Netlify's own 404 while `/SPEC.md` and `/CLAUDE.md` were served as raw files.
+- **The second failed on the publish directory**, which is what settled the `base`-relative question recorded in the table below.
+
+**The certificate needed no intervention**, though it looked like it did: Netlify's automatic check ran while the apex still resolved to the old parking `A` record, saw a non-Netlify IP and declined to issue, and there is no *"Provision certificate"* button in that state. It issued on its own about six minutes after the parking record was removed and DNS verification passed. **If a certificate is ever missing, check what the apex actually resolves to before touching anything in the UI.**
 
 ### Build configuration
 
@@ -830,12 +897,16 @@ Setting the variable for all deploy contexts is safe: deploy previews run on `*.
 
 ### Verification, in order
 
-1. `robots.txt` — the `Sitemap:` line reads `https://pogreb.net/sitemap.xml`, not `localhost`.
-2. `sitemap.xml` — absolute URLs on the apex; contains `/za-pogrebnike`; does **not** contain `/privatnost`.
-3. `/privatnost` — carries `<meta name="robots" content="noindex, follow">`.
-4. **An end-to-end form submission.** Land on `/za-pogrebnike/hvala`, then confirm the submission appears in Netlify → Forms → `pogrebnici` **with every field populated**. An empty field means `public/__forms.html` and the React form have drifted. This is the first time this path has ever run.
-5. **Event logging** — click a provider's phone number from the real domain and confirm a row in `events`. This is the first time `shouldLog()` has ever returned `true`.
-6. The whole flow on a phone: landing → two questions → results → provider page.
+**All six passed on 2026-09-04.** Kept as the checklist any future deploy to a new host or domain has to clear again.
+
+1. ✅ `robots.txt` — the `Sitemap:` line reads `https://pogreb.net/sitemap.xml`, not `localhost`.
+2. ✅ `sitemap.xml` — absolute URLs on the apex; contains `/za-pogrebnike`; does **not** contain `/privatnost`. 79 entries, zero `localhost`.
+3. ✅ `/privatnost` — carries `<meta name="robots" content="noindex, follow">`.
+4. ✅ **An end-to-end form submission.** Land on `/za-pogrebnike/hvala`, then confirm the submission appears in Netlify → Forms → `pogrebnici` **with every field populated**. An empty field means `public/__forms.html` and the React form have drifted. *This is what caught the redirect defect — the submission recorded correctly but landed on Netlify's generic page; see [How the form actually works](#how-the-form-actually-works).*
+5. ✅ **Event logging** — click a provider's phone number from the real domain and confirm a row in `events`. First time `shouldLog()` ever returned `true`.
+6. ✅ The whole flow on a phone: landing → two questions → results → provider page.
+
+**Form detection must be enabled on the Netlify site before the build that relies on it**, and it was — see [Netlify Forms](#netlify-forms) above.
 
 Netlify redirects the `*.netlify.app` deploy domain to the primary custom domain once it is set, which is what keeps a duplicate indexable copy of the site out of search.
 

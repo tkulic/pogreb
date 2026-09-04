@@ -20,7 +20,21 @@
   border-bottom: 1px solid var(--rule-gold);
 }
 
+/* The heading is two lines in one `<h1>`, the same shape the landing page uses.
+
+   This is a search decision as much as a type one. `/pogrebne-usluge/{grad}` is
+   the page that has to rank for "pogrebne usluge {grad}", and while the city
+   sat in a sibling `<p>` the single strongest on-page signal read only
+   "Pogrebnici" — true of all seven pages at once. Nesting the city line inside
+   the heading puts it where it belongs and changes nothing visually: `.header`
+   is a 5px flex column, so this reproduces that gap exactly. */
 .title {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.titleName {
   font-family: var(--font-display);
   font-weight: 600;
   font-size: 20px;
@@ -182,7 +196,9 @@
     padding-bottom: 18px;
   }
 
-  .title {
+  /* On `.titleName`, not `.title`: the heading itself is now the flex column
+     that holds both lines, and carries no type of its own. */
+  .titleName {
     font-size: 24px;
   }
 }

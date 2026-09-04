@@ -33,6 +33,34 @@ export const metadata: Metadata = {
   description:
     'Popis registriranih pogrebnika u Hrvatskoj. Besplatno, bez prijave ' +
     'i bez posrednika.',
+  /**
+   * The site-wide half of the link preview.
+   *
+   * This exists because of something the product already assumes people do:
+   * a family member sends the link to a sibling (see Navigation and state
+   * rules -- shareability is why the flow's state lives in the URL at all).
+   * Those links are opened in WhatsApp and Viber, which render a card from
+   * these tags and a bare grey rectangle without them.
+   *
+   * Only the parts that are true of every page are here. `title`, `description`
+   * and `url` are set per route, because `openGraph.title` does not inherit
+   * from `title` -- a page that sets one and not the other gets the site
+   * default in its card. `og:image` comes from `app/opengraph-image.tsx`,
+   * which Next wires up for every route beneath this layout.
+   *
+   * No `twitter:` block: it falls back to the OpenGraph tags on every consumer
+   * that matters here, and the product has no presence there to name.
+   */
+  openGraph: {
+    type: 'website',
+    locale: 'hr_HR',
+    siteName: 'Pogrebne usluge',
+    url: '/',
+    title: 'Pogrebne usluge',
+    description:
+      'Popis registriranih pogrebnika u Hrvatskoj. Besplatno, bez prijave ' +
+      'i bez posrednika.',
+  },
 };
 
 export const viewport: Viewport = {

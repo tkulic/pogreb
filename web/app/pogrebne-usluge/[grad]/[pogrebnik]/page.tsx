@@ -5,12 +5,15 @@ import { ActionLink } from '@/components/ActionLink';
 import { AvailabilityMark } from '@/components/AvailabilityMark';
 import { DetailViewLogger } from '@/components/DetailViewLogger';
 import { ExternalLink } from '@/components/ExternalLink';
+import { JsonLd } from '@/components/JsonLd';
 import { PhoneIcon } from '@/components/PhoneIcon';
 import { PhoneList } from '@/components/PhoneList';
 import { answersToQuery, parseAnswers } from '@/lib/answers';
 import { CATCHMENT } from '@/lib/copy';
 import { openState, openStateLabel, selectDisplayPhone } from '@/lib/hours';
 import { getCityBySlug, getProviderBySlug } from '@/lib/queries';
+import { openGraph } from '@/lib/seo';
+import { breadcrumbs, funeralHome } from '@/lib/structured-data';
 import type { WeekDay, WorkingHoursDay } from '@/lib/database.types';
 import styles from './detail.module.css';
 
@@ -57,10 +60,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!provider) return {};
 
   const area = CATCHMENT[city.slug]?.locative ?? city.name;
+  const description = `${provider.name} — pogrebne usluge u ${area}. Kontakt, radno vrijeme i popis usluga.`;
+  const path = `/pogrebne-usluge/${city.slug}/${provider.slug}`;
+
   return {
     title: provider.name,
-    description: `${provider.name} — pogrebne usluge u ${area}. Kontakt, radno vrijeme i popis usluga.`,
-    alternates: { canonical: `/pogrebne-usluge/${city.slug}/${provider.slug}` },
+    description,
+    alternates: { canonical: path },
+    openGraph: openGraph({ title: provider.name, description, path }),
   };
 }
 
@@ -88,6 +95,34 @@ export default async function ProviderPage({ params, searchParams }: PageProps) 
 
   return (
     <main className={`page ${styles.page}`}>
+      {/*
+        The business, as a business. Every field restates something this page
+        already renders — name, address, phone, hours, services — so nothing
+        here is a claim the reader cannot check. Null columns are omitted
+        rather than filled in; see `lib/structured-data.ts` for what is
+        deliberately absent and why.
+      */}
+      <JsonLd
+        data={funeralHome(
+          provider,
+          city,
+          provider.services.map((s) => s.name),
+        )}
+      />
+      <JsonLd
+        data={breadcrumbs([
+          { name: 'Pogrebne usluge', path: '/' },
+          {
+            name: `Pogrebnici u ${CATCHMENT[city.slug]?.locative ?? city.name}`,
+            path: `/pogrebne-usluge/${city.slug}`,
+          },
+          {
+            name: provider.name,
+            path: `/pogrebne-usluge/${city.slug}/${provider.slug}`,
+          },
+        ])}
+      />
+
       {/*
         Logged from the client after mount, never during server render — see
         DetailViewLogger for why that distinction carries the whole integrity

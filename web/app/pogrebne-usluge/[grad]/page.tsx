@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { JsonLd } from '@/components/JsonLd';
 import { ProviderCard } from '@/components/ProviderCard';
 import { QuietProviderCard } from '@/components/QuietProviderCard';
 import { SectionHeading } from '@/components/SectionHeading';
@@ -14,6 +15,8 @@ import {
 import { CATCHMENT, NACIN_LABEL, SITUACIJA_LABEL, coverageClaim } from '@/lib/copy';
 import { getCityBySlug, getCityProviders } from '@/lib/queries';
 import { rankProviders } from '@/lib/ranking';
+import { openGraph } from '@/lib/seo';
+import { breadcrumbs, providerItemList } from '@/lib/structured-data';
 import { guidanceFor } from '@/lib/guidance';
 import styles from './results.module.css';
 
@@ -39,15 +42,24 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!city) return {};
 
   const catchment = CATCHMENT[city.slug];
-  const area = catchment?.label ?? city.name;
   const locative = catchment?.locative ?? city.name;
 
+  // Not "Pogrebne usluge — …": the root layout's template appends
+  // "· Pogrebne usluge", so that phrasing rendered the brand phrase twice in
+  // one title and spent SERP width saying nothing the second time.
+  const title = `Pogrebnici u ${locative}`;
+  const description = `Svi registrirani pogrebnici u ${locative}. Besplatno, bez prijave i bez posrednika.`;
+  const path = `/pogrebne-usluge/${city.slug}`;
+
   return {
-    title: `Pogrebne usluge — ${area}`,
-    description: `Svi registrirani pogrebnici u ${locative}. Besplatno, bez prijave i bez posrednika.`,
+    title,
+    description,
     // Filter state is not a canonical page: each combination points back at
     // the bare city page, and is excluded from the sitemap.
-    alternates: { canonical: `/pogrebne-usluge/${city.slug}` },
+    alternates: { canonical: path },
+    // Built by the helper, never inline: Next replaces the layout's openGraph
+    // wholesale rather than merging into it. See lib/seo.ts.
+    openGraph: openGraph({ title, description, path }),
   };
 }
 
@@ -88,6 +100,26 @@ export default async function ResultsPage({ params, searchParams }: PageProps) {
 
   return (
     <main className={`page ${styles.page}`}>
+      {/*
+        The list as the reader sees it, in the order the reader sees it —
+        shortlist first, then the rest, which is exactly what `rankProviders`
+        returned above. Handing a crawler a different order than the page shows
+        would contradict `/kako-rangiramo`, which is the page that promises the
+        ordering is explained rather than sold.
+      */}
+      <JsonLd
+        data={providerItemList(
+          [...shortlist, ...others].map((r) => r.provider),
+          city.slug,
+        )}
+      />
+      <JsonLd
+        data={breadcrumbs([
+          { name: 'Pogrebne usluge', path: '/' },
+          { name: `Pogrebnici u ${areaLocative}`, path: `/pogrebne-usluge/${city.slug}` },
+        ])}
+      />
+
       <PageBack href={questionsHref} label="← Pitanja" />
 
       {/*
@@ -98,8 +130,15 @@ export default async function ResultsPage({ params, searchParams }: PageProps) {
         times, in the most prominent position on the page.
       */}
       <header className={styles.header}>
-        <h1 className={styles.title}>Pogrebnici</h1>
-        <p className={styles.city}>{areaLabel}</p>
+        {/*
+          Both lines sit inside the `<h1>`, so the heading names the city rather
+          than saying "Pogrebnici" on all seven pages. Rendered identically to
+          the two-element version it replaces — see `results.module.css`.
+        */}
+        <h1 className={styles.title}>
+          <span className={styles.titleName}>Pogrebnici</span>
+          <span className={styles.city}>{areaLabel}</span>
+        </h1>
         {/*
           The coverage claim, stated where the list is rather than only in the
           footer. It is the reason to trust this page over a search result, and
