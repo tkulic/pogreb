@@ -1,13 +1,5 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import {
-  capitalise,
-  countOfTotal,
-  numberWord,
-  providerCount,
-  verbForm,
-} from '@/lib/copy';
-import { getAllProviders } from '@/lib/queries';
 import { PROCEDURE_STEPS, SOURCES } from '@/lib/guidance';
 import styles from '../prose.module.css';
 
@@ -41,31 +33,17 @@ export const metadata: Metadata = {
   alternates: { canonical: '/sto-uciniti-prvo' },
 };
 
-export default async function WhatToDoFirstPage() {
-  // Counted across every city, not `cities[0]`. These sentences describe the
-  // listing as a whole, and while one city existed those were the same number;
-  // after the city expansion `cities[0]` is Dubrovnik, and the page would have
-  // described the product using two providers.
-  const providers = await getAllProviders();
-
-  // Counted from the data, never asserted. If the numbers change, the page
-  // changes with them — and if they were ever wrong, they would be wrong in a
-  // way anyone can check against the listing itself.
-  const total = providers.length;
-  const available247 = providers.filter((p) => p.available_24_7).length;
-  const withEmergency = providers.filter((p) =>
-    (p.phones ?? []).some((phone) => phone.type === 'emergency'),
-  ).length;
-  const reachableAfterHours = providers.filter(
-    (p) => p.available_24_7 || (p.phones ?? []).some((ph) => ph.type === 'emergency'),
-  ).length;
-  const handleDocuments = providers.filter((p) =>
-    p.services.some((s) => s.slug === 'sredivanje-dokumentacije'),
-  ).length;
-  const transportAbroad = providers.filter((p) =>
-    p.services.some((s) => s.slug === 'prijevoz-pokojnika-inozemstvo'),
-  ).length;
-
+/**
+ * Reads no provider data, and so is fully static.
+ *
+ * It used to query every provider to word two sentences from live proportions
+ * ("većina pogrebnika navodi…"). The project owner rewrote both sentences to
+ * say the same thing without leaning on the data at all, which left the query,
+ * the share helpers and the conditional sections dead — so they are gone. The
+ * claims that remain are qualitative and true of the trade rather than of our
+ * row count, which is why they need no number behind them.
+ */
+export default function WhatToDoFirstPage() {
   return (
     <main className={`page ${styles.page}`}>
       <Link href="/" className={styles.back}>
@@ -76,8 +54,8 @@ export default async function WhatToDoFirstPage() {
         <h1 className={styles.title}>Što učiniti prvo</h1>
         <p className={styles.lede}>
           Ne morate znati redoslijed koraka. Kada odaberete pogrebnika i
-          nazovete ga, on vas kroz njih vodi — to je posao koji radi svaki dan.
-          Ovdje je samo ono što vam može pomoći da taj poziv obavite mirnije.
+          nazovete ga, on vas vodi kroz proces. To je, uostalom, posao koji radi
+          svaki dan. Mi vam pomažemo da izaberete pravoga.
         </p>
       </header>
 
@@ -99,37 +77,25 @@ export default async function WhatToDoFirstPage() {
         </section>
       )}
 
-      {total > 0 && (
-        <section className={styles.section}>
-          <h2 className={styles.heading}>Što pogrebnik preuzima</h2>
-          <p className={styles.body}>
-            Pogrebnik ne organizira samo pogreb. Od {providerCount(total)} na
-            popisu, njih {countOfTotal(handleDocuments, total)}{' '}
-            {verbForm(handleDocuments, 'navode', 'navodi')} u ponudi i sređivanje
-            dokumentacije, a {countOfTotal(transportAbroad, total)} prijevoz
-            pokojnika u inozemstvo. Ako niste sigurni što je sve potrebno, to je
-            prvo pitanje koje im možete postaviti.
-          </p>
-        </section>
-      )}
-
-      {total > 0 && (
-        <section className={styles.section}>
-          <h2 className={styles.heading}>Ako je noć ili vikend</h2>
-          <p className={styles.body}>
-            {capitalise(countOfTotal(reachableAfterHours, total))} od{' '}
-            {providerCount(total)} dostupno je i izvan uredovnog vremena —{' '}
-            {numberWord(available247)}{' '}
-            {verbForm(available247, 'navode', 'navodi')} dostupnost 0–24, a{' '}
-            {numberWord(withEmergency)} {verbForm(withEmergency, 'imaju', 'ima')}{' '}
-            dežurni telefon. Kada je ured zatvoren, na popisu vam nudimo upravo
-            dežurni broj, a ne uredski.
-          </p>
-        </section>
-      )}
+      <section className={styles.section}>
+        <h2 className={styles.heading}>Što pogrebnik preuzima</h2>
+        <p className={styles.body}>
+          Pogrebnik ne organizira samo pogreb. Mnogi preuzimaju brigu o
+          dokumentaciji i inozemni transport pokojnika. Ako niste sigurni što je
+          sve potrebno, to je prvo pitanje koje im možete postaviti.
+        </p>
+      </section>
 
       <section className={styles.section}>
-        <h2 className={styles.heading}>Što mi ne radimo</h2>
+        <h2 className={styles.heading}>Ako je noć ili vikend</h2>
+        <p className={styles.body}>
+          Mnoga pogrebna poduzeća dostupna su i izvan radnog vremena. Kada je
+          ured zatvoren, na popisu vam nudimo broj dežurne službe umjesto ureda.
+        </p>
+      </section>
+
+      <section className={styles.section}>
+        <h2 className={styles.heading}>Ne zarađujemo na vama</h2>
         <p className={styles.body}>
           Ne tražimo vaše ime, e-mail ni broj telefona i nemamo obrazac za
           slanje upita. Ne prodajemo vaše podatke jer ih ni ne prikupljamo, i

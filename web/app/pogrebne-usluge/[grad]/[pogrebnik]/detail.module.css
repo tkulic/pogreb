@@ -153,10 +153,65 @@
 }
 
 /* Website and email — secondary text links, never the primary action. */
-.links {
+/* The two CTAs. One column on a phone, where a 48px target beside another one
+   leaves neither label room to breathe; side by side and equal from 480px up.
+
+   Equal thirds are the card's pattern because the card has three actions. Here
+   there are two, so they are halves — and the primary keeps its weight through
+   fill rather than through width. */
+.actions {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 8px;
+  width: 100%;
+}
+
+.action {
+  width: 100%;
+}
+
+@media (min-width: 480px) {
+  .actions {
+    flex-direction: row;
+  }
+
+  .action {
+    flex: 1 1 0;
+  }
+}
+
+/* The e-mail address, directly under the numbers and deliberately in the same
+   shape as a `PhoneList` row: the value in `--gold-link`, the type as a tracked
+   uppercase label beside it. The two are one list to a reader even though they
+   are two elements in the markup, so they must not be two designs. */
+.emailRow {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  min-height: 44px;
+  margin: 0;
+  padding-block: 6px;
+  border-bottom: 1px solid var(--rule-quiet);
+}
+
+.emailAddress {
+  font-family: var(--font-text);
+  font-size: 15px;
+  color: var(--gold-link);
+  word-break: break-word;
+}
+
+.emailAddress:hover {
+  color: var(--gold-link-hover);
+}
+
+.emailLabel {
+  flex: none;
+  font-family: var(--font-text);
+  font-size: 10.5px;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+  color: var(--text-label);
 }
 
 .link {

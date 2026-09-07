@@ -49,7 +49,7 @@ export const PROVIDER_FORM_PUBLIC = true;
 export const MENU: readonly NavLink[] = [
   { href: '/sto-uciniti-prvo', label: 'Što učiniti prvo' },
   { href: '/kako-rangiramo', label: 'Kako rangiramo' },
-  { href: '/nase-obecanje', label: 'Naše obećanje' },
+  { href: '/nase-obecanje', label: 'Naš credo' },
   ...(PROVIDER_FORM_PUBLIC
     ? [{ href: '/za-pogrebnike', label: 'Za pogrebnike' }]
     : []),

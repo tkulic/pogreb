@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import { JsonLd } from '@/components/JsonLd';
 import { ProviderCard } from '@/components/ProviderCard';
 import { SectionHeading } from '@/components/SectionHeading';
-import { CATCHMENT, providerCount } from '@/lib/copy';
+import { CATCHMENT, providerShare } from '@/lib/copy';
 import {
   getCityBySlug,
   getCityProviders,
@@ -91,6 +91,7 @@ export default async function ServiceListingPage({ params }: PageProps) {
   const catchment = CATCHMENT[city.slug];
   const areaLabel = catchment?.label ?? city.name;
   const areaLocative = catchment?.locative ?? city.name;
+  const share = providerShare(offering.length, all.length);
 
   return (
     <main className={`page ${styles.page}`}>
@@ -121,10 +122,17 @@ export default async function ServiceListingPage({ params }: PageProps) {
           <span className={styles.titleName}>{service.name}</span>
           <span className={styles.city}>{areaLabel}</span>
         </h1>
-        <p className={styles.lede}>
-          Ovu uslugu nudi {providerCount(offering.length)} od{' '}
-          {providerCount(all.length)} u {areaLocative}.
-        </p>
+        {/*
+          A worded share, not two counts. "Ovu uslugu nudi šest pogrebnika od
+          trinaest pogrebnika u Splitu i okolici" asked the reader to do
+          arithmetic before the sentence meant anything, and it was correct only
+          for as long as both numbers held. See `providerShare`.
+        */}
+        {share && (
+          <p className={styles.lede}>
+            Ovu uslugu u {areaLocative} nudi {share}.
+          </p>
+        )}
         {catchment && (
           <p className={styles.settlements}>
             Pogrebnici koji rade u {catchment.locative} —{' '}
@@ -158,7 +166,7 @@ export default async function ServiceListingPage({ params }: PageProps) {
           Kako rangiramo
         </Link>
         <Link className={styles.footerLink} href="/nase-obecanje">
-          Naše obećanje
+          Naš credo
         </Link>
       </footer>
     </main>

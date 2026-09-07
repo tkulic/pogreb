@@ -161,7 +161,7 @@ export default async function ResultsPage({ params, searchParams }: PageProps) {
             <Link className={styles.change} href={questionsHref}>
               Odgovorite na dva pitanja
             </Link>{' '}
-            i predložit ćemo koga nazvati prvog.
+            i predložit ćemo koga kontaktirati prvog.
           </p>
         )}
       </header>
@@ -252,7 +252,7 @@ export default async function ResultsPage({ params, searchParams }: PageProps) {
           Kako rangiramo
         </Link>
         <Link className={styles.footerLink} href="/nase-obecanje">
-          Naše obećanje
+          Naš credo
         </Link>
       </footer>
     </main>

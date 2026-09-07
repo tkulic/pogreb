@@ -4,7 +4,9 @@
 >
 > Status: **the whole schema in this document is implemented and applied to the hosted Supabase project** — the four content tables, `entities.slug`, the Croatian `services.slug` values, and all of **Usage logging** (`events` + `log_event`, its enums, index, RLS and grants). Applied 2026-09-02. SQL lives in `supabase/migrations/`; this document stays the source of truth for intent, the migrations for exact DDL.
 >
-> **Applied (2026-09-03):** the six-city pilot expansion — Zagreb, Rijeka, Zadar, Osijek, Pula, Dubrovnik. Six `cities` rows, 38 `entities`, 163 `entity_services`, two additions to the `services` lookup, and two corrections to the Split rows. No schema change: every migration is data. Curated source data and the full provenance trail live in `data/` (gitignored). The conventions those migrations follow are recorded in this document, marked *(2026-09-03)*. The hosted database now holds **seven cities and 45 providers**, and the frontend reads them — see [SPEC_frontend.md](SPEC_frontend.md) → Landing page and Screen 2.
+> **Applied (2026-09-03):** the six-city pilot expansion — Zagreb, Rijeka, Zadar, Osijek, Pula, Dubrovnik. Six `cities` rows, 38 `entities`, 163 `entity_services`, two additions to the `services` lookup, and two corrections to the Split rows. No schema change: every migration is data. Curated source data and the full provenance trail live in `data/` (gitignored). The conventions those migrations follow are recorded in this document, marked *(2026-09-03)*. The hosted database now holds seven cities, and the frontend reads them — see [SPEC_frontend.md](SPEC_frontend.md) → Landing page and Screen 2.
+>
+> **Applied (2026-09-07):** the Split i okolica coverage expansion — **six new `entities` and 26 `entity_services`**, all under the existing `split` city row, plus five corrections to the seven pilot rows. No schema change; every migration is data. All seven live Split rows had sat in Split city proper while `CATCHMENT.split` claimed eight surrounding settlements, so the coverage claim rested on inference; four of those settlements now have providers of their own — Trogir (3), Kaštela (2), Solin (1), Omiš (1). Research, exclusions and the five decisions behind it are in `data/SPLIT_OKOLICA_REVIEW.md` (gitignored). The hosted database now holds **seven cities and 51 providers** — Zagreb 20, **Split 13**, Rijeka 6, Zadar 5, Osijek 3, Pula 2, Dubrovnik 2 — and **254 `entity_services`**.
 >
 > **Naming convention:** table/column names and code are in English. Croatian appears only for (a) genuine Croatian identifiers with no English equivalent — OIB, MBS — and (b) customer-facing data values (city names, service display names). See [SPEC.md](SPEC.md) → Naming Convention.
 
@@ -358,10 +360,32 @@ All applied. Nothing is pending.
 | `20260902102000_services_slug_croatian.sql` | the 16 `services.slug` renames to Croatian, with a guard that raises if any English slug survives |
 | `20260902102500_events_and_log_event.sql` | `event_type` / `event_source` / `event_device` enums; `events` table and its index; `log_event()`; RLS enabled on `events` with no policies; the grants above |
 | `20260902143000_log_event_production_host.sql` | `log_event()` replaced to add `pogreb.net` to the `internal` source bucket |
+| `20260903120000_pilot_cities.sql` | six `cities` rows — Zagreb, Rijeka, Zadar, Osijek, Pula, Dubrovnik |
+| `20260903120500_services_two_additions.sql` | `posredovanje-grobnog-mjesta`, `ugovaranje-unaprijed` — the lookup goes from 16 to 18 rows |
+| `20260903121000_split_corrections.sql` | `mbs` held a DZS MB rather than an MBS in four Split rows; Bila ruža's `oib` failed its checksum |
+| `20260903123000…132000_entities_{city}.sql` | the 38 six-city providers, one migration per city, conventions documented in the Zagreb file |
+| `20260903133000_entity_services_pilot_cities.sql` | 163 service rows across 22 of the 38 |
+| `20260907100000_split_corrections_okolica_review.sql` | five corrections to the live Split rows — Lovrinac's and Zec's addresses moved off their registered seats to the offices their sites give customers, Tonkić's two published mobiles added, Bila ruža's hours corrected to the funeral office window, `last_verified_at` bumped on all seven |
+| `20260907101000_entities_split_okolica.sql` | six providers from the okolica — Hrvojka, Cipetić, Cvjećarnica Vesna, KDGS Solin, Priba, Orhideja — all under the `split` city row with the town in `address` |
+| `20260907102000_entity_services_split_okolica.sql` | 26 service rows across five of the six; Priba has none, per the registry-only rule |
+
+**The 2026-09-03 rows above were absent from this table until 2026-09-07.** Worth naming rather than quietly fixing: `supabase/migrations/` is gitignored, so a migration missing from this table is a migration with **no record in the repo at all**. The gap survived a whole expansion because nothing enforces it.
 
 **Ordering constraint, as implemented:** `entities.slug` is `not null` with a composite unique constraint and seven pilot rows already existed, so it was added nullable, backfilled keyed on `oib` — stable, unlike `name`, which carries the trading-name changes from `20260827115739` — and only then constrained. `set not null` is the guard: it would have failed and rolled back the migration had any row been missed.
 
 Note on the first migration: it was edited after it had already been applied to the hosted database. Supabase tracks applied migrations by version rather than content, so the edit never reached production — the corrective migration exists to close that gap. **An applied migration must not be edited in place; corrections go in a new migration.**
+
+### A comment in an applied migration that the source contradicts (2026-09-07)
+
+The rule directly above has a consequence that is easy to miss: **a wrong *comment* in an applied migration is also uneditable**, and a comment is what a later reader trusts. One exists, and this is its correction.
+
+`20260903121000_split_corrections.sql` changed Bila ruža's `oib` to `57193004795` and recorded, as a warning:
+
+> Note there is a second, distinct "BILA RUŽA, obrt … vl. Katija Vuco" at Ulica Templarskog reda 1A, Split with primary NKD 32.99 (manufacturing). That is NOT this business; do not merge them on the strength of the name.
+
+**bilaruza.com presents both addresses as its own** — Templarska ulica 1a as the main address and Poljička ulica 22 as the funeral-services address, with the funeral phones on the second. fininfo serves the same record id (`361221`) under both a *vl. Katija Vuco* and a *vl. Marija Peričić* slug, and the identifier it labels "OIB" there (`91097100`) is eight digits, so it is an MBO.
+
+The OIB was chosen on an address-and-phone match — the migration says so, and calls it corroboration by address and phone rather than by a registry record. If the two names are one business with two premises, that corroboration was matching against the wrong half. **`57193004795` is a valid OIB and may well be the right one; what is gone is the reason to believe it.** Settling it needs the Sudski registar (not configured) or the Obrtni registar (a Never-tier boundary), so it stays as it is, knowingly.
 
 ## Open questions
 

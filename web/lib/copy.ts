@@ -106,6 +106,16 @@ export const CATCHMENT: Record<
       'Solin',
       'Kaštela',
       'Klis',
+      // Added 2026-09-07 (decision C of the Split i okolica review). Roughly
+      // 15 km out — closer than both Trogir and Omiš, which were already
+      // listed — and grouped administratively with Solin and Klis. Seget and
+      // Dugi Rat were proposed alongside it and declined.
+      //
+      // Its only local operator, Podi Dugopolje d.o.o., is held rather than
+      // listed (decision D), so Dugopolje joins Podstrana and Klis as a named
+      // settlement with no provider of its own. Covered in practice by the
+      // Split and Solin providers — Zec keeps a Solin office under concession.
+      'Dugopolje',
       'Stobreč',
       'Žrnovnica',
       'Omiš',
@@ -198,9 +208,13 @@ export const CATCHMENT: Record<
  * **Deliberately count-free.** Stating "svih sedam" made the strongest fact we
  * have — that nobody is missing — read as a small number, and a visitor who
  * has never heard of us reads "seven" as the size of our database rather than
- * the size of the market. Coverage is the claim; the count is a detail, and it
- * still appears where it does real work (a service page's "šest od sedam", the
- * `· N` on a section heading).
+ * the size of the market. Coverage is the claim; the count is a detail.
+ *
+ * **As of 2026-09-07 that rule is absolute in prose:** no exact provider count
+ * appears in customer-facing sentences anywhere. The service page's
+ * "šest od sedam" and the counts in `/sto-uciniti-prvo` are gone, replaced by
+ * `providerShare`. The one survivor is `· N` on a results section heading,
+ * which counts the cards below it rather than the market.
  *
  * Centralised because it appears on the results header, the service listings
  * and the provider pages. If it is ever hedged or widened it has to change in
@@ -248,7 +262,7 @@ export function nationalCoverageClaim(cities: number): string {
  * `grada` and 5+ take `gradova`, where `pogrebnika` served both. 11–14 are the
  * standard exception and behave like 5+.
  */
-export function cityCount(n: number): string {
+function cityCount(n: number): string {
   const last = n % 10;
   const lastTwo = n % 100;
   const teen = lastTwo >= 11 && lastTwo <= 14;
@@ -276,66 +290,80 @@ const NUMBER_WORD = [
   'petnaest', 'šesnaest', 'sedamnaest', 'osamnaest', 'devetnaest', 'dvadeset',
 ];
 
-export function numberWord(n: number): string {
+function numberWord(n: number): string {
   return n >= 0 && n < NUMBER_WORD.length ? NUMBER_WORD[n] : String(n);
 }
 
 /**
- * "sedam pogrebnika", "jedan pogrebnik".
+ * Five counting helpers lived here and are gone as of 2026-09-07:
+ * `providerCount`, `providerNoun`, `capitalise`, `verbForm` and `countOfTotal`.
  *
- * Croatian counts by the last digit, with 11–14 as an exception. For this noun
- * the 2–4 and 5+ forms coincide (`pogrebnika`), so only the singular needs
- * separating — but the full rule is written out because the next noun that
- * needs this will not be so forgiving.
+ * They existed to put exact provider counts into Croatian sentences —
+ * "šest pogrebnika nudi", "svih sedam" — and every one of their call sites was
+ * rewritten when exact counts came out of customer-facing prose. `verbForm` is
+ * the one worth remembering rather than the code: **Croatian verb agreement
+ * after a numeral is not singular-vs-plural** — 2–4 take the plural form and
+ * 5+ take the singular, with 11–14 behaving like 5+. `providerShare` below
+ * avoids the trap by construction rather than by handling it.
  */
-export function providerCount(n: number): string {
-  return `${numberWord(n)} ${providerNoun(n)}`;
+
+/**
+ * A share of the providers, worded rather than counted — "većina pogrebnika",
+ * "gotovo svaki pogrebnik", "manji dio pogrebnika".
+ *
+ * **Exact provider counts are out of customer-facing prose** (project owner,
+ * 2026-09-07). Two reasons, and only the first is about maintenance:
+ *
+ * 1. **A sentence built from two live counts is a sentence that has to be
+ *    re-read every time the data changes.** "Od pedeset i jednog pogrebnika na
+ *    popisu, njih trideset i dva navode…" is arithmetic the reader has to do
+ *    before it means anything, and it was correct for exactly as long as both
+ *    numbers held.
+ * 2. **The proportion is the fact; the count is trivia.** A family wants to
+ *    know whether asking for something is normal or unusual. "Većina" answers
+ *    that. "Trideset i dva" makes them divide.
+ *
+ * Still derived from live rows, never asserted — the *word* changes when the
+ * data does, so this is not a hedge, it is the same fact at the right
+ * resolution.
+ *
+ * **Every phrase returned takes a singular verb**, which is deliberate:
+ * Croatian agreement after a numeral is a trap (2–4 plural, 5+ singular, 11–14
+ * back to singular — see the note above), and picking share words that are all
+ * grammatically singular removes the trap instead of routing around it. So
+ * `svi pogrebnici` is never returned; `svaki pogrebnik` says the same thing and
+ * agrees with `nudi`.
+ *
+ * Returns **null when nobody offers it**, because that sentence needs a negated
+ * verb and a different shape — the caller omits the clause instead.
+ */
+export function providerShare(part: number, total: number): string | null {
+  if (part <= 0 || total <= 0) return null;
+  if (part === total) return 'svaki pogrebnik';
+  if (part === 1) return 'samo jedan pogrebnik';
+
+  const ratio = part / total;
+  if (ratio >= 0.75) return 'gotovo svaki pogrebnik';
+  if (ratio > 0.5) return 'većina pogrebnika';
+  if (ratio === 0.5) return 'polovina pogrebnika';
+  if (ratio >= 0.25) return 'manji dio pogrebnika';
+  return 'malo pogrebnika';
 }
 
 /**
- * Just the noun, for the places that want the digit rather than the word.
+ * "više od 50" — a floor, for the one place a national scale claim earns its
+ * keep.
  *
- * A scannable list — the landing page's city grid — reads better as "20
- * pogrebnika" than "dvadeset pogrebnika": the word form is for sentence flow,
- * and a column of spelled-out numbers cannot be compared at a glance, which is
- * the only reason that column exists.
+ * Rounded **down to the previous ten below the true count**, so the claim is
+ * true when written and stays true as providers are added: at 51 it says 50, at
+ * 60 it still says 50, at 61 it says 60. A claim that can only become more true
+ * is one nobody has to maintain — which is the difference between this and the
+ * exact counts it replaces.
+ *
+ * Returns null below the first threshold, where "više od 10" would be a
+ * smaller-sounding claim than saying nothing.
  */
-export function providerNoun(n: number): string {
-  const last = n % 10;
-  const lastTwo = n % 100;
-  const singular = last === 1 && lastTwo !== 11;
-  return singular ? 'pogrebnik' : 'pogrebnika';
-}
-
-/** Sentence-cases a count phrase for the start of the context strip. */
-export function capitalise(s: string): string {
-  return s.charAt(0).toUpperCase() + s.slice(1);
-}
-
-/**
- * Croatian verb agreement after a numeral.
- *
- * The rule is not "singular vs plural" in the English sense: **2–4 take the
- * plural form, and 5 and above take the singular** — "četiri pogrebnika nude",
- * but "šest pogrebnika nudi". 11–14 are the standard exception and behave like
- * 5+, which is why this keys on the last two digits as well as the last one.
- *
- * Worth a helper rather than a hardcoded word: these counts come from live
- * data, so the correct form changes as providers are added.
- */
-export function verbForm(n: number, plural: string, singular: string): string {
-  const last = n % 10;
-  const lastTwo = n % 100;
-  const takesPlural = last >= 2 && last <= 4 && !(lastTwo >= 12 && lastTwo <= 14);
-  return takesPlural ? plural : singular;
-}
-
-/**
- * "šest" — or "svih sedam" when the count is every provider there is.
- *
- * Saying "sedam" when the total is also seven reads as a coincidence; "svih
- * sedam" states the fact that matters, which is that nobody is excluded.
- */
-export function countOfTotal(n: number, total: number): string {
-  return n === total ? `svih ${numberWord(total)}` : numberWord(n);
+export function providerFloor(n: number): string | null {
+  if (n < 20) return null;
+  return `više od ${Math.floor((n - 1) / 10) * 10}`;
 }

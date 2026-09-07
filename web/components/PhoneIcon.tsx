@@ -21,7 +21,7 @@ export function PhoneIcon({ size = 18 }: { size?: number }) {
       strokeWidth={1.8}
       strokeLinecap="round"
       strokeLinejoin="round"
-      /* Decorative: the button already reads "Nazovi". */
+      /* Decorative: the button already reads "Nazovite". */
       aria-hidden="true"
       focusable="false"
     >

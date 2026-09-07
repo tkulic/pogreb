@@ -110,9 +110,9 @@ const BY_POKOJNIK: Partial<Record<NonNullable<FlowAnswers['pokojnik']>, string>>
 
   // gov.hr — the institution notifies; the family still chooses the provider.
   bolnica:
-    'Ustanova sama obavještava nadležnu službu i mrtvozornika, pa to ne morate ' +
-    'vi. Pogrebnika birate sami — izravno ili preko ustanove; niste vezani uz ' +
-    'onoga kojeg vam ustanova predloži.',
+    'Ustanova sama obavještava nadležnu službu i mrtvozornika. Pogrebnika ' +
+    'birate sami — izravno ili preko ustanove; niste vezani uz onoga kojeg vam ' +
+    'ustanova predloži.',
 
   // Same document flow as any death outside a health institution; the home
   // ordinarily makes the call. Hedged, because practice varies by home.
@@ -125,7 +125,7 @@ const BY_POKOJNIK: Partial<Record<NonNullable<FlowAnswers['pokojnik']>, string>>
     'Javite se najbližem veleposlanstvu ili konzulatu Republike Hrvatske. Za ' +
     'prijevoz posmrtnih ostataka potrebna je sprovodnica, uz odobrenje države ' +
     'u kojoj je osoba preminula; za prijenos urne s pepelom sprovodnica nije ' +
-    'potrebna. Pogrebnici na ovom popisu organiziraju i međunarodni prijevoz.',
+    'potrebna. Pogrebnici u našem registru organiziraju i međunarodni prijevoz.',
 };
 
 /**

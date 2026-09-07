@@ -33,7 +33,7 @@ const RULES: { title: string; body: string }[] = [
   {
     title: 'Dostupnost, kada je hitno',
     body:
-      'Ako ste rekli da je osoba preminula, pogrebnici dostupni 0–24 dolaze ' +
+      'Ako je osoba preminula, pogrebnici dostupni 0–24 dolaze ' +
       'prvi, zatim oni koji imaju dežurni telefon. Kada nije hitno, dostupnost ' +
       'ne mijenja redoslijed.',
   },
@@ -42,22 +42,21 @@ const RULES: { title: string; body: string }[] = [
     body:
       'Pogrebnik o kojem imamo više provjerenih podataka — telefon, dežurnu ' +
       'liniju, radno vrijeme, e-mail, web stranicu, popis usluga — dolazi ' +
-      'ispred onoga o kojem imamo manje. Popis koji se ne može iskoristiti ' +
-      'vrijedi vam manje od onoga koji može.',
+      'ispred onoga o kojem imamo manje. Popis s nepotpunim podacima ' +
+      'nije vam od osobite pomoći.',
   },
   {
     title: 'Abecedno',
     body:
-      'Kada je sve ostalo jednako, redoslijed je abecedni, po hrvatskoj ' +
-      'abecedi — Č, Ć, Š, Ž i Đ na svojim mjestima.',
+      'Kada je sve ostalo jednako, redoslijed je abecedni.'
   },
 ];
 
 const NEVER: string[] = [
   'Nitko nam ne plaća za bolju poziciju. U ovoj fazi ne naplaćujemo ništa, ni pogrebnicima ni vama.',
-  'Ne rangiramo prema broju klikova ni pregleda. Kada bi broj klikova dizao poziciju, viša pozicija bi donosila više klikova — brojka bi mjerila samu sebe.',
+  'Ne rangiramo prema broju klikova ni pregleda.',
   'Redoslijed nije slučajan i ne rotira. Isti odgovori uvijek daju isti popis, pa se poveznica koju pošaljete ukućanima otvara jednako i njima.',
-  'Ne rangiramo prema cijeni. Nijedan pogrebnik u pilot-području ne objavljuje cijenu, pa je nemamo.',
+  'Ne rangiramo prema cijeni. Pogrebnici u pravilu ne objavljuju cijene.',
 ];
 
 export default function RankingPage() {

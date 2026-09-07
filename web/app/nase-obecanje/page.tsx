@@ -30,10 +30,8 @@ import styles from '../prose.module.css';
  * same tracked gap.
  */
 export const metadata: Metadata = {
-  title: 'Naše obećanje',
-  description:
-    'Četiri obećanja i što svako od njih isključuje: svi pogrebnici na ' +
-    'popisu, objavljena pravila, nikakvi osobni podaci, besplatno.',
+  title: 'Naš credo',
+  description: 'Četiri obećanja. Vola se drži za rogove, a čovjeka za riječ.',
   alternates: { canonical: '/nase-obecanje' },
 };
 
@@ -44,24 +42,23 @@ export const metadata: Metadata = {
  */
 const PROMISES: { title: string; body: string; excludes: string }[] = [
   {
-    title: 'Svi, ne samo neki',
+    title: 'Fer',
     body:
       'Na popisu su svi pogrebnici registrirani u području koje pokrivamo — ' +
       'uključujući one koji nemaju web stranicu i one koji se nigdje ne ' +
-      'oglašavaju. Popis nastaje iz javnih registara i vlastite provjere, a ' +
-      'ne iz toga tko nam se javio.',
+      'oglašavaju. Popis nastaje iz javnih registara i javno dostupnih ' +
+      'podataka, agregiranih s velikom pažnjom.',
     excludes:
-      'Nitko ne može platiti da bude viši na popisu, ni da netko drugi bude ' +
-      'niži ili izostavljen. Ne postoji ni „istaknuto mjesto” koje bi se ' +
-      'kupilo, jer takvo mjesto ne postoji na stranici.',
+      'Nitko ne može platiti bolju poziciju, niti za lošiju poziciju ' +
+      'konkurentskog poduzeća. Ne postoji ni „istaknuto mjesto” koje bi se ' +
+      'moglo kupiti.',
   },
   {
-    title: 'Ne tražimo vaše podatke',
+    title: 'Anonimno',
     body:
       'Nema prijave, nema obrasca, nema polja za ime, e-mail ni telefon. ' +
       'Nema kolačića i nema oznake koja bi vas pratila s ove stranice na ' +
-      'drugu. Zato vas na ulazu ne pitamo ništa o privatnosti — nemamo što ' +
-      'pitati.',
+      'drugu.',
     excludes:
       'Vaše podatke ne možemo prodati ni proslijediti jer ih nemamo. Kada ' +
       'pritisnete „Nazovi”, poziv ide izravno pogrebniku: broj je njegov, ' +
@@ -71,24 +68,24 @@ const PROMISES: { title: string; body: string; excludes: string }[] = [
   {
     title: 'Besplatno',
     body:
-      'Za vas i za pogrebnike. Ne naplaćujemo kontakt, ne prodajemo upite i ' +
-      'nemamo oglase — ni svoje, ni tuđe.',
+      'Ne naplaćujemo kontakt, ne prodajemo upite i nemamo oglase — ni ' +
+      'svoje, ni tuđe.',
     excludes:
       'Ako se ovo jednom promijeni, prvo se mijenja ova stranica, s datumom ' +
       'i s time što je točno promijenjeno. Obećanje koje se tiho promijeni ' +
       'nije obećanje.',
   },
   {
-    title: 'Provjerljivo',
+    title: 'Transparentno',
     body:
       'Pravila po kojima sastavljamo popis objavljena su u cijelosti i ' +
-      'običnim jezikom, na stranici Kako rangiramo. Isti odgovori uvijek ' +
+      'razumljivim jezikom, na stranici Kako rangiramo. Isti odgovori uvijek ' +
       'daju isti popis, pa se poveznica koju pošaljete ukućanima njima ' +
       'otvara jednako kao vama.',
     excludes:
       'Popis nije slučajan, ne rotira i ne ovisi o broju klikova. Ako ' +
-      'mislite da je neko pravilo pogrešno, možete ga pročitati i reći nam ' +
-      'da je pogrešno — to je razlika između objavljenog pravila i ' +
+      'mislite da je neko pravilo pogrešno, možete ga pročitati i predložiti ' +
+      'promjenu — to je razlika između objavljenog pravila i ' +
       '„našeg algoritma”.',
   },
 ];
@@ -96,9 +93,9 @@ const PROMISES: { title: string; body: string; excludes: string }[] = [
 /** What the promise does not cover. Stated by us, before anyone asks. */
 const LIMITS: string[] = [
   'Ne ocjenjujemo kvalitetu usluge. Nemamo ocjene ni recenzije jer ih nemamo od koga dobiti, a izmišljene bi bile gore od nikakvih.',
-  'Ne uspoređujemo cijene i ne rangiramo po njima. Pogrebnici u pravilu ne objavljuju cjenike; gdje cijenu ipak znamo, stoji na stranici pogrebnika i označena je kao orijentacijska.',
-  'Ne znamo koji pogrebnik dolazi u koje mjesto. Područje koje navodimo je područje popisa, a ne obećanje da svaki pogrebnik s popisa radi u svakom naselju.',
-  'Podatke unosimo ručno i mogu zastarjeti. Ako je neki broj, radno vrijeme ili usluga netočna, javite nam i ispravit ćemo — ispravak je pravi lijek za to.',
+  'Ne uspoređujemo cijene i ne rangiramo po njima. Pogrebnici u pravilu ne objavljuju cjenike; ako ipak postoji cijena, stoji na stranici pogrebnika i označena je kao orijentacijska.',
+  'Ne znamo koji pogrebnik dolazi u koje mjesto. Područje koje navodimo je područje popisa, a ne tvrdnja da svaki pogrebnik s popisa radi u svakom naselju.',
+  'Podatke unosimo ručno. Stoga oni mogu zastarjeti. Ako je neki broj, radno vrijeme ili usluga netočna, javite nam i ispravit ćemo — ispravak je pravi lijek za to.',
 ];
 
 export default function PromisePage() {
@@ -109,10 +106,9 @@ export default function PromisePage() {
       </Link>
 
       <header className={styles.header}>
-        <h1 className={styles.title}>Naše obećanje</h1>
+        <h1 className={styles.title}>Naš credo</h1>
         <p className={styles.lede}>
-          Četiri obećanja. Uz svako piše i što ono isključuje, jer obećanje bez
-          toga je samo lijepa rečenica.
+          Četiri obećanja. Vola se drži za rogove, a čovjeka za riječ.
         </p>
       </header>
 
@@ -137,7 +133,7 @@ export default function PromisePage() {
       <section className={styles.section}>
         <h2 className={styles.heading}>Što bilježimo</h2>
         <p className={styles.body}>
-          Jedno bilježimo, i vrijedi to reći točno: koliko je puta otvoren
+          Jedno bilježimo, i vrijedi to pojasniti: koliko je puta otvoren
           profil pojedinog pogrebnika i koliko je puta pritisnut njegov broj
           ili e-mail. Bilježi se samo to — koji pogrebnik i koja radnja.
         </p>
@@ -147,13 +143,6 @@ export default function PromisePage() {
           kakvu oznaku po kojoj bi se dvije radnje mogle povezati u jednu
           osobu. Zapis o pritisnutom broju ne zna ništa o vama, pa ga se ne
           može ni pripisati vama.
-        </p>
-        <p className={styles.body}>
-          Bilježimo to zato što besplatan popis bez ijedne brojke ne može
-          razlikovati „ovo nikome ne treba” od „ovo nitko nije našao”, a to su
-          dva posve različita zaključka. Cijena je to što ne znamo koliko nas
-          ljudi posjeti — samo koliko je puta nešto pritisnuto. Tu cijenu
-          plaćamo svjesno.
         </p>
       </section>
 
@@ -188,10 +177,8 @@ export default function PromisePage() {
         precisely so that copy like this does not have to.
       */}
       <p className={styles.note}>
-        Popis još raste: pokrivamo dio Hrvatske, a ne cijelu zemlju, i svaki
-        novi grad dodajemo po istim pravilima. Sve gore navedeno vrijedi od
-        prvog dana, a ne od trenutka kada popis naraste — obećanje koje bi
-        vrijedilo tek kasnije ne bi vrijedilo ni sada.
+        Popis svakodnevno raste: pokrivamo dio Hrvatske, a ne cijelu zemlju, i
+        svaki novi grad dodajemo po istim pravilima.
       </p>
 
       <div className={styles.footerLinks}>

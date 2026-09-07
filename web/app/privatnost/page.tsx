@@ -149,7 +149,7 @@ export default function PrivacyPage() {
           profil pojedinog pogrebnika i koliko je puta pritisnut njegov broj
           ili e-mail. To je opisano u cijelosti na stranici{' '}
           <Link href="/nase-obecanje" className={styles.footerLink}>
-            Naše obećanje
+            Naš credo
           </Link>
           .
         </p>
@@ -175,7 +175,9 @@ export default function PrivacyPage() {
       </section>
 
       <section className={styles.section}>
-        <h2 className={styles.heading}>Što skupljamo i što s tim radimo</h2>
+        <h2 className={styles.heading}>
+          Što skupljamo i što s podatcima radimo
+        </h2>
         <p className={styles.body}>
           Samo ono što sami upišete u obrazac na stranici{' '}
           <Link href="/za-pogrebnike" className={styles.footerLink}>
@@ -216,8 +218,8 @@ export default function PrivacyPage() {
       <section className={styles.section}>
         <h2 className={styles.heading}>Gdje se podaci čuvaju</h2>
         <p className={styles.body}>
-          Obrazac obrađuje Netlify (Netlify, Inc.), američka tvrtka koja
-          poslužuje ovu stranicu. Poslana poruka pohranjuje se kod njih i
+          Obrazac obrađuje Netlify (Netlify, Inc.), servis koja poslužuje ovu
+          stranicu. Poslana poruka pohranjuje se kod njih i
           preusmjerava nam se e-mailom. To znači da podaci putuju izvan
           Europskog gospodarskog prostora, na temelju standardnih ugovornih
           klauzula i okvira za prijenos podataka između EU-a i SAD-a.
@@ -274,7 +276,7 @@ export default function PrivacyPage() {
 
       <div className={styles.footerLinks}>
         <Link href="/nase-obecanje" className={styles.footerLink}>
-          Naše obećanje
+          Naš credo
         </Link>
         <Link href="/" className={styles.footerLink}>
           Pronađite pogrebnika

@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { ActionLink } from '@/components/ActionLink';
 import { AvailabilityMark } from '@/components/AvailabilityMark';
 import { DetailViewLogger } from '@/components/DetailViewLogger';
+import { EmailAction } from '@/components/EmailAction';
 import { ExternalLink } from '@/components/ExternalLink';
 import { JsonLd } from '@/components/JsonLd';
 import { PhoneIcon } from '@/components/PhoneIcon';
@@ -142,16 +143,41 @@ export default async function ProviderPage({ params, searchParams }: PageProps) 
           {provider.available_24_7 && <AvailabilityMark variant="filled" />}
         </div>
 
-        {selected && (
+        {/*
+          Two actions, side by side: call and e-mail.
+
+          The e-mail action was previously a text link at the foot of the page,
+          which put the second-most-likely thing a visitor wants below the
+          opening hours. It is a CTA here and the address is still listed under
+          `Kontakt`, so the button is the action and the address is the fact.
+
+          Neither button reveals a number, unlike the shortlist card: every
+          number is listed in full below, so there is nothing to reveal.
+
+          The row collapses to one column on a phone — see `detail.module.css`.
+        */}
+        {(selected || provider.email) && (
           <>
-            {/* The button still reads `Nazovi` without a number, for
-                consistency with the list — the numbers below already provide
-                them, so no reveal step is needed here. */}
-            <ActionLink variant="primary" href={`tel:${selected.phone.number}`} fullWidth>
-              <PhoneIcon />
-              Nazovi
-            </ActionLink>
-            {selected.isAfterHours && (
+            <div className={styles.actions}>
+              {selected && (
+                <ActionLink
+                  variant="primary"
+                  className={styles.action}
+                  href={`tel:${selected.phone.number}`}
+                >
+                  <PhoneIcon />
+                  Nazovite
+                </ActionLink>
+              )}
+              {provider.email && (
+                <EmailAction
+                  entityId={provider.id}
+                  email={provider.email}
+                  className={styles.action}
+                />
+              )}
+            </div>
+            {selected?.isAfterHours && (
               <span className={styles.afterHours}>dežurni telefon</span>
             )}
           </>
@@ -167,10 +193,30 @@ export default async function ProviderPage({ params, searchParams }: PageProps) 
         {status && <p className={styles.status}>{status}</p>}
       </div>
 
-      {phones.length > 0 && (
+      {/*
+        Kontakt holds every way to reach this provider directly: the numbers
+        with their types, then the e-mail address on the same list, in the same
+        shape. It used to sit in an unlabelled block after the opening hours,
+        beside the website — which grouped it by "is a link" rather than by what
+        a reader is looking for.
+      */}
+      {(phones.length > 0 || provider.email) && (
         <section className={styles.section}>
           <h2 className={styles.heading}>Kontakt</h2>
           <PhoneList entityId={provider.id} phones={phones} />
+          {provider.email && (
+            <p className={styles.emailRow}>
+              <ExternalLink
+                entityId={provider.id}
+                eventType="email_click"
+                href={`mailto:${provider.email}?subject=${encodeURIComponent('Upit o pogrebnim uslugama')}`}
+                className={styles.emailAddress}
+              >
+                {provider.email}
+              </ExternalLink>
+              <span className={styles.emailLabel}>e-mail</span>
+            </p>
+          )}
         </section>
       )}
 
@@ -215,30 +261,24 @@ export default async function ProviderPage({ params, searchParams }: PageProps) 
         </section>
       )}
 
-      {(provider.website || provider.email) && (
+      {/*
+        The website keeps its place after the opening hours — it is the last
+        thing a visitor needs, and sending them off-site earlier would end the
+        visit at the moment they were still deciding. What it gains is a heading
+        of its own, so it reads as a section like the three above rather than as
+        a loose link the page trails off into.
+      */}
+      {provider.website && (
         <section className={styles.section}>
-          <div className={styles.links}>
-            {provider.website && (
-              <ExternalLink
-                entityId={provider.id}
-                eventType="website_click"
-                href={provider.website}
-                className={styles.link}
-              >
-                {provider.website.replace(/^https?:\/\//, '')}
-              </ExternalLink>
-            )}
-            {provider.email && (
-              <ExternalLink
-                entityId={provider.id}
-                eventType="email_click"
-                href={`mailto:${provider.email}?subject=${encodeURIComponent('Upit o pogrebnim uslugama')}`}
-                className={styles.link}
-              >
-                {provider.email}
-              </ExternalLink>
-            )}
-          </div>
+          <h2 className={styles.heading}>Web stranica</h2>
+          <ExternalLink
+            entityId={provider.id}
+            eventType="website_click"
+            href={provider.website}
+            className={styles.link}
+          >
+            {provider.website.replace(/^https?:\/\//, '')}
+          </ExternalLink>
         </section>
       )}
 

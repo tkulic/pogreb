@@ -19,10 +19,95 @@
 
 /* --- hero --- */
 
+/* The hero band, with the photograph behind the text.
+
+   This is the one place on the site where an image sits under type.
+
+   **The band keeps the page's left edge**, and that is deliberate rather than
+   timid. Bleeding it out by one gutter was tried first and looked accidental:
+   the photograph then started a gutter to the left of the wordmark above it and
+   of every section heading below it, which is exactly the competing-left-edges
+   failure `globals.css` warns about where it aligns the reading column to the
+   frame. One edge, all the way down.
+
+   `isolation: isolate` is load-bearing: the image is placed at `z-index: -1`,
+   and without a stacking context of its own it would slide behind the page
+   background instead of behind the panel. */
 .hero {
+  position: relative;
+  isolation: isolate;
   display: flex;
   flex-direction: column;
+  justify-content: center;
   gap: 26px;
+  min-height: 320px;
+  padding-block: 24px;
+  overflow: hidden;
+  border-bottom: 1px solid var(--gold);
+}
+
+/* `object-fit: cover` with a centred origin: the band's height is fixed by
+   `min-height` above, so the photograph is cropped rather than letterboxed and
+   the composition holds from 320px to the full frame. */
+.heroImage {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+/* The scrim: a soft wash of `--stone` behind the type and nothing more.
+
+   **The photograph is meant to read.** Earlier versions covered most of the
+   band — first as a hard-edged panel, then as a scrim wide and opaque enough to
+   wash the image out — and both defeated the point of putting a photograph
+   there at all. This one is sized to the text block and fades out well inside
+   the band's edges.
+
+   **The radii are set per breakpoint, and that is not fussiness.** The scrim
+   has to cover the type and no more, but the type is nearly the full width of
+   the band on a phone and about half of it on a desktop, so one radius cannot
+   do both. Wide is the mobile default; the desktop override pulls it in.
+
+   **The floor is an accessibility constraint, not a taste call.** `--ink` on a
+   scrim this thin is a blend, so contrast depends on the photograph beneath:
+   over the darkest pixels in this image, ~0.86 opacity gives about 11:1 and
+   ~0.55 about 6:1, while below roughly 0.45 it drops under the 4.5:1 AA floor.
+   The stops therefore hold ≥0.55 out to where the longest line ends, and only
+   fall away past the type. **A thinner scrim than this is a defect, not a
+   style**, and a darker photograph would need it stronger again.
+
+   **Many stops, no plateau, and a long tail.** A gradient with a flat centre
+   and three stops has a visible edge — not because of where it ends but
+   because its rate of change jumps, and the eye reads that shoulder as the
+   outline of an ellipse sitting on the photograph. The ladder below decays from
+   the first stop and thins to nothing over the last third, which is what
+   removes the shape while keeping the opacity where the type is.
+
+   No pure white: the palette has none, and a white bloom over a warm
+   photograph would read as a different design system pasted onto this one. */
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(
+    ellipse 88% 62% at 50% 50%,
+    rgba(233, 229, 219, 0.9) 0%,
+    rgba(233, 229, 219, 0.88) 20%,
+    rgba(233, 229, 219, 0.84) 34%,
+    rgba(233, 229, 219, 0.76) 48%,
+    rgba(233, 229, 219, 0.64) 60%,
+    rgba(233, 229, 219, 0.5) 70%,
+    rgba(233, 229, 219, 0.36) 78%,
+    rgba(233, 229, 219, 0.23) 85%,
+    rgba(233, 229, 219, 0.12) 91%,
+    rgba(233, 229, 219, 0.05) 96%,
+    rgba(233, 229, 219, 0) 100%
+  );
 }
 
 /* The measure the hero's prose is read at, inside the wider frame.
@@ -39,6 +124,11 @@
   width: 100%;
   max-width: 34em;
   margin-inline: auto;
+  /* No background of its own: the scrim on `.hero::before` carries the
+     legibility, and a panel here would put a hard edge back on the thing the
+     gradient exists to avoid. Padding is kept small — every pixel of it is
+     scrim the photograph has to give up for no type. */
+  padding: 10px 16px;
   text-align: center;
 }
 
@@ -162,24 +252,10 @@
   padding-top: 12px;
 }
 
-/* --- the band ---
-
-   The one image slot on the page, filled by engraved line art. The texture
-   behind it is what keeps it from reading as a flat grey box, and it is also
-   the state the band would fall back to if the drawing were ever removed. */
-
-.band {
-  position: relative;
-  height: 150px;
-  overflow: hidden;
-  border-bottom: 1px solid var(--gold);
-}
-
-.engraving {
-  width: 100%;
-  height: 100%;
-  color: var(--ink);
-}
+/* The separate image band that used to sit under the hero text is gone, along
+   with `.engraving`. It held `StoneEngraving`, which is still in
+   `components/` — it is the drawing the results header and `/sto-uciniti-prvo`
+   bands could take, and both are still texture alone. */
 
 /* --- sections --- */
 
@@ -346,10 +422,32 @@
 
   .hero {
     gap: 34px;
+    min-height: 400px;
   }
 
-  .band {
-    height: 220px;
+  /* Pulled in from the mobile default: at this width the type is about half the
+     band, so a scrim sized for a phone's full-width lines would wash out most
+     of the photograph. Same opacity where the type is, same smooth ladder,
+     smaller footprint. */
+  .hero::before {
+    background: radial-gradient(
+      ellipse 46% 56% at 50% 50%,
+      rgba(233, 229, 219, 0.9) 0%,
+      rgba(233, 229, 219, 0.88) 20%,
+      rgba(233, 229, 219, 0.84) 34%,
+      rgba(233, 229, 219, 0.76) 48%,
+      rgba(233, 229, 219, 0.64) 60%,
+      rgba(233, 229, 219, 0.5) 70%,
+      rgba(233, 229, 219, 0.36) 78%,
+      rgba(233, 229, 219, 0.23) 85%,
+      rgba(233, 229, 219, 0.12) 91%,
+      rgba(233, 229, 219, 0.05) 96%,
+      rgba(233, 229, 219, 0) 100%
+    );
+  }
+
+  .heroText {
+    padding: 14px 20px;
   }
 
   .cities {
@@ -393,8 +491,8 @@
     font-size: 15.5px;
   }
 
-  .band {
-    height: 260px;
+  .hero {
+    min-height: 460px;
   }
 
   .cities {

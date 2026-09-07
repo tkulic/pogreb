@@ -6,7 +6,7 @@
 >
 > The layout is **masthead, reading column, footer** at every width — see [Layout and shape](#layout-and-shape). This replaced the sticky desktop rail, which is deleted, and closed the tablet-portrait gap with it. The landing page was rebuilt around the familiar shape (hero, how it works, why us, close) and its `<h1>` now names the reader's situation before the coverage claim — a deliberate reversal, reasoned through under [Landing page](#landing-page). The landing image band is filled by engraved line art rather than waiting on a photograph.
 >
-> **The product covers seven cities** — Zagreb, Split, Rijeka, Zadar, Osijek, Pula and Dubrovnik, 45 providers — since the 2026-09-03 expansion ([SPEC_database.md](SPEC_database.md)). That turned screen 2 into a real question, replaced the landing page's single-city coverage strip with a city list, and made `cities[0]` a bug rather than a shorthand.
+> **The product covers seven cities** — Zagreb, Split, Rijeka, Zadar, Osijek, Pula and Dubrovnik, **51 providers** — since the 2026-09-03 expansion and the 2026-09-07 Split okolica fill-in, which took Split from 7 providers to 13 ([SPEC_database.md](SPEC_database.md)). **Passages below that reason about "all 7" are pilot-era and describe Split as it was**; they are kept where the reasoning still holds and are wrong about the count. That turned screen 2 into a real question, replaced the landing page's single-city coverage strip with a city list, and made `cities[0]` a bug rather than a shorthand.
 >
 > `/za-pogrebnike` is the product's **only form**, for funeral directors. **It is now linked and indexable**: `PROVIDER_FORM_PUBLIC` was flipped to `true` on 2026-09-04, once `/privatnost` existed and the note beside the submit button pointed at it. See [The provider page](#the-provider-page). What remains open is listed under [Open questions](#open-questions), and what still degrades the build under [Data dependencies](#data-dependencies-that-gate-the-build).
 >
@@ -26,7 +26,7 @@ Two consequences of that, which are requirements rather than side effects:
 
   **The one exception is [`/za-pogrebnike`](#the-provider-page), and it is an exception to the audience rather than to the rule.** It carries a form for funeral directors — corrections, missing listings, collaboration — because the businesses being listed had no way to reach us at all, which was a tracked gap and an E-E-A-T problem. A provider writing to us about their own listing is initiating, about their own business, and can see exactly what they are sending. **A family never meets it**: it is not linked from the flow, the results or the detail pages, and the one link on the landing page sits after the close, set as the quietest thing on it.
 
-  This does not soften the promise. *Ne tražimo vaše podatke* is addressed to the person looking for a funeral director, and it stays true for them word for word — which is why the promise wording was deliberately left unchanged when the form shipped.
+  This does not soften the promise. The no-personal-data promise is addressed to the person looking for a funeral director, and it stays true for them word for word — which is why the promise wording was deliberately left unchanged when the form shipped.
 - **No cookie banner.** The no-PII design of `events` ([SPEC_database.md](SPEC_database.md) → Usage logging) is what earns this, and the provider form does not touch it: it is a plain HTML POST that happens only when a provider presses a button, so nothing is stored, read back or tracked on any visitor's device. All three reference sites have a consent wall; not having one is a visible usability advantage and must not be traded away.
 
 ## The user story
@@ -47,39 +47,42 @@ So the flow's value is **not filtering**. It is orientation and confidence: turn
 
 `/` is the landing page, and the flow begins one tap later at `/?korak=situacija`.
 
-It exists because the flow could not answer the one question a stranger arrives with. Someone landing from a search result previously met *"Što se dogodilo?"* with no indication of what the site was, who was asking, or what would happen to their answer — which is a great deal to ask of a person in the first hours after a death, and it is also the moment a visitor decides whether this is a directory or a lead broker.
+It exists because the flow could not answer the one question a stranger arrives with. Someone landing from a search result previously met screen 1's question with no indication of what the site was, who was asking, or what would happen to their answer — which is a great deal to ask of a person in the first hours after a death, and it is also the moment a visitor decides whether this is a directory or a lead broker.
 
-**Structure, in order:** the `<h1>` and one primary action, both above the fold; the image band; *"Gradovi koje pokrivamo"*; *"Kako radi"* in three steps; *"Zašto baš ovdje"* — the four promises — ending in a link to the full page; the closing action; the provider line (currently hidden). The landing page is the only page that lays out against the wide `--frame` rather than the reading measure ([Layout and shape](#layout-and-shape)), which is what lets the steps and the promises run horizontally.
+**Structure, in order:** the `<h1>` and one primary action, both above the fold; the image band; *"Gradovi koje pokrivamo"*; *"Kako do pogrebnika"* in three steps; *"Zašto baš ovdje"* — the four promises — ending in a link to the full page; the closing action; the provider line (currently hidden). The landing page is the only page that lays out against the wide `--frame` rather than the reading measure ([Layout and shape](#layout-and-shape)), which is what lets the steps and the promises run horizontally.
 
 Four rules on it:
 
 1. **One primary action.** `Pronađite pogrebnika` is the heaviest thing on the screen, and the bypass beside it is a text link rather than a second button — two buttons would split the action in two. Everything below supports the decision to tap it and must not compete with it. **The closing CTA is the same action, not a second one** — repeating it at the foot of a longer page is the familiar shape, and it does not break the rule because there is still exactly one *kind* of heaviest thing on the screen.
 2. **The promises are the product's actual differentiators**, stated plainly: everyone is listed, nobody pays for position, no personal data is collected, it is free, and the ranking rules are published rather than described. These are the things the three German reference sites cannot say, and they are worth more here than any description of features. Each one is stated in a sentence here and **in full on [`/nase-obecanje`](#the-promise-page), where it also carries what it rules out**.
-3. **The `<h1>` names the reader's situation first and carries the search terms second.** It is *"Netko vam je preminuo?"* followed, inside the same `<h1>`, by *"Pogrebne usluge u Splitu i okolici, na jednom mjestu."* The lede immediately widens it to the `posljednji-dani` case, because screen 1 offers that situation too and someone whose relative is dying needs the same list.
+3. **The `<h1>` names the reader's situation first and carries the search terms second**, both inside the same `<h1>` — a question about what has happened, then the product phrase. The wording is in `components/Landing.tsx`.
 
    **This reverses the rule that made the coverage claim the `<h1>`**, and the reasoning that rule rested on still stands — a stranger reads a count as the size of our database rather than the size of the market. What it got wrong is which question comes first. It was answering *how do we assert completeness* when the first thing a stranger arriving from a search result brings is *is this for me*. Naming their situation answers that in four words; the coverage claim then answers the second question, in the strip directly under the action, where it reads as evidence rather than as an opening boast.
 
    Two limits on the reversal, both binding:
 
-   - **The empathy line gains a clause; it never displaces the keywords.** *Pogrebne usluge u Splitu i okolici* stays inside the `<h1>`. This product's entire distribution channel is Croatian-language search, so an `<h1>` that reads beautifully and ranks for nothing is not a trade available to it.
-   - **The situation named is the one the product is built for**, and it is put as a question rather than an assertion. *"Netko vam je preminuo?"* matches screen 1's urgent path; the lede catches the reader it does not describe. An `<h1>` that told a visitor what had happened to them would be worse than a generic one.
+   - **The empathy line gains a clause; it never displaces the keywords.** The product phrase stays inside the `<h1>`. This product's entire distribution channel is Croatian-language search, so an `<h1>` that reads beautifully and ranks for nothing is not a trade available to it.
+   - **The situation named is the one the product is built for**, and it is put as a question rather than an assertion — it matches screen 1's urgent path, and the lede catches the reader it does not describe. An `<h1>` that told a visitor what had happened to them would be worse than a generic one.
 4. **The claim is coverage, not a count** — but the subject changed with the city expansion, and so did what may be counted.
 
-   The single-city coverage strip is gone. In its place is **a list of every covered city, each linking to its own page and carrying its own provider count**, and a note reading *"Svi registrirani pogrebnici u sedam gradova"* (`nationalCoverageClaim`, derived from the live row count so it cannot go stale).
+   The single-city coverage strip is gone. In its place is **a list of every covered city, each linking to its own page and carrying its coverage status**, under a note built from `nationalCoverageClaim` + `providerFloor` — both derived from the live rows, so neither can go stale.
 
-   Two counts are now permitted on this page, and both are the count doing real work rather than boasting:
+   **Exact provider counts came off this page on 2026-09-07** (project owner). Each city used to carry its own — *"20 pogrebnika"*, *"2 pogrebnika"* — on the argument that a count beside a link the reader can check is a fact rather than a boast. What that missed is what the column actually did: it ranked the cities by size, and a family in Dubrovnik needs to know their town is covered, not that it is the smallest number on the page. Each city now reads **"svi registrirani"**, which is the same promise `coverageClaim` makes on the city page itself, in two words.
+
+   Two numbers survive on this page, and both are shapes that cannot go stale:
 
    - **The city count**, because it is the size of the *product* rather than of our database — which is exactly what a stranger is trying to establish, and it moves in a direction that is unambiguously good news. This is the distinction the original objection to *"svih sedam pogrebnika"* actually drew.
-   - **A per-city provider count**, because it is a fact about a place printed beside a link where the reader can go and count them.
+   - **A floor, not a total** — `providerFloor` rounds down to the previous ten, so *"više od 50"* is true when written and can only become more true as providers are added. That property is the whole permission: a claim nobody has to maintain.
 
    **The `<h1>` no longer names a city**, and that is right for search rather than a concession: this page should rank for *pogrebne usluge*, and `/pogrebne-usluge/{grad}` — which has its own `<h1>`, its own metadata and its own `coverageClaim` — should rank for *pogrebne usluge split*. One page trying to be both would be weaker at each.
 
-   The city list also **is the bypass**. It is set as text links rather than buttons so it cannot compete with the one primary action, and it replaces the old *"Ili odmah prikažite sve pogrebnike"*, which had no meaning once there were seven cities to be "all" of.
+   The city list also **is the bypass**. It is set as text links rather than buttons so it cannot compete with the one primary action, and it replaces a single-city "show me everything" link, which had no meaning once there were seven cities to be "all" of.
 
    Three guardrails come with it, all binding:
 
    - **The wording is `coverageClaim` in `web/lib/copy.ts`, and it says "registrirani".** The qualifier is what we can stand behind — a provider operating with no registry entry we could find is exactly the case it is honest about. The claim is also about **the pilot area, not any provider's service radius**; both limits are `CATCHMENT`'s and they still apply.
-   - **The count keeps every place it does real work**, and those are all places where it is a fact about something rather than a boast: `· N` on each results section heading, *"šest od sedam"* on a service page, the counts in `/sto-uciniti-prvo`.
+   - **No exact provider count appears in customer-facing prose anywhere** (project owner, 2026-09-07). Two arguments, and only the first is about maintenance: a sentence built from two live counts — *"of the N providers listed, M offer…"* — has to be re-read every time the data moves; and the proportion was the fact the reader wanted, while the count made them do arithmetic first. `providerShare` in `web/lib/copy.ts` replaces them with a **worded share** read from the same live rows — *"većina pogrebnika"*, *"gotovo svaki pogrebnik"*, *"manji dio pogrebnika"* — so the wording still changes when the data does. It rewrote the service-page lede (was *"šest od sedam"*) and both count-built sections of `/sto-uciniti-prvo`. Every phrase it returns takes a **singular** verb by construction, which sidesteps the numeral-agreement trap `verbForm` exists for; `countOfTotal` is deprecated for prose and kept only for its numeral rules.
+   - **`· N` on the results section headings stays**, and it is the one exception. It is not a claim about the market: it tells the reader how many cards follow, it is derived from the rendered list, and `N₁ + N₂` being the whole set is the partition guarantee those headings exist to make visible — see [Guarantees](#guarantees). Removing it is a two-line change if that reading is ever overruled.
    - **A city page ships only once that city's providers are actually verified.** Coverage stated ahead of the data would be the one version of this claim that is a lie, and it is also how a directory earns a thin-content penalty.
 
 ## Flow overview
@@ -126,7 +129,7 @@ All three reference sites open with this same split rather than a search box, an
 
 ## Screen 2 — Mjesto
 
-**Question:** *Gdje je pogreb?* with the hint *"obično u mjestu gdje je osoba preminula"*.
+**Question:** *Gdje je pogreb?* — with a hint under it naming where a funeral usually takes place, since the answer is not obvious to someone who has never arranged one.
 
 Deliberately not "where are you" and not "where is the deceased": a Split provider conducting a burial at the Podstrana cemetery is routine, and only the funeral's location is stable enough to select on.
 
@@ -137,9 +140,7 @@ Deliberately not "where are you" and not "where is the deceased": a Split provid
 - where providers **are** — Split, all 7 of them
 - where the **funeral** is — Podstrana, Solin, Kaštela, Klis, Stobreč, Žrnovnica, Omiš, Trogir and more, nearly all with no provider of their own
 
-Under the current model a user in Podstrana cannot be represented at all. **Decision for Phase 1: treat the pilot unit as a catchment area, not a municipality.** The screen offers one option — *"Split i okolica"* — and the page states the covered area explicitly beneath it:
-
-> Pogrebnici koji rade u Splitu i okolici — Podstrana, Solin, Kaštela, Klis, Stobreč, Žrnovnica, Omiš, Trogir.
+Under the current model a user in Podstrana cannot be represented at all. **Decision for Phase 1: treat the pilot unit as a catchment area, not a municipality.** The city is offered under its catchment label (`CATCHMENT[slug].label`), and the covered settlements are stated explicitly beneath the list on the results page rather than left to inference.
 
 A user from Podstrana recognises themselves and gets all 7. This needs no schema change and no new data, and at pilot scale it loses nothing, because all 7 serve the whole area.
 
@@ -159,7 +160,7 @@ Two rules on it:
 1. **`grad` is not part of `FlowAnswers`.** `FlowAnswers` is the input to ranking, and the city is not a ranking term — it decides *which* providers are fetched, not how they are ordered. Keeping it out also stops `?grad=` leaking into the results URL, where the path already says the city and a second spelling would be a duplicate for search engines to reconcile.
 2. **Screen 3 cannot render without it.** Arriving at `?korak=potrebe` with no valid city redirects to `?korak=mjesto`. That is not a validation error — nothing was typed and nothing is wrong — it is the one mandatory screen asserting itself, and it also catches a link shared before `?grad=` existed.
 
-**The settlement lists moved off this screen.** Printing seven of them would bury the buttons, so the screen carries one line — *"Svaki grad uključuje i okolicu — popis naselja piše uz rezultate"* — and each city's list appears on its own results page, where it qualifies that page's claim.
+**The settlement lists moved off this screen.** Printing seven of them would bury the buttons, so the screen carries one line saying that every city includes its surrounding area and that the settlements are named with the results — and each city's list then appears on its own results page, where it qualifies that page's claim.
 
 ### Where this goes later (not built now)
 
@@ -266,11 +267,11 @@ The destination of the flow, and the page the whole product exists to render.
 3. **`NAJBOLJE ODGOVARA · N`** — the shortlist.
 4. **`OSTALI POGREBNICI · N`** — everyone else, quieter but complete.
 5. **Guidance strip** — conditional on `situacija` and `pokojnik`; links to `/sto-uciniti-prvo`. Text is sourced from the primary references listed under [screen 3b](#question-3b--gdje-je-pokojnik-sada--pulled-2026-09-04). Omitted entirely — rules and link included — when neither answer has guidance attached, rather than rendering an empty bordered strip. **Since 3b was pulled, `pokojnik` is never set**, so in practice the strip now renders on `situacija` alone.
-6. **Transparency footer** — *"Nitko nam ne plaća za bolju poziciju i nitko nije izostavljen."*, then the settlement list, then links to `/kako-rangiramo` and `/nase-obecanje`. The coverage sentence it used to open with moved up into the header (2); the footer now carries what *qualifies* the claim rather than restating it.
+6. **Transparency footer** — the neutrality claim (nobody pays for position, nobody is left out), then the settlement list, then links to `/kako-rangiramo` and `/nase-obecanje`. The coverage sentence it used to open with moved up into the header (2); the footer now carries what *qualifies* the claim rather than restating it.
 
 **Two things moved here after the page was built and reviewed, and both were hierarchy problems rather than content problems:**
 
-- **The provider count is gone from the header.** It used to open the context strip — *"Sedam pogrebnika · odabrali ste…"* — in the most prominent position on the page. Both section headings already carry `· N`, so it was the same number stated three times, and it was the first thing the eye met on a page whose job is to present providers.
+- **The provider count is gone from the header.** It used to open the context strip, in the most prominent position on the page. Both section headings already carry `· N`, so it was the same number stated three times, and it was the first thing the eye met on a page whose job is to present providers.
 - **The guidance strip moved below the two blocks.** Above them it read as the page's main content and pushed the actual service into second place. It is genuinely useful and honestly sourced, but a family that arrived here to find someone to call should meet the providers first; below the list it catches the reader who did not find what they needed. The settlement list moved to the footer for the same reason — it qualifies the claim rather than introducing it.
 
 ### Guarantees
@@ -288,7 +289,7 @@ Let *M* = providers matching every selected criterion (currently only `nacin=kre
 | case | shortlist | others |
 |---|---|---|
 | *M* ≥ 1 | top `min(4, |M|)` by ranking | all remaining, in ranking order |
-| *M* = 0 | block omitted, with the line *"Nijedan pogrebnik u Splitu i okolici ne nudi [uslugu]. Prikazujemo sve."* | all 7 |
+| *M* = 0 | block omitted, with a line saying no provider in the area offers the chosen service and that everyone is shown instead | all of them |
 
 The cap of 4 is what makes it a shortlist rather than a re-sorted list. *M* = 0 is unreachable with current pilot data — the only filter is `kremiranje` and 4 providers offer it — so it is a defensive rule, not a live case.
 
@@ -430,7 +431,7 @@ Which number the primary action dials — one rule, shared with the shortlist ca
 
 This is the whole point of typing phones in the schema: after hours the office line is useless, and the emergency line is the entire value of the listing.
 
-**The detail page differs from the list page in one respect: every number is shown.** All numbers are listed beneath the button with their type in Croatian (`office` → *ured*, `mobile` → *mobitel*, `emergency` → *dežurni*), each a `tel:` link that logs `phone_click`. The button itself still reads `Nazovi` without a number, for consistency, and needs no reveal step here because the list below already provides it.
+**The detail page differs from the list page in one respect: every number is shown.** All numbers are listed beneath the button with their type in Croatian (`office` → *ured*, `mobile` → *mobitel*, `emergency` → *dežurni*), each a `tel:` link that logs `phone_click`. The button itself reads `Nazovite` without a number and needs no reveal step here, because the list below already provides it. **It read `Nazovi` until 2026-09-07** — the one place in the product still in the ti-form, against the register rule two sections up; the owner settled it on the vi-form, so the detail page, the cards and `/specimen` now all read `Nazovite` / `Pošaljite e-mail`.
 
 That is a deliberate exception. Choosing between a provider's office and dežurni line is core value on this page — and hiding all of them behind clicks would be hostile on the one page a family reaches when they have decided who to call. It also gives the number a no-JavaScript path, which the list page's reveal does not have. The cost is that a number can be dialled off this page without a `phone_click`; that leak is bounded, it always follows a recorded `detail_view`, and it undercounts rather than overcounts.
 
@@ -444,8 +445,9 @@ That is a deliberate exception. Choosing between a provider's office and dežurn
 
 ### Rest of the page
 
-- **Full service list**, canonical seed order. A price appears only where `price_from` / `price_to` is non-null, prefixed *"od"* and carrying an *"orijentacijski"* caveat. Currently this renders for nobody.
-- **Website and email** as secondary text links. Never styled as the primary action.
+- **Full service list**, canonical seed order. A price appears only where `price_from` / `price_to` is non-null, prefixed *"od"* and carrying an *"orijentacijski"* caveat.
+- **Two CTAs at the top, call and e-mail** (2026-09-07). One column on a phone, halves from 480px up; the primary keeps its weight through fill, not width. Neither reveals a number, unlike the shortlist card — every number is listed in full below, so there is nothing to reveal. The e-mail action needs a client boundary to log its click and does not reuse `ContactActions`, which carries the card's reveal behaviour with it.
+- **Four labelled sections, in this order: Kontakt, Usluge, Radno vrijeme, Web stranica** (2026-09-07). The e-mail address moved into `Kontakt`, directly under the numbers and in the same row shape as a `PhoneList` row — the button is the action, the address is the fact. The website kept its place after the opening hours, because sending a visitor off-site earlier ends the visit while they are still deciding, but it gained a heading of its own: the page used to trail off into an unlabelled block of links grouped by *is a link* rather than by what a reader is looking for.
 - **`last_verified_at` is not displayed**, and **no freshness claim of any kind appears** — not even a soft *"podaci se redovno provjeravaju"*. With manual entry the date will go stale, and a visible stale date damages trust more than no date; an unverifiable reassurance is worse than both. The field stays internal, for data-quality triage.
 - **Back link to the results, preserving the query parameters**, so returning does not restart the flow.
 - **No map.** Coordinates are null for all 7, and a mapping API is a new external integration ([SPEC.md](SPEC.md) → Ask first).
@@ -495,21 +497,21 @@ It exists because the promises are the product's only real differentiators and a
 
 | section | content |
 |---|---|
-| the four promises | *Svi, ne samo neki* · *Ne tražimo vaše podatke* · *Besplatno* · *Provjerljivo* — same order as the landing page's short form, each with a quieter `što isključuje` line attached |
-| *Što bilježimo* | exactly what `events` holds and what it does not: per-provider view and click counts, no IP even truncated, no user-agent, no referrer, no session or visitor identifier. Why we count at all, and the accepted cost — that there is no visitor number, only tap counts |
+| the four promises | completeness, no personal data, free, published rules — in the same order as the landing page's short form, each with a quieter `što isključuje` line attached. Wording lives in `PROMISES` in the page file |
+| *Što bilježimo* | exactly what `events` holds and what it does not: per-provider view and click counts, no IP even truncated, no user-agent, no referrer, no session or visitor identifier |
 | *Što obećanje ne pokriva* | no quality judgement and no reviews; no prices; the area is the area of the list and not a per-provider service radius; manual data can go stale |
 
 Three rules on it:
 
 1. **`Što bilježimo` is not a disclaimer bolted on** — it is the second promise being honest about its own edge, stated by us rather than discovered by someone reading network requests. It must stay in step with [SPEC_database.md](SPEC_database.md) → Usage logging: if `events` ever gains a column, this section changes in the same pass.
-2. **A promise wording exists once.** The landing page's short form and this page must not drift; a promise worded one way there and another way here reads as the weaker of the two.
+2. **A promise wording exists once.** The landing page's short form and this page must not drift; a promise worded one way there and another way here reads as the weaker of the two. The 2026-09-07 copy pass broke this for a few hours — the landing promises were retitled and this page's were not — and it was closed the same day by **taking the landing titles as canonical**: the four are now single words on both pages, in the same order, with the sentence and the *što isključuje* line carrying the substance here. A one-word title states the value; a title that is itself a sentence competed with the sentence beneath it.
 3. **The four promises are the product's constraints written down**, so a change to any of them is a change to the product, not to copy. Monetisation in particular touches the first and third directly — see [SPEC.md](SPEC.md) → Boundaries, where charging anyone in Phase 1 is a Never, and `.research/RESEARCH_market.md` § 3, where the reason the highest-revenue model in the field is unavailable to us is precisely promise one.
 
 **Still absent: a named owner.** A promise page with nobody behind it is the weakest kind, and a name cannot be invented ([SPEC.md](SPEC.md) → Never: fabricating data); the project owner has chosen not to publish one. It waits on `/o-nama`. Tracked under [Known gaps](#known-gaps-deliberately-deferred).
 
 **The contact route is half closed as of 2026-09-04.** *"Javite nam"* appears on this page and on `/kako-rangiramo`, and until that date neither actually linked anywhere — a defect, since earlier revisions of this spec and of `CLAUDE.md` both claimed they did. Both now link to `/za-pogrebnike`. On this page the phrase lives inside a plain-string array, so the address sits in a sentence below the list rather than inside the sentence that promises it. What is still missing is a route for a member of the public who is not a funeral director; that half is untouched.
 
-**The closing note carries no count**, deliberately. It read *"jedno područje i mali broj pogrebnika"* straight through the seven-city expansion. A hand-written number here goes stale exactly the way `cities[0]` did; the landing page counts cities from the live rows so that prose like this does not have to.
+**The closing note carries no count**, deliberately. An earlier version described the coverage as one area and a small number of providers, and said so straight through the seven-city expansion. A hand-written number here goes stale exactly the way `cities[0]` did; the landing page counts cities from the live rows so that prose like this does not have to.
 
 ## The provider page
 
@@ -728,9 +730,9 @@ Both square, both ≥ 48px, neither with a radius or shadow. A revealed phone nu
 Two marks sit alongside it and neither is an icon, which is the distinction that keeps the rule meaningful rather than merely technically satisfied:
 
 - **The wordmark's mark** (`Logo`) — a Diocletian arch reduced to two piers, the span and the ground line, drawn to the same construction as the phone glyph. It is a brand mark used in exactly two places, the masthead and the footer, and it is architecture rather than iconography.
-- **The landing band's engraving** (`StoneEngraving`) — one drawing on one page, covered by [Image policy](#image-policy) rather than by this rule.
+- **`StoneEngraving`** — one drawing, covered by [Image policy](#image-policy) rather than by this rule. It is currently on no page: the landing band it filled was replaced by the hero photograph on 2026-09-07, and the results header and `/sto-uciniti-prvo` bands it could fill are still texture alone.
 
-The line the rule is actually drawing is against a *set*: pictograms that stand for concepts and multiply once the first three exist. That is why the *"Kako radi"* steps are marked with numerals rather than with three drawn glyphs — three would have been a set.
+The line the rule is actually drawing is against a *set*: pictograms that stand for concepts and multiply once the first three exist. That is why the *"Kako do pogrebnika"* steps are marked with numerals rather than with three drawn glyphs — three would have been a set.
 
 ### Image policy
 
@@ -738,10 +740,23 @@ Images are in scope and chosen by the project owner — this is the frame they s
 
 - **One image maximum per page**, and only where it does work: the results header band, and the top of `/sto-uciniti-prvo`. The provider detail page uses `logo_url` at small size if present, never as a hero.
 - **Subject:** stone, architecture, light — Brač limestone, the Diocletian colonnade, cemetery architecture. **Never people, never hands, never candles, never lilies.** That imagery is the funeral industry's own native slop and it loses the register instantly.
-- **Treatment:** bounded band with a 1px gold rule beneath. Never full-bleed, never behind text, never carrying a text overlay. Desaturated toward the stone palette so it reads as part of the ground rather than a photograph pasted onto it.
+- **Treatment:** bounded band with a 1px gold rule beneath. Desaturated toward the stone palette so it reads as part of the ground rather than a photograph pasted onto it. Never carrying a text overlay — **except on the landing hero, which is now exactly that; see the exception below.**
 - **Aspect** ~2.6:1 (390×150 at design width). Served as WebP/AVIF at 2×, with explicit `width`/`height` to prevent layout shift.
 - Illustration is allowed on identical terms — engraving-style line art, ink on stone.
 - **Every page must render correctly with no image at all.** The stone texture exists for exactly this state, and the POC ships whether or not any image has been chosen.
+
+#### The landing hero is an exception, taken deliberately (2026-09-07)
+
+The project owner supplied a photograph and asked for it **behind the heading, the second clause and the primary action** — which contradicts the treatment rule above in the one way that matters, and it is granted for this one section rather than folded into the general rule. The engraving band that used to sit under the hero text is gone with it; `StoneEngraving` remains in `components/` for the two bands that are still texture alone.
+
+Four constraints came with it, and they are what make it an exception rather than an abandonment:
+
+- **A radial scrim, not a panel.** `--stone` washed in behind the type and fading to nothing well inside the band. A hard-edged card was built first and rejected: it read as a different design system pasted onto the photograph. The falloff uses a long ladder of stops rather than three, because a gradient with a flat centre and an abrupt shoulder shows its own outline — the eye reads the ellipse, which was the second version rejected.
+- **The photograph must read.** The scrim is sized to the text block and no more, and its radii are set per breakpoint because the type is nearly the band's full width on a phone and about half of it on a desktop. A scrim that covers most of the band defeats the point of the photograph.
+- **Contrast is a floor, not a preference.** `--ink` over a thin scrim is a blend, so legibility depends on the image beneath: over the darkest pixels of the current photograph, ~0.86 opacity gives roughly 11:1 and ~0.55 roughly 6:1, while below about 0.45 it falls under the 4.5:1 AA floor. The stops hold ≥0.55 out to where the longest line ends. **A thinner scrim is a defect**, and a darker photograph needs a stronger one — this is the check to repeat if the image is ever replaced.
+- **Self-hosted, pre-encoded, no `next/image`.** AVIF → WebP → JPEG at two widths, generated once with `sharp` and committed under `web/public/img/`. Routing the file through an image CDN at runtime would put a third party back in the request path, which [SPEC.md](SPEC.md) → Boundaries forbids. The source was 1280px wide, so that is the largest derivative — below 2× for a 1000px band, and the reason a larger original would sharpen the desktop rendering.
+
+**Not amended by this:** the subject rules (never people, hands, candles, lilies), one image per page, and rendering correctly with no image at all.
 
 **The landing band is filled, by illustration rather than by photograph.** `StoneEngraving` draws a colonnade as engraved line art on the stone texture, bounded, with the gold rule beneath — which is the finished state of that band, not a placeholder holding a photograph's place. It is also the honest option: the subject rules above rule out everything stock photography offers this category, and a drawing we control cannot drift into people, hands, candles or lilies.
 
@@ -781,8 +796,8 @@ Applying [SPEC_database.md](SPEC_database.md) → Client-side rules to these spe
 
 1. **`detail_view` fires from a client component in `useEffect` after mount — never from the server component.** This is the highest-risk instance of that rule in the product: the results page links to up to seven detail pages, so Next.js `<Link>` prefetch on hover would otherwise log a view for every provider a user merely scrolled past, inflating precisely the providers drawing the most attention. Prefetch fetches the RSC payload without mounting client components, so a post-mount effect is immune.
 2. **Environment guard** — log only when `process.env.NODE_ENV === 'production'` **and** the hostname is the real host. `npm run dev` points at the production database, so without this the developer's own refreshes are the largest contributor in month one.
-3. **`phone_click`** on the shortlist `Nazovi` button, on the number it reveals, on the detail-page button, and on every number in the detail-page list. Gated on `event.isTrusted`. The others block has no phone action, so nothing there can fire. **The log call must never gate the reveal** — reveal synchronously, log fire-and-forget, in that order.
-4. **`email_click`** on the shortlist `Pošalji e-mail` button and on the detail page's email link. This is a change from the original design, where `email_click` was a detail-page-only event; the list-page email CTA makes it a primary-surface signal, and for the `planiranje` path probably the dominant one.
+3. **`phone_click`** on the shortlist `Nazovite` button, on the number it reveals, on the detail-page button, and on every number in the detail-page list. Gated on `event.isTrusted`. The others block has no phone action, so nothing there can fire. **The log call must never gate the reveal** — reveal synchronously, log fire-and-forget, in that order.
+4. **`email_click`** on the shortlist `Pošaljite e-mail` button and on the detail page's email link. This is a change from the original design, where `email_click` was a detail-page-only event; the list-page email CTA makes it a primary-surface signal, and for the `planiranje` path probably the dominant one.
 5. **`website_click`** on the detail page's website link, and nowhere else. The shortlist's third action goes to our own detail page rather than to the provider's site, so there is no outbound website click to log from the results page.
 6. **Fire and forget** — `supabase.rpc('log_event', …)` unawaited, errors swallowed. A failed log must never delay a `tel:` handoff or a `mailto:` handoff. The contact is the point; the metric is not.
 7. **One log per mount**, guarded against StrictMode's double-invoked effects.
@@ -871,6 +886,13 @@ Two failures on the way, both recorded because neither is guessable:
 | `base` | `web` | the app is not at the repo root; without this the build fails on a missing `package.json` |
 | `command` / `publish` | `npm run build` / `.next` | **`publish` resolves relative to `base`, not to the repo root** — settled by the first deploy, which failed on it. `web/.next` here became `/opt/build/repo/web/web/.next` and `@netlify/plugin-nextjs` failed in `onBuild` on a directory that does not exist. Netlify's UI implies the repo-root reading, and earlier revisions of this table asserted it; `base` is the only repo-root-relative key in the file |
 | `NODE_VERSION` | `22` | Next 16 needs 20.9+. Pinned so a change to Netlify's default image cannot move the runtime silently |
+
+**A data change alone does not change the built pages, and this was caught the hard way on 2026-09-07.** After the Split okolica rows were pushed, a local `npm run build` still rendered Zec's old address and no new providers — and it looked exactly like a failed migration. It was not: `supabase-js` reads through `fetch`, Next caches `fetch` results in `.next/cache`, and the service listing pages are SSG, so a build with a warm cache bakes whatever the previous build fetched. `rm -rf .next` and rebuilding produced the new data immediately.
+
+Two consequences, both binding:
+
+- **After any migration that changes provider data, verify against a cleared cache** (`rm -rf .next`) before trusting a local build — a stale page is indistinguishable from a migration that silently did nothing.
+- **A deploy must not be assumed to pick up a data change**, because `@netlify/plugin-nextjs` restores `.next/cache` between builds. Trigger a deploy with the cache cleared, or confirm the new data on the live page rather than on the build log. The results page and provider detail are `force-dynamic` and always current; **it is the `/usluga/{slug}` listings that can go stale**, which is exactly where a newly added provider needs to appear.
 | `NEXT_TELEMETRY_DISABLED` | `1` | **a GDPR guarantee, not a preference.** See [SPEC.md](SPEC.md) → Project Structure: it was true only because of a machine-local Next config no build container has |
 | `@netlify/plugin-nextjs` | declared | Netlify installs it on detecting Next, but the app has server-rendered routes and cannot be served as a static export, so it is load-bearing rather than incidental |
 
@@ -920,11 +942,13 @@ Not out of scope — accepted as incomplete, and tracked here so they are not re
 | ~~**`/privatnost` does not exist**~~ | **Closed 2026-09-04**, and `PROVIDER_FORM_PUBLIC` flipped with it. The notice is scoped to the provider form: it opens by saying it does not concern a searching family, names all eight fields and whether each is published, names Netlify as processor including the US transfer, states twelve months' retention, lists the six rights and names AZOP. |
 | **`/privatnost` names no controller** | The identity half of GDPR art. 13(1)(a). The page gives a contact address and states that no legal person stands behind the site; it does not name a person. The project owner was shown this before the flag was flipped and accepted it. Closes with a name — one line in that page's `Tko obrađuje podatke` section. Part of the same `/o-nama` decision as the row above. |
 | **Provider form is unverified** | The submission path has never executed anywhere — Netlify Forms needs a deploy. **The flag was flipped before this was verified**, so the live form is linked and indexable while its submission path is untested; the first deploy must include an end-to-end test submission. See [Deployment](#deployment). |
-| **`lib/__fixtures__/split-pilot.ts` is Split-only** | The 51 ranking and hours tests still pass and still test the right things — they exercise pure functions over a fixture, and the fixture being one city does not weaken that. But `serviceFrequency` now reasons over a very different distribution in production (`balzamiranje` has one provider nationally, `ekshumacija` four), and no test covers a city the size of Zagreb. |
+| **`lib/__fixtures__/split-pilot.ts` is Split-only — and no longer describes Split** | The 51 ranking and hours tests still pass and still test the right things — they exercise pure functions over a fixture, and the fixture being one city does not weaken that. But it is a snapshot of the seven-provider pilot, and **Split now holds 13 providers** across five towns, including one municipal operator and one provider carrying 13 services. `serviceFrequency` also reasons over a changed distribution: `balzamiranje` went from one provider nationally to two and `ekshumacija` from four to five on 2026-09-07. Still no test covers a city the size of Zagreb. |
 | ~~**Tablet portrait**~~ | **Closed** by the masthead. 560–1024px now gets the real menu and the horizontal rows; the constraint was the rail's width, and the rail is gone. |
-| ~~**Landing page imagery**~~ | **Closed** by `StoneEngraving`. A photograph may still replace it, but the band is a finished state rather than a pending one — see [Image policy](#image-policy). |
+| ~~**Landing page imagery**~~ | **Closed 2026-09-07** by a photograph behind the hero text, with a radial `--stone` scrim carrying legibility. The owner supplied the image and took the decision that the [Image policy](#image-policy) had to bend for it; that section records the exception and the four constraints attached to it. `StoneEngraving` is no longer on the page. |
 | **`planiranje` path** | Hidden from screen 1 and still fully wired. See [Screen 1](#screen-1--situacija). |
-| **Croatian phrasing review** | See [Open questions](#open-questions). |
+| **Croatian phrasing review** | See [Open questions](#open-questions). **Raised to the owner's top priority on 2026-09-07**, and widened there from the guidance text to every Croatian string that ships — flow labels, results copy, `web/lib/copy.ts`, titles and card text included. One full pass was made by the owner that day; `/za-pogrebnike`, the provider detail page and most of `/privatnost` are still unreviewed. |
+| **A listing entered directly still shows a ranking** | Arriving at `/pogrebne-usluge/{grad}` with no answers renders **Najbolje odgovara** with reason lines anyway, because `rankProviders` partitions regardless of input. With `answers = {}` the criteria-match and urgency terms are both no-ops, so the order reduces to **completeness, then alphabet** — which promotes the one term [Ranking rules](#ranking-rules) admits is unfair to providers to the primary sort key, on the page every crawler and shared link lands on. Dubrovnik shows it plainest: two providers, cap of four, so the shortlist *is* the whole list. Not a defect in the ranking function, which does what it is specified to do; a missing case above it. **The owner has asked for an unsorted list there instead** — and for the list to come back in whatever order the query returns, since with no answers there is nothing to rank on. Not built. |
+| ~~**Split's data is the oldest in the set**~~ | **Closed 2026-09-07.** Seven providers against an eight-settlement catchment, gathered before the six-city expansion settled how a provenance trail is kept — reviewed and expanded to 13 providers across Split, Trogir, Kaštela, Solin and Omiš, with five corrections to the original rows. Research in `data/SPLIT_OKOLICA_REVIEW.md`; migrations in [SPEC_database.md](SPEC_database.md) → Migrations. |
 
 ## Out of scope for the POC
 
@@ -964,9 +988,16 @@ The schema is complete as of 2026-09-02 — nothing in the database blocks a bui
 
 ## Open questions
 
-- **Croatian phrasing review of the guidance text.** The procedural content for the *"Gdje je pokojnik sada?"* strip and for `/sto-uciniti-prvo` is written and every claim is sourced (see [screen 3b](#question-3b--conditional-on-sourcing)). What remains is not sourcing but language: a native speaker should read it, and the project owner should sign it off, before launch. Facts checked; phrasing unreviewed. **`/privatnost` now belongs to this list and is the most urgent entry on it**, because it is the only page making legal statements — its Croatian was written unreviewed, same as the rest.
+- **Where copy lives, and how it is reviewed — settled 2026-09-07.** The project owner asked whether copy belongs in TSX at all, having found it hard to proofread and hard to keep in step with the specs. The answer taken: **it stays where it is used.** A single-locale product gains nothing from an i18n layer or a central dictionary — translation is never coming, and `{t.promise.title}` in place of the sentence makes the markup harder to read, not easier.
+
+  A generated review document (an AST-based extractor writing every user-visible string to one file, edited by the owner and applied back) was built and used for one full pass that day, then **deleted at the owner's direction as more machinery than the job needs**. Copy is reviewed by reading the page files. The pass itself landed: the landing steps and promises, the promise page (now titled *Naš credo*), `/sto-uciniti-prvo`, `/privatnost` and the guidance strings were all rewritten by the owner.
+
+  **The other half of that decision is a policy, and it is binding: the specs do not hold customer-facing text.** The code is the source of truth for copy; this document records decisions about copy and quotes at most a short phrase where the decision cannot be read without it. The 2026-09-07 cleanup stripped the paragraphs of shipped Croatian that had accumulated here — each one was a second version that went stale the moment its page changed.
+
+- **Croatian phrasing review of the guidance text.** The procedural content for the *"Gdje je pokojnik sada?"* strip and for `/sto-uciniti-prvo` is written and every claim is sourced (see [screen 3b](#question-3b--conditional-on-sourcing)). What remains is not sourcing but language: a native speaker should read it, and the project owner should sign it off, before launch. Facts checked; phrasing unreviewed. **`/privatnost` now belongs to this list and is the most urgent entry on it**, because it is the only page making legal statements — its Croatian was written unreviewed, same as the rest. **The project owner made this the top-priority item on 2026-09-07 and widened it** from the guidance text to every Croatian string the product ships, including the flow labels, the composed reason line, `CATCHMENT`'s locative forms, and the titles and card text a search user reads first. **Two things the review must not reopen:** `/privatnost` names no controller (a decision the owner took after being shown the gap), and `ukop`, *"Osoba je u posljednjim danima"* and the settlement list were confirmed as they stand.
+- **Whether any provider carries a price — answered for Split, still open elsewhere.** The 2026-09-07 okolica review read every provider's own material across Split, Trogir, Kaštela, Solin and Omiš: **not one publishes a figure.** The only prices found anywhere were Hrvojka's casket range, quoted **in kuna** on a page not updated since the euro changeover, which is not loaded — the same call the pilot made about Lovrinac's single HRK figure. So `price_from` is still null throughout Split, the promise wording holds, and what remains unchecked is the other six cities. The paragraph below is the original question, kept for its reasoning:
 - **Whether any provider carries a price.** `/nase-obecanje` used to state that *no* provider in the covered area publishes a price list, and the provider page's code comment said the price element "renders for nobody". Both were written for the seven-provider Split pilot. `entity_services.price_from` exists and the provider page renders it where non-null, and nobody has checked the 45-provider dataset since. The promise wording has been rewritten to hold either way; a single read-only query settles it properly.
-- **No-JavaScript path on the list page.** The reveal-on-click behaviour means that with scripting unavailable, the list page's `Nazovi` still dials on mobile (it is a real `tel:` link) but reveals nothing on desktop. The detail page is the fallback, since it lists every number as plain markup. Acceptable, but worth a decision if analytics ever show meaningful no-JS traffic.
+- **No-JavaScript path on the list page.** The reveal-on-click behaviour means that with scripting unavailable, the list page's `Nazovite` still dials on mobile (it is a real `tel:` link) but reveals nothing on desktop. The detail page is the fallback, since it lists every number as plain markup. Acceptable, but worth a decision if analytics ever show meaningful no-JS traffic.
 
 ### Resolved
 

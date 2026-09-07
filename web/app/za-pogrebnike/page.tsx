@@ -12,8 +12,8 @@ import styles from './provider.module.css';
  * exist: there is no user-facing form and no published address, by decision.
  *
  * **The four promises are unchanged, and this page does not weaken them.**
- * "Ne tražimo vaše podatke" is a promise to the person looking for a funeral
- * director — the search asks nothing, stores nothing and has no form in it.
+ * The `Anonimno` promise is made to the person looking for a funeral director —
+ * the search asks nothing, stores nothing and has no form in it.
  * A provider choosing to write to us about their own listing is the opposite
  * situation: they are the one initiating, about their own business, and they
  * can see exactly what they are sending. Stating that distinction on the page

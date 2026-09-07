@@ -170,7 +170,8 @@ export default async function HomePage({ searchParams }: PageProps) {
             claim; here one line says what "i okolica" is doing.
           */}
           <p className={styles.settlements}>
-            Svaki grad uključuje i okolicu — popis naselja piše uz rezultate.
+            Svaki grad uključuje i okolicu — popis naselja naveden je uz
+            rezultate.
           </p>
         </>
       )}

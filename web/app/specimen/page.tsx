@@ -143,16 +143,16 @@ export default function SpecimenPage() {
         <div className={styles.row}>
           <ActionLink variant="primary" href="#specimen">
             <PhoneIcon />
-            Nazovi
+            Nazovite
           </ActionLink>
           <ActionLink variant="secondary" href="#specimen">
-            Pošalji e-mail
+            Pošaljite e-mail
           </ActionLink>
         </div>
         <p className={styles.note}>Urgent path — phone full width:</p>
         <ActionLink variant="primary" href="#specimen" fullWidth>
           <PhoneIcon />
-          Nazovi
+          Nazovite
         </ActionLink>
         <p className={styles.note}>
           A revealed number is not a third button style — it is a{' '}
