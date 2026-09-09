@@ -1,3 +1,5 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import { ImageResponse } from 'next/og';
 
 /**
@@ -32,6 +34,26 @@ const INK = '#1E1B16';
 const INK_BODY = '#443F35';
 const GOLD = '#7A5F22';
 
+/**
+ * The mark, inlined as a data URI.
+ *
+ * Satori resolves `<img src>` from a URL or a data URI and nothing else, and a
+ * URL here would mean this build step fetching over the network to draw a file
+ * that is already on disk. So it is read at build time and base64'd into the
+ * card; the cost lands entirely in the build, and what ships is the flattened
+ * PNG this route returns.
+ *
+ * It reads the *master* in `web/assets/` rather than the 189px mark in
+ * `public/`, because the card draws it at 124px on a 1200x630 canvas that
+ * viewers routinely see scaled up — and the master is not a shipped asset, so
+ * using the large one costs a visitor nothing. `process.cwd()` is `web/`
+ * during `next build`, which is the same anchor Next's own docs use for
+ * loading fonts into an `ImageResponse`.
+ */
+const MARK = `data:image/png;base64,${fs
+  .readFileSync(path.join(process.cwd(), 'assets', 'logo-master.png'))
+  .toString('base64')}`;
+
 export default function OpengraphImage() {
   return new ImageResponse(
     (
@@ -43,9 +65,25 @@ export default function OpengraphImage() {
           flexDirection: 'column',
           justifyContent: 'center',
           background: STONE,
-          padding: '96px 110px',
+          /* Tightened from 96px when the mark was added: the card's vertical
+             budget is fixed at 630px and the mark spends 136 of it. */
+          padding: '78px 110px',
         }}
       >
+        {/*
+          The mark, above the rule and the name it belongs to.
+
+          A preview card is the one surface where the product is seen before it
+          is read — in a WhatsApp thread, under a link a sibling sent — and
+          until now this card carried the palette but no identity. The mark is
+          the fastest thing on it to recognise a second time.
+
+          Aspect ratio is the master's, 1012x600, held exactly: Satori does not
+          apply `object-fit`, so a mismatch here silently stretches the artwork.
+        */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={MARK} alt="" width={169} height={100} style={{ marginBottom: 36 }} />
+
         {/* Gold is a cut line, never a surface — the one rule Kamen will not bend. */}
         <div style={{ width: 132, height: 3, background: GOLD, marginBottom: 54 }} />
 

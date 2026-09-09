@@ -35,10 +35,16 @@
   color: var(--ink);
 }
 
-/* Inherits ink from .brand — the mark never carries a colour of its own. */
+/* The mark carries its own ink now that it is artwork rather than a stroked
+   path, so nothing is set here but its size. Height-driven with `width: auto`,
+   because it is a wide mark (1.69:1) and the masthead's constraint is the
+   band's height, not the mark's width. Kept small on phones: the brand lockup
+   shares a 320px-wide row with `Izbornik`, and this mark is 15px wider at the
+   same height than the arch it replaced. */
 .mark {
   flex: none;
-  color: var(--gold);
+  height: 22px;
+  width: auto;
 }
 
 .wordmark {
@@ -139,6 +145,12 @@
 @media (min-width: 860px) {
   .inner {
     min-height: 68px;
+  }
+
+  /* The taller band can carry it, and the leaves inside the glass only
+     separate properly above about 26px. */
+  .mark {
+    height: 28px;
   }
 
   .menu {

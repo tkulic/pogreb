@@ -729,10 +729,37 @@ Both square, both ≥ 48px, neither with a radius or shadow. A revealed phone nu
 
 Two marks sit alongside it and neither is an icon, which is the distinction that keeps the rule meaningful rather than merely technically satisfied:
 
-- **The wordmark's mark** (`Logo`) — a Diocletian arch reduced to two piers, the span and the ground line, drawn to the same construction as the phone glyph. It is a brand mark used in exactly two places, the masthead and the footer, and it is architecture rather than iconography.
+- **The wordmark's mark** (`Logo`) — an olive branch read through a magnifying glass. See [The mark](#the-mark) below; it is a brand mark, not a pictogram, and it appears in exactly three places.
 - **`StoneEngraving`** — one drawing, covered by [Image policy](#image-policy) rather than by this rule. It is currently on no page: the landing band it filled was replaced by the hero photograph on 2026-09-07, and the results header and `/sto-uciniti-prvo` bands it could fill are still texture alone.
 
 The line the rule is actually drawing is against a *set*: pictograms that stand for concepts and multiply once the first three exist. That is why the *"Kako do pogrebnika"* steps are marked with numerals rather than with three drawn glyphs — three would have been a set.
+
+### The mark
+
+An **olive branch read through a magnifying glass**, supplied by the project owner on 2026-09-09. It replaced the Diocletian arch drawn for the first build, which said the place but not the job: the branch is the domain — Mediterranean, funerary, local in the same literal way the rest of Kamen is — and the glass is the act, which is *looking something up*, not comparing, rating or brokering.
+
+**It is a raster, where the arch was an SVG in `currentColor`, and that is the one real cost of the change.** The mark carries its own ink — olive over near-black, with tonal shading a hand-written path could not carry honestly — so it no longer inherits colour from what it sits inside, and `.mark` in the header and footer no longer sets one. What makes that survivable is that Kamen is [single-theme](#single-theme-deliberately): every place it appears is `--stone`, which is the ground it was drawn against. **A dark surface anywhere in this product would break it**, and that is now a second reason not to introduce one.
+
+Three placements, and no more without a decision:
+
+| where | drawn at | notes |
+| --- | --- | --- |
+| masthead (`SiteHeader`) | 22px tall, 28px ≥860px | the lockup shares a 320px row with `Izbornik`; 22px is what keeps that from wrapping |
+| footer (`SiteFooter`) | 26px tall | quieter than the masthead on purpose — it must not open the footer louder than the column headings beside it |
+| share card (`app/opengraph-image.tsx`) | 169×100 | the one surface where the product is *seen* before it is read |
+
+**Assets, and the geometry behind them.** The supplied file was 1536×1024 with the artwork in a transparent field, 944 KB. It is not a shipped asset and must not go back into `public/`, where everything ships:
+
+- `web/assets/logo-master.png` — the master, trimmed to the artwork at alpha threshold 40: **1012×600**, 134 KB. Outside `public/`, so it never reaches a browser; the share card reads it at build time.
+- `web/public/img/logo-mark.png` — **189×112**, 8.8 KB, the wide mark for masthead and footer at 4× its largest drawn size. One PNG, no `<picture>`: **WebP measured *larger* than PNG** for artwork this flat, and a second file that saves nothing is a second file to keep in step.
+- `web/app/favicon.ico` (16/32/48), `icon.png` (192), `apple-icon.png` (180) — Next wires all three into `<head>` from the filenames alone; nothing is declared in `layout.tsx`.
+
+**The icons are not the whole mark, and they cannot be.** The mark is 1.69:1, and letterboxed into a square it is illegible mush at 16px — this was rendered and looked at, not assumed. The icons instead crop to the **magnifier glyph alone** (ring, handle, and the leaves inside the glass), which keeps both halves of the idea and still reads at 16px. The crop is `left: 406, top: 0, 600×600` in master coordinates — the glyph's bounding box squared, with 6% padding. Reproduce it from those numbers if the artwork is ever re-cut.
+
+⚠️ **Two traps, both of which cost a build:**
+
+- **The icons are flattened onto `--stone`, deliberately.** A transparent icon with a near-black ring disappears into dark browser chrome. Single-theme applies to the tab as well.
+- **Next's ICO decoder rejects palette and RGB PNG payloads inside an `.ico`** — `Format error decoding Ico: The PNG is not in RGBA format!`, and the build fails outright. Every entry must be RGBA. `sharp`'s `palette: true` produces exactly the file that breaks it, which is how this was found.
 
 ### Image policy
 
@@ -854,7 +881,7 @@ Link previews exist because the product already assumes the behaviour: a family 
 
 **Therefore: no page hand-writes an `openGraph` object.** Every one goes through `openGraph()` in `lib/seo.ts`, which restates the site-wide parts alongside the per-page ones. A page that bypasses it will look correct in review and ship a broken preview card.
 
-The card image is `app/opengraph-image.tsx`, drawn with `next/og` rather than shipped as a binary — no third-party request, and the Kamen palette stays in one language. **Every string in it is deliberately free of Croatian diacritics**: it renders in the font bundled with `next/og`, which has not been through [the diacritic constraint](#the-diacritic-constraint), and a preview card rendering `Dakovo` for `Đakovo` would be the most visible possible instance of that failure. Vendor a TTF or OTF before putting a diacritic in it — the existing faces are `woff2`, which Satori cannot read.
+The card image is `app/opengraph-image.tsx`, drawn with `next/og` rather than shipped as a binary — no third-party request, and the Kamen palette stays in one language. **It carries [the mark](#the-mark)** as of 2026-09-09: until then the card held the palette but no identity, and a preview card is the one surface where the product is seen before it is read. Two things constrain that: Satori resolves `<img src>` from a URL or a data URI and nothing else, so the master is read from disk at build time and base64'd in rather than fetched over the network; and Satori does not apply `object-fit`, so the mark's `width`/`height` must hold the master's 1012×600 ratio exactly or the artwork silently stretches. The card's vertical budget is fixed at 630px and the mark spends 136 of it, which is why the padding came down from 96px to 78px. **Every string in it is deliberately free of Croatian diacritics**: it renders in the font bundled with `next/og`, which has not been through [the diacritic constraint](#the-diacritic-constraint), and a preview card rendering `Dakovo` for `Đakovo` would be the most visible possible instance of that failure. Vendor a TTF or OTF before putting a diacritic in it — the existing faces are `woff2`, which Satori cannot read.
 
 ### Sitemap
 

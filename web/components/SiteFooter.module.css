@@ -41,9 +41,14 @@
   color: var(--ink);
 }
 
+/* Sized, and nothing else — the mark carries its own ink (components/Logo.tsx).
+   26px rather than the masthead's 28: nothing competes for this row, but the
+   footer is the quiet end of the page and the mark should not open it louder
+   than the headings in the columns beside it. */
 .mark {
   flex: none;
-  color: var(--gold);
+  height: 26px;
+  width: auto;
 }
 
 .wordmark {
