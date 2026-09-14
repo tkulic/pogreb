@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { ActionLink } from './ActionLink';
-import { CATCHMENT, nationalCoverageClaim, providerFloor } from '@/lib/copy';
+import { CATCHMENT, providerCountLabel } from '@/lib/copy';
 import { PROVIDER_FORM_PUBLIC } from '@/lib/nav';
 import type { CityCoverage } from '@/lib/queries';
 import styles from '@/app/landing.module.css';
@@ -56,16 +56,11 @@ import styles from '@/app/landing.module.css';
  * - **Each city carries its own provider count.** That is the count doing real
  *   work — a fact about a place, beside a link where the reader can go and
  *   count them — rather than a boast, which is the distinction the coverage
- *   rule actually draws. `nationalCoverageClaim` carries the same argument for
- *   counting cities in the section note.
+ *   rule actually draws. Removed 2026-09-07, restored by the owner 2026-09-14;
+ *   the note that used to sit under the list went in the same decision, so the
+ *   counts now stand on their own. See the comment at the list.
  */
 export function Landing({ cities }: { cities: CityCoverage[] }) {
-  // Summed across the live rows, then rounded down by `providerFloor` — the
-  // page never states the true total. See the note at the section below.
-  const floor = providerFloor(
-    cities.reduce((sum, city) => sum + city.providers, 0),
-  );
-
   return (
     <main className={`pageWide ${styles.page}`}>
       {/*
@@ -163,36 +158,63 @@ export function Landing({ cities }: { cities: CityCoverage[] }) {
                 {CATCHMENT[city.slug]?.label ?? city.name}
               </Link>
               {/*
-                Honest per-city status, without the count. It read "20
-                pogrebnika" / "2 pogrebnika" beside each city, which put Zagreb
-                and Dubrovnik on a scale the reader has no use for — a family in
-                Dubrovnik needs to know their town is covered, not that it is
-                the smallest column on the page. "Svi registrirani" is the same
-                promise `coverageClaim` makes on the city page itself, in two
-                words.
+                The per-city count, restored by the owner on 2026-09-14 after
+                being replaced by "svi registrirani" on 2026-09-07.
 
-                A city with no providers yet still says so, and stays listed and
-                linked, because the sitemap lists it too and the two must agree.
+                The argument it was removed on was that "20 pogrebnika" beside
+                "2 pogrebnika" puts Zagreb and Dubrovnik on a scale a grieving
+                family has no use for. That reading lost: the number is the
+                thing a reader actually wants from a coverage list — how much
+                is there where I am — and withholding it to protect the smaller
+                cities from comparison is a judgment made on the reader's
+                behalf that they did not ask for.
+
+                The completeness promise did not survive on this page at all:
+                it moved to the note below the list for a few hours, and the
+                owner then removed that note outright in the same session. It
+                still runs on every city page through `coverageClaim`, which is
+                the page where a reader can actually check it — so the landing
+                page now shows the reader the numbers and lets the city page
+                make the claim about them.
+
+                Numeral agreement goes through `providerCountLabel`; see the
+                rule there before touching this. A city with no providers yet
+                still says so, stays listed and stays linked, because the
+                sitemap lists it too and the two must agree.
               */}
               <span className={styles.cityCount}>
-                {city.providers > 0 ? 'svi registrirani' : 'u pripremi'}
+                {city.providers > 0
+                  ? providerCountLabel(city.providers)
+                  : 'u pripremi'}
               </span>
             </li>
           ))}
         </ul>
         {/*
-          The one scale claim on the page, and a floor rather than a count:
-          `providerFloor` rounds down to the previous ten, so it is true when
-          written and can only become more true as providers are added. That is
-          the whole reason it is allowed here while exact counts are not — see
-          `providerShare` and `providerFloor` in lib/copy.ts.
+          The note that stood here is gone (project owner, 2026-09-14). It read
+          "Svi registrirani pogrebnici u sedam gradova, njih više od 50 — nitko
+          nije izostavljen i nitko nam ne plaća za bolju poziciju. Svaki grad
+          uključuje i okolicu; popis naselja piše uz rezultate."
+
+          The count clause went redundant the moment the per-city counts came
+          back above it: the reader can see seven rows and add them up, so a
+          floor of "više od 50" sitting under numbers that total 51 reads as
+          withholding something already on screen. The owner took the whole
+          paragraph rather than the clause.
+
+          Two claims went with it and are not lost:
+
+          - **Neutrality** ("nitko nam ne plaća za bolju poziciju") still runs
+            in the city page footer, where it qualifies an actual ordering, and
+            in full on /nase-obecanje.
+          - **Okolica** is still carried by the link labels themselves — each
+            reads "Zagreb i okolica" from CATCHMENT — and the settlement list
+            proper is on the city page, which is where it can be checked.
+
+          `nationalCoverageClaim` and `providerFloor` had no other call site and
+          were deleted from lib/copy.ts with this change, as the five counting
+          helpers were on 2026-09-07.
         */}
-        <p className={styles.citiesNote}>
-          {nationalCoverageClaim(cities.length)}
-          {floor && `, njih ${floor}`} — nitko nije izostavljen i nitko nam ne
-          plaća za bolju poziciju. Svaki grad uključuje i okolicu; popis naselja
-          piše uz rezultate.
-        </p>
       </section>
 
       <section className={styles.section}>

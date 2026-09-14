@@ -126,13 +126,18 @@ export const CATCHMENT: Record<
     label: 'Zagreb i okolica',
     locative: 'Zagrebu i okolici',
     settlements: [
-      'Velika Gorica',
+      // `Velika Gorica` and `Velika Mlaka` were both removed on 2026-09-14,
+      // when Velika Gorica was promoted out of this catchment into a city of
+      // its own. Two entries rather than one: Velika Mlaka is a settlement of
+      // Grad Velika Gorica (postal 10408), and `miraj` sits in it. Leaving
+      // either behind would have two city pages claiming the same place — and
+      // the coverage claim is stated absolutely on both, so it would be two
+      // pages contradicting each other rather than merely overlapping.
       'Zaprešić',
       'Samobor',
       'Sesvete',
       'Dugo Selo',
       'Lučko',
-      'Velika Mlaka',
     ],
   },
   rijeka: {
@@ -199,6 +204,34 @@ export const CATCHMENT: Record<
       'Ston',
     ],
   },
+  // Added 2026-09-14 with the eighth city. Both settlements are the project
+  // owner's decision, as CATCHMENT requires — Palma's own cemetery listings
+  // point the same way (Podvinje, Sibinj and Ruščica directions), but evidence
+  // is not authorisation here.
+  'slavonski-brod': {
+    label: 'Slavonski Brod i okolica',
+    locative: 'Slavonskom Brodu i okolici',
+    settlements: ['Sibinj', 'Bukovlje'],
+  },
+  // Added 2026-09-14. Promoted out of `zagreb` above rather than discovered.
+  //
+  // The first three settlements are where listed providers actually sit —
+  // Velika Mlaka (miraj), Mala Buna (kos), Velika Kosnica (tolic) — and the
+  // last two are municipalities whose cemeteries VG Komunalac administers.
+  // Approved by the owner on that basis.
+  'velika-gorica': {
+    label: 'Velika Gorica i okolica',
+    // "Velikoj Gorici" — both words decline, which is exactly the case the
+    // stored-not-derived rule above exists for.
+    locative: 'Velikoj Gorici i okolici',
+    settlements: [
+      'Velika Mlaka',
+      'Mala Buna',
+      'Velika Kosnica',
+      'Pokupsko',
+      'Kravarsko',
+    ],
+  },
 };
 
 /**
@@ -213,8 +246,12 @@ export const CATCHMENT: Record<
  * **As of 2026-09-07 that rule is absolute in prose:** no exact provider count
  * appears in customer-facing sentences anywhere. The service page's
  * "šest od sedam" and the counts in `/sto-uciniti-prvo` are gone, replaced by
- * `providerShare`. The one survivor is `· N` on a results section heading,
- * which counts the cards below it rather than the market.
+ * `providerShare`. That still holds — but "in prose" is now load-bearing, and
+ * there are **two** positions outside it where a bare figure stands in a
+ * column or a heading rather than a sentence: `· N` on a results section
+ * heading, which counts the cards below it rather than the market, and
+ * `providerCountLabel` in the landing page's city list, restored by the owner
+ * on 2026-09-14.
  *
  * Centralised because it appears on the results header, the service listings
  * and the provider pages. If it is ever hedged or widened it has to change in
@@ -227,75 +264,43 @@ export const CATCHMENT: Record<
  * and it says "registrirani" rather than "svi" because that is what we can
  * stand behind — a provider operating without a registry entry we could not
  * find is exactly the case the qualifier is honest about.
+ *
+ * **The trailing apposition was added 2026-09-14, from search data.** The
+ * first Search Console read showed the market types *"pogrebno poduzeće
+ * {grad}"* at least as often as *"pogrebne usluge {grad}"*, and the Zagreb
+ * variants of it ranked 55–64 — page six — because the phrase appeared
+ * nowhere on a city page. This is not a keyword bolted onto a sentence: it is
+ * the **more precise** name for what the list contains, since `entity_type` is
+ * `doo | jdoo | dd` (trgovačka društva — *poduzeća*) or `obrt` (a sole trader,
+ * which is not a *poduzeće* and should not be called one). Saying "pogrebnici"
+ * alone was the loose word.
+ *
+ * So it stays only while it stays true. If the data ever holds an entity that
+ * is neither, this sentence is wrong on the most prominent line of the page and
+ * has to change with it.
  */
 export function coverageClaim(areaLocative: string): string {
-  return `Svi registrirani pogrebnici u ${areaLocative}`;
+  return `Svi registrirani pogrebnici u ${areaLocative} — pogrebna poduzeća i obrti`;
 }
 
 /**
- * The same claim, for the landing page, which is no longer about one city.
+ * `nationalCoverageClaim`, `cityCount`, `numberWord` and `NUMBER_WORD` stood
+ * here and were deleted on 2026-09-14, when the landing page's note under the
+ * city list was removed (project owner). It was their only call site.
  *
- * The city expansion broke the single-city landing page: with seven cities
- * there is no "the" area to name, and naming one of them would be arbitrary.
- * So the landing claim counts **cities** rather than providers.
+ * Two things worth keeping out of the diff:
  *
- * That is not a retreat from "coverage, not a count" — it is the same rule
- * applied to a different subject. The objection to "sedam pogrebnika" was that
- * a stranger reads it as the size of our database rather than the size of the
- * market. A city count says something else entirely: it is the size of the
- * *product*, which is exactly what a visitor is trying to establish, and it
- * grows in a direction that is unambiguously good news. The per-city coverage
- * claim above is unchanged and still carries the completeness promise on the
- * page where it can actually be checked.
- *
- * Derived from the live row count, never written as a word, so it cannot go
- * stale the way "u sedam gradova" in hand-written copy would.
+ * 1. **`grad` needs the full three-way numeral rule that `pogrebnik` does
+ *    not** — 2–4 take `grada` and 5+ take `gradova`, where `pogrebnika` serves
+ *    both, with 11–14 behaving like 5+. `providerCountLabel` below documents
+ *    why its own two-branch version is not the general rule; this is the
+ *    counter-example it names.
+ * 2. **Croatian spells numbers out to twenty and uses digits past that**, which
+ *    is ordinary typographic practice rather than a house style.
  */
-export function nationalCoverageClaim(cities: number): string {
-  return `Svi registrirani pogrebnici u ${cityCount(cities)}`;
-}
 
 /**
- * "sedam gradova", "dva grada", "jedan grad".
- *
- * `grad` needs the full three-way rule that `pogrebnik` did not: 2–4 take
- * `grada` and 5+ take `gradova`, where `pogrebnika` served both. 11–14 are the
- * standard exception and behave like 5+.
- */
-function cityCount(n: number): string {
-  const last = n % 10;
-  const lastTwo = n % 100;
-  const teen = lastTwo >= 11 && lastTwo <= 14;
-  const noun = teen
-    ? 'gradova'
-    : last === 1
-      ? 'grad'
-      : last >= 2 && last <= 4
-        ? 'grada'
-        : 'gradova';
-  return `${numberWord(n)} ${noun}`;
-}
-
-/**
- * Croatian number words, for the context strip's count.
- *
- * Spelled out to twenty and then numeric, which is ordinary Croatian
- * typographic practice and keeps "Sedam pogrebnika" reading as a sentence
- * rather than a statistic. The pilot will not exceed twenty for a long time;
- * past that the digit is correct anyway.
- */
-const NUMBER_WORD = [
-  'nula', 'jedan', 'dva', 'tri', 'četiri', 'pet', 'šest', 'sedam', 'osam',
-  'devet', 'deset', 'jedanaest', 'dvanaest', 'trinaest', 'četrnaest',
-  'petnaest', 'šesnaest', 'sedamnaest', 'osamnaest', 'devetnaest', 'dvadeset',
-];
-
-function numberWord(n: number): string {
-  return n >= 0 && n < NUMBER_WORD.length ? NUMBER_WORD[n] : String(n);
-}
-
-/**
- * Five counting helpers lived here and are gone as of 2026-09-07:
+ * Five counting helpers lived here and were removed on 2026-09-07:
  * `providerCount`, `providerNoun`, `capitalise`, `verbForm` and `countOfTotal`.
  *
  * They existed to put exact provider counts into Croatian sentences —
@@ -305,7 +310,52 @@ function numberWord(n: number): string {
  * after a numeral is not singular-vs-plural** — 2–4 take the plural form and
  * 5+ take the singular, with 11–14 behaving like 5+. `providerShare` below
  * avoids the trap by construction rather than by handling it.
+ *
+ * **One of the five is back, narrowly, as `providerCountLabel` below** (project
+ * owner, 2026-09-14). The others stay gone: nothing needs a count *inside a
+ * sentence*, which is what made them expensive.
  */
+
+/**
+ * "20 pogrebnika", "1 pogrebnik" — a bare count for the landing page's city
+ * list, and the only exact provider count in the product outside `· N` on a
+ * results heading.
+ *
+ * **The project owner reversed the 2026-09-07 rule for this one position on
+ * 2026-09-14.** The reversal is narrower than it sounds, and the narrowness is
+ * the point: the objection recorded under `providerShare` was to counts *in
+ * prose* — a sentence the reader has to do arithmetic on before it means
+ * anything, and which goes stale the moment either number moves. A figure in a
+ * column beside a link is not that sentence. It answers "how much is there in
+ * my town" at a glance, it needs no verb to agree with it, and the reader can
+ * click through and count them.
+ *
+ * So the rule now reads: **counts are out of sentences, not out of the
+ * product.** `providerShare` and `providerFloor` still own every prose
+ * position and nothing there changed.
+ *
+ * ## The agreement rule, which is why this is a function and not a template
+ *
+ * Croatian numerals take a case, not a plural. For *pogrebnik*:
+ *
+ * - **ends in 1, but not 11** → nominative singular, `pogrebnik` (1, 21, 101)
+ * - **everything else** → `pogrebnika` (2, 5, 11, 13, 20, 111)
+ *
+ * The usual three-way trap — 1 / 2–4 / 5+ — collapses to two here **only
+ * because this noun's genitive singular and genitive plural are the same
+ * word**. `pogrebnika` serves both 2–4 and 5+. That is a fact about
+ * *pogrebnik*, not about Croatian: swap the noun to `grad` and the third branch
+ * reappears, because 2–4 take `grada` and 5+ take `gradova`. **Do not
+ * generalise this function to another noun without adding that branch back.**
+ *
+ * Today every city returns `pogrebnika` — no count ends in 1 — so the first
+ * branch is unexercised by the live data and is covered by tests instead. It
+ * starts mattering the day a city reaches 21.
+ */
+export function providerCountLabel(n: number): string {
+  const noun = n % 10 === 1 && n % 100 !== 11 ? 'pogrebnik' : 'pogrebnika';
+  return `${n} ${noun}`;
+}
 
 /**
  * A share of the providers, worded rather than counted — "većina pogrebnika",

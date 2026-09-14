@@ -47,8 +47,29 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   // Not "Pogrebne usluge — …": the root layout's template appends
   // "· Pogrebne usluge", so that phrasing rendered the brand phrase twice in
   // one title and spent SERP width saying nothing the second time.
+  //
+  // **The title deliberately keeps "Pogrebnici" and was not widened.** The
+  // 2026-09-14 search read is the reason the description below changed, and
+  // the same data argues against touching this line: "pogrebnik" already
+  // ranks 6–10, while the phrasing that ranks 55–64 is "pogrebno poduzeće".
+  // Fitting both reads as "Pogrebnici i pogrebna poduzeća u Zagrebu i
+  // okolici · Pogrebne usluge" — 68 characters, truncated in the SERP, and
+  // stuffed. Trading a position that works for one that might is the wrong
+  // bet at 27% query visibility, so the second phrasing goes in the
+  // description and the page's own first line instead. If those do not move
+  // it in ~4 weeks, this title is the next lever.
   const title = `Pogrebnici u ${locative}`;
-  const description = `Svi registrirani pogrebnici u ${locative}. Besplatno, bez prijave i bez posrednika.`;
+  // Carries the two phrasings the title cannot: "pogrebna poduzeća" in the
+  // nominative, and "pogrebne usluge" adjacent to the city name rather than
+  // stranded after the template's separator. The completeness promise still
+  // leads, because it is the reason to click this result over a directory.
+  //
+  // The three nouns are what a `ProviderCard` actually renders — services,
+  // address, contact actions. "Radno vrijeme" was in an earlier draft and was
+  // wrong: hours live on the provider detail page, one click further on. A
+  // description that promises what the landed-on page does not show is a
+  // bounce, and Google reads the bounce.
+  const description = `Sva registrirana pogrebna poduzeća i obrti u ${locative}. Pogrebne usluge, adrese i kontakti — besplatno, bez prijave i bez posrednika.`;
   const path = `/pogrebne-usluge/${city.slug}`;
 
   return {

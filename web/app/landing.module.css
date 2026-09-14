@@ -243,14 +243,8 @@
   white-space: nowrap;
 }
 
-.citiesNote {
-  font-family: var(--font-text);
-  font-size: 13px;
-  line-height: 1.7;
-  color: var(--ink-body);
-  max-width: 44em;
-  padding-top: 12px;
-}
+/* `.citiesNote` stood here and went with the paragraph under the city list
+   (project owner, 2026-09-14). The list now ends at its last row. */
 
 /* The separate image band that used to sit under the hero text is gone, along
    with `.engraving`. It held `StoneEngraving`, which is still in
