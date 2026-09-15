@@ -8,6 +8,8 @@
 >
 > **The product covers seven cities** — Zagreb, Split, Rijeka, Zadar, Osijek, Pula and Dubrovnik, **51 providers** — since the 2026-09-03 expansion and the 2026-09-07 Split okolica fill-in, which took Split from 7 providers to 13 ([SPEC_database.md](SPEC_database.md)). **Passages below that reason about "all 7" are pilot-era and describe Split as it was**; they are kept where the reasoning still holds and are wrong about the count. That turned screen 2 into a real question, replaced the landing page's single-city coverage strip with a city list, and made `cities[0]` a bug rather than a shorthand.
 >
+> **The cost page shipped 2026-09-15** — [`/koliko-kosta-pogreb`](#the-cost-page--koliko-kosta-pogreb), the first page to state prices, carrying a four-question estimator built on published municipal tariffs rather than on any provider's prices. It closed item 3 of the [article pipeline](#planned-content--the-article-pipeline) and retired two promises the site could no longer make. Six more articles are researched and waiting there.
+>
 > `/za-pogrebnike` is the product's **only form**, for funeral directors. **It is now linked and indexable**: `PROVIDER_FORM_PUBLIC` was flipped to `true` on 2026-09-04, once `/privatnost` existed and the note beside the submit button pointed at it. See [The provider page](#the-provider-page). What remains open is listed under [Open questions](#open-questions), and what still degrades the build under [Data dependencies](#data-dependencies-that-gate-the-build).
 >
 > **One part of that gate is still open by decision.** `/privatnost` names no controller — it gives a contact address and states that no legal person stands behind the site. That is the contact half of GDPR art. 13(1)(a) and not the identity half. The project owner was shown the gap and chose to flip the flag anyway; it closes with a name, which is a one-line change in that page's `Tko obrađuje podatke` section.
@@ -65,14 +67,22 @@ Four rules on it:
    - **The situation named is the one the product is built for**, and it is put as a question rather than an assertion — it matches screen 1's urgent path, and the lede catches the reader it does not describe. An `<h1>` that told a visitor what had happened to them would be worse than a generic one.
 4. **The claim is coverage, not a count** — but the subject changed with the city expansion, and so did what may be counted.
 
-   The single-city coverage strip is gone. In its place is **a list of every covered city, each linking to its own page and carrying its coverage status**, under a note built from `nationalCoverageClaim` + `providerFloor` — both derived from the live rows, so neither can go stale.
+   The single-city coverage strip is gone. In its place is **a list of every covered city, each linking to its own page and carrying its provider count**. Nothing sits under it.
 
-   **Exact provider counts came off this page on 2026-09-07** (project owner). Each city used to carry its own — *"20 pogrebnika"*, *"2 pogrebnika"* — on the argument that a count beside a link the reader can check is a fact rather than a boast. What that missed is what the column actually did: it ranked the cities by size, and a family in Dubrovnik needs to know their town is covered, not that it is the smallest number on the page. Each city now reads **"svi registrirani"**, which is the same promise `coverageClaim` makes on the city page itself, in two words.
+   **The per-city count came off this page on 2026-09-07 and went back on 2026-09-14** — both decisions the project owner's. It read *"20 pogrebnika"*, *"2 pogrebnika"* beside each city; the removal argued that the column ranked the cities by size, and that a family in Dubrovnik needs to know their town is covered rather than that it is the smallest number on the page. It was replaced by *"svi registrirani"* for a week.
 
-   Two numbers survive on this page, and both are shapes that cannot go stale:
+   **The reversal stands on the reader.** The number is what someone actually wants from a coverage list — *how much is there where I am* — and suppressing it to spare the smaller cities a comparison is a judgment made on the reader's behalf that they never asked for. The count is rendered by `providerCountLabel`.
 
-   - **The city count**, because it is the size of the *product* rather than of our database — which is exactly what a stranger is trying to establish, and it moves in a direction that is unambiguously good news. This is the distinction the original objection to *"svih sedam pogrebnika"* actually drew.
-   - **A floor, not a total** — `providerFloor` rounds down to the previous ten, so *"više od 50"* is true when written and can only become more true as providers are added. That property is the whole permission: a claim nobody has to maintain.
+   This does **not** reopen counts in prose — see the rule below, where "in prose" is now the load-bearing half.
+
+   **The note under the list went in the same decision.** It read *"Svi registrirani pogrebnici u sedam gradova, njih više od 50 — nitko nije izostavljen i nitko nam ne plaća za bolju poziciju. Svaki grad uključuje i okolicu; popis naselja piše uz rezultate."* The count clause was made redundant by the per-city counts above it — a floor of *"više od 50"* under seven rows that visibly total 51 reads as withholding something already on screen — and the owner took the whole paragraph rather than the clause.
+
+   `nationalCoverageClaim` and `providerFloor` had no other call site and were **deleted** from `web/lib/copy.ts`, with `cityCount`, `numberWord` and `NUMBER_WORD` behind them. The same disposal the five counting helpers got on 2026-09-07. Two claims went with the paragraph and neither is lost:
+
+   - **Neutrality** (*"nitko nam ne plaća za bolju poziciju"*) still runs in the city page footer, where it qualifies an ordering that actually exists, and in full on `/nase-obecanje`.
+   - **Okolica** is still carried by the link labels themselves — each reads *"Zagreb i okolica"* from `CATCHMENT` — with the settlement list proper on the city page, where it can be checked.
+
+   So the landing page now shows the reader the numbers and lets the city page make the claim about them.
 
    **The `<h1>` no longer names a city**, and that is right for search rather than a concession: this page should rank for *pogrebne usluge*, and `/pogrebne-usluge/{grad}` — which has its own `<h1>`, its own metadata and its own `coverageClaim` — should rank for *pogrebne usluge split*. One page trying to be both would be weaker at each.
 
@@ -81,7 +91,7 @@ Four rules on it:
    Three guardrails come with it, all binding:
 
    - **The wording is `coverageClaim` in `web/lib/copy.ts`, and it says "registrirani".** The qualifier is what we can stand behind — a provider operating with no registry entry we could find is exactly the case it is honest about. The claim is also about **the pilot area, not any provider's service radius**; both limits are `CATCHMENT`'s and they still apply.
-   - **No exact provider count appears in customer-facing prose anywhere** (project owner, 2026-09-07). Two arguments, and only the first is about maintenance: a sentence built from two live counts — *"of the N providers listed, M offer…"* — has to be re-read every time the data moves; and the proportion was the fact the reader wanted, while the count made them do arithmetic first. `providerShare` in `web/lib/copy.ts` replaces them with a **worded share** read from the same live rows — *"većina pogrebnika"*, *"gotovo svaki pogrebnik"*, *"manji dio pogrebnika"* — so the wording still changes when the data does. It rewrote the service-page lede (was *"šest od sedam"*) and both count-built sections of `/sto-uciniti-prvo`. Every phrase it returns takes a **singular** verb by construction, which sidesteps the numeral-agreement trap `verbForm` exists for; `countOfTotal` is deprecated for prose and kept only for its numeral rules.
+   - **No exact provider count appears in customer-facing *prose* anywhere** (project owner, 2026-09-07; scope clarified 2026-09-14). The emphasis is the rule: a count inside a sentence is out, a bare figure in a column or a heading is not. Two positions are therefore outside it and always were — `· N` on a results section heading, which counts the cards below it rather than the market, and the landing page's per-city count via `providerCountLabel`. Two arguments for the rule itself, and only the first is about maintenance: a sentence built from two live counts — *"of the N providers listed, M offer…"* — has to be re-read every time the data moves; and the proportion was the fact the reader wanted, while the count made them do arithmetic first. `providerShare` in `web/lib/copy.ts` replaces them with a **worded share** read from the same live rows — *"većina pogrebnika"*, *"gotovo svaki pogrebnik"*, *"manji dio pogrebnika"* — so the wording still changes when the data does. It rewrote the service-page lede (was *"šest od sedam"*) and both count-built sections of `/sto-uciniti-prvo`. Every phrase it returns takes a **singular** verb by construction, which sidesteps the numeral-agreement trap `verbForm` exists for; `countOfTotal` is deprecated for prose and kept only for its numeral rules.
    - **`· N` on the results section headings stays**, and it is the one exception. It is not a claim about the market: it tells the reader how many cards follow, it is derived from the rendered list, and `N₁ + N₂` being the whole set is the partition guarantee those headings exist to make visible — see [Guarantees](#guarantees). Removing it is a two-line change if that reading is ever overruled.
    - **A city page ships only once that city's providers are actually verified.** Coverage stated ahead of the data would be the one version of this claim that is a lie, and it is also how a directory earns a thin-content penalty.
 
@@ -557,6 +567,61 @@ What opened it: `/privatnost` now covers the rest, and a second note beside the 
 
 Recorded for whoever reads this next: **while the flag was `false`, the route was still reachable by URL** — the gate was "offered to nobody", never "unreachable". Anyone reasoning about what was exposed before 2026-09-04 should read it that way.
 
+## The cost page — `/koliko-kosta-pogreb`
+
+Built **2026-09-15**, from the research in `.research/RESEARCH_funeral_costs.md`. That file is gitignored, so **this section is the only in-repo record of why the figures are what they are** — the same position [SPEC_database.md](SPEC_database.md) → Migrations holds for the database, and it went undocumented once already there.
+
+It answers the question item 3 of [Planned content](#planned-content--the-article-pipeline) set as a condition: the research had to yield enough public, citable figures to genuinely answer *"what does this cost in Croatia"*, or the page was not to ship. It did — six municipal tariffs and one national equipment catalogue — so it ships, stating costs.
+
+**It clears the `Never` on pricing**, which reads *"fabricating/guessing business data (phone, email, working hours, pricing) **without a verified source**"*. Every figure carries a `source` and an `asOf`, and **none of them is any provider's price**: they are published municipal tariffs and ranges assembled from cited catalogues. The product still holds zero `price_from` rows and still says nothing about what a given pogrebnik charges.
+
+### Where the figures come from, and why the page does not say
+
+`web/lib/costs.ts` holds three things kept deliberately apart, so each can be checked alone: the figures, a pure `estimate()`, and the display rounding.
+
+The tariffed lines are **Lovrinac's, in Split** — and the page does not say so, which is a decision rather than an omission. Three reasons, in the order they decided it:
+
+- **It is the only complete published bill in the country.** Lovrinac publishes both halves — the cemetery's work *and* the funeral service's. Everywhere else at most one half is public: Zagreb's grave digging is 122,76 € against Split's 262,00 €, which looks cheaper but is not, because the private pogrebnik's fee there is invisible rather than absent.
+- **It errs high.** The tariffed core is ~614 € in Split against ~569 € in Rijeka and ~304 € in Zagreb. For a cost estimate that is the safe direction: a family braced for more and billed less is fine, the reverse is not.
+- **Averaging was tried and rejected.** National ranges across all six tariffs give roughly **620–1.550 €**, and the project owner ruled that a span that wide is not information — *"telling someone it can cost between 500 and 1500 euro is not an information at all"*. Recorded because the arithmetic is genuinely defensible and someone will propose it again.
+
+**A city picker was considered and rejected on the data.** Two things killed it. City size does not predict price — Zagreb digs a grave for 122,76 €, Pula for 91,25 €, Osijek for 275,00 € — so an urban/rural toggle would give a confidently wrong signal. And *"pick the nearest city"* fails on the same evidence: Pula, Poreč and Labin sit within 55 km of each other and charge 91,25 €, 186,01 € and 225,00 € for the same work. Of the seven covered cities only **two** (Split, Rijeka) have both halves of the bill published, so a seven-city picker would have been two cities of data and five of guesswork wearing a city label.
+
+**The disclaimer carries what the city label would have.** It states that the figure depends on the city, the provider and the choices made, and the CTA sends the family into the flow at `korak=mjesto` to get a real offer. That is the page's honest ending: an estimate cannot bind anyone, and a written itemised offer can.
+
+**Re-check every January.** Lovrinac reprices on 1 January — the 2026 list was a flat **5,00 %** uplift on the 2024 one, to the cent, on every line.
+
+### The estimator
+
+One screen, three questions plus a conditional fourth, recomputing live. It **deliberately does not follow the three-screen flow**: the flow is triage and its answers live in the URL so a result set can be shared, whereas this is a lookup nobody shares. State is local for the same reason — a URL encoding a coffin tier would be a link a grieving family could send a relative by accident.
+
+| question | control | note |
+|---|---|---|
+| Ukop ili kremiranje? | radio | the biggest fork |
+| Postoji li krematorij u vašem gradu? | radio, only under *kremiranje* | the one geographic question |
+| Lijes | radio, three tiers | the widest single choice |
+| Dodatno | checkboxes | vijenac · osmrtnica · glazba · karmine |
+
+Four rules the estimator keeps, each of which was a defect first:
+
+1. **Every figure on screen is rounded to 10 €, and each total is the sum of the rounded parts beneath it.** Lines round first, blocks are the sum of their lines, the headline is the sum of the blocks. Rounding each level independently lets a headline disagree with the blocks printed under it by a full step; exact cents in the itemisation under a rounded total reads as an arithmetic error even when both are right. **The step is 10 and not 50** because at 50 the recurring grave fee (10–80 €) renders as *"0–100 €"* — wrong at the bottom, since no grave costs nothing per year — which would force a carve-out the smaller step does not need.
+2. **The itemisation shows groups, not tariff rows.** A dozen lines reading *"Opremanje kovčega 12,23 €"* is a procurement document rather than an explanation, and it overwhelms exactly the reader who opened the panel to understand the bill. Grouping also keeps every shown figure well above the rounding step, so nothing is distorted by being rounded.
+3. **`vijenac` and `osmrtnica` are ticked by default.** Optional in principle, near-universal in practice — and an item like that defaulted off produces a headline **110–190 € too low** on a bill of about a thousand, which is the one failure this page cannot afford. They stay untickable, and that they *can* be declined is one of the page's points.
+4. **Assumptions travel on the number they qualify**, in the `assumption` field, and render in the itemisation — never in the headline. Three carry one: karmine (25 guests), osmrtnica (one newspaper notice), cremation transport (distance). An assumption stored anywhere else is one that gets silently invalidated the next time someone edits its figure.
+
+**The grave plot is never priced, for anyone.** An earlier version asked whether the family had a grave, a tomb, or nothing; the question was dropped entirely on 2026-09-15 and the caveat made permanent. The opening of the grave *is* charged, as a range spanning both kinds (tomb 220,48 €, earth grave 285,88 € — a tomb is expensive to buy and **cheap to open**, which is the opposite of what almost everyone assumes). But the plot itself is allocated by order of registration rather than sold from a price list, the wait runs to years in the larger cities, and the figure spans a few hundred euros to several thousand. Any number there would be the least defensible one on the page, so the page states the exclusion instead.
+
+### Two promises changed with it
+
+Both would have been contradicted by the page directly beneath them, and the project owner cut them rather than qualify them — the stated intent being to publish prices and bring transparency to the market:
+
+- **The footer** no longer says *"i ne navodimo cijene"*.
+- **`/nase-obecanje`** no longer lists *"Ne uspoređujemo cijene i ne rangiramo po njima"* among its limits. It now says **`Ne rangiramo po cijeni`** and states that costs are published deliberately — which keeps the independence claim, the one that actually matters, and drops the one that no longer holds.
+
+### What it does not do
+
+It names no provider, quotes no provider's price, and ranks nothing. `/kako-rangiramo` came out of `MENU` when this page went in — the masthead stayed at four items rather than growing to five — and it is still linked from the city pages, the service pages, `/nase-obecanje` and `/za-pogrebnike`, which is where a methodology page belongs anyway.
+
 ## Visual system — Kamen
 
 Chosen from three rendered directions on a design canvas; the two unchosen ones (Ploča, Arhiv) and the earlier round remain there for reference: <https://claude.ai/code/artifact/8d8d6b3e-1215-443d-a8f6-8aa19ab5ebfc>
@@ -977,13 +1042,117 @@ Not out of scope — accepted as incomplete, and tracked here so they are not re
 | **A listing entered directly still shows a ranking** | Arriving at `/pogrebne-usluge/{grad}` with no answers renders **Najbolje odgovara** with reason lines anyway, because `rankProviders` partitions regardless of input. With `answers = {}` the criteria-match and urgency terms are both no-ops, so the order reduces to **completeness, then alphabet** — which promotes the one term [Ranking rules](#ranking-rules) admits is unfair to providers to the primary sort key, on the page every crawler and shared link lands on. Dubrovnik shows it plainest: two providers, cap of four, so the shortlist *is* the whole list. Not a defect in the ranking function, which does what it is specified to do; a missing case above it. **The owner has asked for an unsorted list there instead** — and for the list to come back in whatever order the query returns, since with no answers there is nothing to rank on. Not built. |
 | ~~**Split's data is the oldest in the set**~~ | **Closed 2026-09-07.** Seven providers against an eight-settlement catchment, gathered before the six-city expansion settled how a provenance trail is kept — reviewed and expanded to 13 providers across Split, Trogir, Kaštela, Solin and Omiš, with five corrections to the original rows. Research in `data/SPLIT_OKOLICA_REVIEW.md`; migrations in [SPEC_database.md](SPEC_database.md) → Migrations. |
 
+## Planned content — the article pipeline
+
+Started as three pages the project owner approved on **2026-09-14**, off the back of the first Search Console read (`.seo/ANALYSIS_2026-09-14.md`, gitignored). One of them has since shipped, and the cost research that shipped it identified six more. They are listed here rather than in [Known gaps](#known-gaps-deliberately-deferred) because they are not gaps in something already built — they are new work with a decision behind it.
+
+**Status at a glance.** Nothing below is scheduled; the ordering is the argument for what to do next, not a commitment.
+
+| # | page | status |
+|---|---|---|
+| 1 | Prijevoz pokojnika iz inozemstva / sprovodnica | approved 2026-09-14, not built |
+| 2 | Dokumenti — smrtni list, izvadak iz matice umrlih | approved 2026-09-14, not built |
+| 3 | Troškovi pogreba | **shipped 2026-09-15** as [`/koliko-kosta-pogreb`](#the-cost-page--koliko-kosta-pogreb) |
+| 4 | Koliko košta kremiranje i gdje se obavlja | approved 2026-09-14 as part of the cost cluster, not built |
+| 5 | Koliko stvarno koštaju lijes i urna | approved 2026-09-14 as part of the cost cluster, not built |
+| 6 | Što morate platiti, a što ne morate | **absorbed** into page 3 as a collapsed section |
+| 7 | Tko plaća pogreb ako obitelj ne može | candidate — researched, not approved |
+| 8 | Grobno mjesto: naknada, nasljeđivanje, napušteni grob | candidate — researched, not approved |
+| 9 | Ugovaranje pogreba unaprijed | candidate — researched, not approved |
+
+Every one of them is **prose about Croatian procedure or published tariffs**, which means every one inherits the three rules binding `lib/guidance.ts`, not negotiable per page:
+
+1. **A sentence that cannot be attributed to a source in that page's `SOURCES` does not go in.** Not "it is generally known", not "a funeral home's site says so".
+2. **Description of ordinary procedure, never legal advice.** Where practice varies, say what usually happens.
+3. **Deadlines and document names are quoted, not paraphrased.** A family repeating the wrong word at a counter is a real cost.
+
+A fourth rule came out of writing page 3, and binds pages 4 and 5 hardest: **no framing in which the cheaper choice is the lesser one.** A family must be able to pick the plainest coffin without being told, by implication, that they loved someone less. The pages explain the bill; they do not accuse anyone of inflating it.
+
+All of them land in the open [Croatian phrasing review](#known-gaps-deliberately-deferred) the moment they are written, and none should ship without it — sourced facts in unreviewed phrasing is exactly the state the existing guidance text is already in.
+
+**Pages 4–9 are all sourced already**, in `.research/RESEARCH_funeral_costs.md` (gitignored): six municipal tariffs, one national equipment catalogue, the statutory benefit schemes, and the dated journalism behind every range. The research is done; only the writing is not. Its §15 carries the full reasoning for the clustering summarised below.
+
+### 1. Prijevoz pokojnika iz inozemstva / sprovodnica — **a menu item**
+
+The only one of the three that changes navigation: the owner asked for it as a **separate `MENU` entry** in `web/lib/nav.ts`, which takes the masthead from four items to five. That menu's doc comment argues against casual additions, so the reason is recorded here: this is not an adjacent category being advertised before it exists, it is a procedure page for a demand already visible in the data.
+
+**Why it earns the slot.** The search read showed impressions from the Netherlands, Canada, Austria, Switzerland, Germany, the UK and the US — 15 impressions and **2 of the 6 total clicks**, from a diaspora that has to repatriate a body and does not know what a *sprovodnica* is. We already list providers offering `prijevoz-pokojnika-inozemstvo`, so the page ends where the product can actually help, which is the test the other two also have to pass.
+
+**Source.** MVEP is already in `nav.ts` → `SOURCES` and already backs the death-abroad case in `guidance.ts`. Start there; it will not cover the whole page alone.
+
+**Open:** the exact route slug, and whether the menu label is short enough at five items on tablet portrait.
+
+### 2. Dokumenti — smrtni list, izvadak iz matice umrlih
+
+What each document **is**, who issues it, what it is needed for, and how the two differ — the confusion that sends people to a counter twice.
+
+Partly sourced already: NN 46/2011 art. 10 covers *Potvrda o smrti*, its four copies and where each goes, and `guidance.ts` already quotes it. The *izvadak iz matice umrlih* is a different document from a different office and is **not** covered by the existing sources — it needs its own.
+
+This is the page most at risk of drifting into instruction rather than description, because "what do I need" is a question people want answered imperatively. Rule 2 applies hardest here.
+
+### 3. Troškovi pogreba — **shipped**
+
+**Explicitly scoped by the owner as research *and* prose**, in that order, because the prose could not be written before the research existed. Both are now done.
+
+**Shipped 2026-09-15** as [`/koliko-kosta-pogreb`](#the-cost-page--koliko-kosta-pogreb), which is where the decisions live now. Kept here because the condition this item set is the reason it was allowed to ship, and the reasoning should not have to be reconstructed:
+
+> A page titled *Troškovi pogreba* that never states a cost is worse than no page: it takes the query, fails the intent, and teaches Google the site does not answer it. Either the research yields enough public, citable figures to genuinely answer "what does this cost in Croatia", or the page should not ship under that title.
+
+**The research cleared it.** Six municipal tariffs and a national equipment catalogue, all public and all dated. The `Never` on pricing turned out not to bite either: it forbids guessing *"without a verified source"*, and every figure carries one — none of them a provider's price. We still hold zero `price_from` rows and the product still says nothing about what a given pogrebnik charges.
+
+**Demand was evidenced, not assumed:** `nasadi zadar cjenik` ranked **41** — page four — and still earned a click. That is someone wanting a price list badly enough to scroll past three pages of results.
+
+The research also turned up two things this item did not anticipate, both now on the page: the **annual grave fee**, which recurs forever and which nobody is told about at the time, and the fact that **the plot itself cannot be priced at all** because it is allocated by registration order rather than sold.
+
+### 4. Koliko košta kremiranje i gdje se obavlja — **route `/koliko-kosta-kremiranje`**
+
+The strongest single fact the cost research produced, and the one page here that corrects something actively wrong in circulation.
+
+**The claim.** *"Kremiranje je deset puta jeftinije"* is repeated across Croatian media and is **true only where a crematorium is local**. Croatia has two, in Zagreb and Osijek. Everywhere else the body travels, and transport dominates: a published Istrian tariff prices the Zagreb run at **562,50 €** as a single line, and Split works out near **1.066 €** on that cemetery's own per-kilometre rate.
+
+**The proof is a municipal tariff, not an opinion.** Rijeka's KD Kozala charges **21,52 €** for `Organizacija usluge kremiranja` — a fee for *arranging* it — and bills the cremation itself *prema stvarnom trošku*. A city that owned a crematorium would publish a price. Nothing else in the research is as clean.
+
+**Route note:** deliberately not a bare `/kremiranje`, which would collide conceptually with the `kremiranje` service slug already used in listing URLs.
+
+**Sensitivity.** Cremation is a religious and cultural question in Croatia. Report costs and availability; do not argue the religious case in either direction, and do not frame cremation as the smart choice.
+
+### 5. Koliko stvarno koštaju lijes i urna — **route `/cijena-lijesa-i-urne`**
+
+The single most marked-up category, and the one where grief is most easily monetised.
+
+**What it has to say.** The Zagreb catalogue is the largest published in the country and runs **208,77 € to 3.863,40 €**. An urn is **9,57 € or 114,44 €** and the difference is entirely appearance. A **cremation coffin is genuinely cheaper** than its burial equivalent and families are routinely not told one exists.
+
+**This is the most delicate page in the pipeline, by a distance.** The whole thing risks reading as *"do not spend money on your mother's coffin."* The framing that works is showing the options and their prices so a family can decide **without being sold to at the worst moment of their life** — information, never judgement. Write it last, once the house voice on pages 3 and 4 is established.
+
+### 6. Što morate platiti, a što ne morate — **absorbed, not dropped**
+
+Planned as its own page; shipped instead as a **collapsed `<details>` section inside page 3**, on the owner's decision of 2026-09-15. A reader who came for the number should not have to scroll past the list of declinable items, and a reader who wants that list should not have to find another page for it. Revisit only if it outgrows the disclosure.
+
+### 7. Tko plaća pogreb ako obitelj ne može — *candidate*
+
+**Highest human value in the set, and no competitor covers it.** Fully sourced already: the social-welfare `naknada za pogrebne troškove` and its condition that the institution reclaims from the estate; the veterans' caps under the Pravilnik (NN 51/2018) — equipment to **300 €**, burial to **200 €**, wreath to **110 €**, obituaries to **60 €**; **Posmrtna pripomoć**, a mutual-aid association founded in 1931 at ~5–7 €/month; and **body donation to the Zagreb Medical Faculty**, which covers cremation and burial entirely.
+
+It also unlocks a fourth block in the estimator — *Možda ne morate platiti* — shown conditionally and worded as rights.
+
+**Two cautions.** It must read as *information you are entitled to*, never as charity for the poor. And the body-donation option is the most delicate item in the whole research: a real and dignified choice that will read badly if framed as a way to save money. Frame it as what it is — a decision the deceased makes in advance, for their own reasons.
+
+### 8. Grobno mjesto: naknada, nasljeđivanje, napušteni grob — *candidate*
+
+**The best sleeper in the set.** Real search demand, nobody explains it, and the facts are startling: a grave whose fee goes unpaid for ten years can be reallocated, and **tending or visiting it preserves nothing — only paying does**. The city owns the land; the family owns the monument and holds the plot only on allocation, with the right of use passing through `ostavinski postupak` rather than automatically.
+
+Annual fees across the covered cities run **10–80 €**, which page 3 already surfaces without explaining.
+
+### 9. Ugovaranje pogreba unaprijed — *candidate*
+
+Lowest search volume of the nine, and the only one with somewhere specific to land: it gives the wired-but-hidden `planiranje` path (see [Screen 1](#screen-1--situacija)) a destination. Covers allocating a plot before a death is needed — priced in the Zagreb tariff as `dodjela prije nastale potrebe` — and Posmrtna pripomoć.
+
 ## Out of scope for the POC
 
 | not built | why |
 |---|---|
 | Map view | coordinates null for all 7; a mapping API is a new external integration (ask-first) and adds no decision value at 7 providers |
 | Reviews / ratings | no review data exists, and inventing it is a Never |
-| Price calculator, cost tables | zero `price_from` rows; this is the entire model of the German portals and we cannot honestly run it |
+| ~~Price calculator, cost tables~~ | **Overtaken 2026-09-15.** The objection was sound as written — we hold zero `price_from` rows and cannot honestly compare what providers charge, which *is* the German portals' model. What it missed is that the public tariffs of the municipal cemeteries are a different source entirely, and they are enough to answer the reader's question without quoting anyone's price. See [The cost page](#the-cost-page--koliko-kosta-pogreb). Comparing **providers** on price stays out. |
 | Geolocation, distance sort, "blizu mene" | no coordinates, and no user location is collected |
 | Side-by-side comparison table | seven cards on one screen already is the comparison |
 | Lead form, email capture, callback request — **anything asking a family for their details** | out by [SPEC.md](SPEC.md) scope; also the thing that would force a consent banner. The provider form on [`/za-pogrebnike`](#the-provider-page) is not this and must never become it: it points the other way, from the listed business to us |

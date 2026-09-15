@@ -172,14 +172,20 @@ Six columns, all fixed-width, no `text` column anywhere — which is what keeps 
 | Urne | `urne` | `urns` |
 | Cvjetni aranžmani | `cvjetni-aranzmani` | `flowers` |
 | Osmrtnice i tiskane objave | `osmrtnice` | `obituary-printing` |
+| Posredovanje pri kupnji grobnog mjesta | `posredovanje-grobnog-mjesta` | *(added 2026-09-03)* |
 | Klesarske usluge / nadgrobni spomenici | `nadgrobni-spomenici` | `gravestones` |
 | Uređenje i održavanje groba | `uredenje-groba` | `grave-maintenance` |
 | Sređivanje dokumentacije | `sredivanje-dokumentacije` | `document-handling` |
 | Oblačenje i uređivanje pokojnika | `uredivanje-pokojnika` | `deceased-preparation` |
 | Organizacija glazbe | `glazba-na-pogrebu` | `funeral-music` |
 | Fotografiranje i snimanje | `fotografiranje-pogreba` | `funeral-photography` |
-| Posredovanje pri kupnji grobnog mjesta | `posredovanje-grobnog-mjesta` | *(added 2026-09-03)* |
 | Ugovaranje pogreba unaprijed | `ugovaranje-unaprijed` | *(added 2026-09-03)* |
+
+**This table's row order is the canonical render order**, mirrored in `CANONICAL_SERVICE_ORDER` (`web/lib/services.ts`) because the `services` table has no sort column. It is not alphabetical and must not be sorted: it runs roughly in the order a family encounters the decisions.
+
+**The two 2026-09-03 additions sat at the bottom of this table — and were missing from `CANONICAL_SERVICE_ORDER` entirely — until 2026-09-14.** `canonicalIndex` returns `length` for an unknown slug rather than throwing, so both quietly sorted last in every service list for eleven days with nothing failing. Placed deliberately on 2026-09-14: `posredovanje-grobnog-mjesta` joins the grave cluster in the order it happens (secure the plot → the headstone → the upkeep), and `ugovaranje-unaprijed` trails everything, because pre-arrangement is not a decision in the post-death sequence at all — it belongs to the `planiranje` path, a different person on a different timeline.
+
+`web/lib/services.test.ts` now enforces this: it pins the 18 slugs in this order as a canary, and asserts that every ordered service has a `SERVICE_SHORT_PHRASE` entry and vice versa. **A migration that adds a service will fail that test**, which is the intent — the failure is the reminder to place the new slug here deliberately rather than let it default to last.
 
 Slugs are Croatian because they appear in URLs ([SPEC.md](SPEC.md) → Naming Convention), with diacritics transliterated (đ→d, ž→z, č→c, ć→c, š→s) so no path segment needs percent-encoding.
 
@@ -368,6 +374,13 @@ All applied. Nothing is pending.
 | `20260907100000_split_corrections_okolica_review.sql` | five corrections to the live Split rows — Lovrinac's and Zec's addresses moved off their registered seats to the offices their sites give customers, Tonkić's two published mobiles added, Bila ruža's hours corrected to the funeral office window, `last_verified_at` bumped on all seven |
 | `20260907101000_entities_split_okolica.sql` | six providers from the okolica — Hrvojka, Cipetić, Cvjećarnica Vesna, KDGS Solin, Priba, Orhideja — all under the `split` city row with the town in `address` |
 | `20260907102000_entity_services_split_okolica.sql` | 26 service rows across five of the six; Priba has none, per the registry-only rule |
+| `20260914100000_delete_out_of_scope_entities.sql` | **the first migration to delete entity rows** — Memorial (pet funerals only), Miroševac, Spokoj, and the Zagreb Tihi dom (not the business behind `tihi-dom.hr`, which is an Istrian obrt). 51 → 47 |
+| `20260914101000_enrich_entities_from_websites.sql` | six rows enriched from their own sites — memento-mori, skroce-breza, mir-galic, muskovac, priba, suza-adria. Skroče Breza's address moved to Bože Peričića 10; Muškovac's second phone **added not replaced**; Suza Adria's only line re-typed `mobile` → `emergency` |
+| `20260914102000_cities_slavonski_brod_velika_gorica.sql` | two `cities` rows — the eighth and ninth. 7 → 9 |
+| `20260914103000_entities_slavonski_brod_velika_gorica.sql` | eight providers (4 Slavonski Brod, 4 Velika Gorica) plus **`miraj` relocated** from Zagreb to Velika Gorica by `city_id` update, keeping its slug and nine services. 47 → 55 |
+| `20260914104000_entity_services_2026_09_14.sql` | 75 service rows across the five enriched and eight new providers; zero-service rows 17 → 8 |
+
+**The 2026-09-14 batch was written and pushed in one pass** at the project owner's explicit direction (*"write all chunks and push to db immediately"*), which waived the chunk-by-chunk migration review in `CLAUDE.md`. Every guard in all five passed, so the counts they assert are confirmed against the live database: **55 entities across 9 cities, 8 rows still carrying no services.** Research and the full decision log are in `data/DATA_REVIEW_2026-09-14.md` (gitignored).
 
 **The 2026-09-03 rows above were absent from this table until 2026-09-07.** Worth naming rather than quietly fixing: `supabase/migrations/` is gitignored, so a migration missing from this table is a migration with **no record in the repo at all**. The gap survived a whole expansion because nothing enforces it.
 

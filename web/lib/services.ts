@@ -28,12 +28,23 @@ export const CANONICAL_SERVICE_ORDER: readonly string[] = [
   'urne',
   'cvjetni-aranzmani',
   'osmrtnice',
+  // Added 2026-09-14. The grave cluster now runs in the order it happens:
+  // secure the plot, then the headstone, then the upkeep.
+  'posredovanje-grobnog-mjesta',
   'nadgrobni-spomenici',
   'uredenje-groba',
   'sredivanje-dokumentacije',
   'uredivanje-pokojnika',
   'glazba-na-pogrebu',
   'fotografiranje-pogreba',
+  // Added 2026-09-14, and last deliberately. This list runs in the order a
+  // family encounters the decisions — and pre-arrangement is not a decision in
+  // that sequence at all. It belongs to the `planiranje` path, which is a
+  // different person on a different timeline. Leading with it would put "book
+  // your own funeral" at the top of a list read by someone whose relative died
+  // tonight; trailing is the honest position, for a stronger version of the
+  // reason `fotografiranje-pogreba` trails.
+  'ugovaranje-unaprijed',
 ];
 
 /**
@@ -59,12 +70,14 @@ export const SERVICE_SHORT_PHRASE: Readonly<Record<string, string>> = {
   urne: 'urne',
   'cvjetni-aranzmani': 'cvjetni aranžmani',
   osmrtnice: 'osmrtnice',
+  'posredovanje-grobnog-mjesta': 'posredovanje za grobno mjesto',
   'nadgrobni-spomenici': 'klesarske usluge',
   'uredenje-groba': 'uređenje groba',
   'sredivanje-dokumentacije': 'sređivanje dokumentacije',
   'uredivanje-pokojnika': 'uređivanje pokojnika',
   'glazba-na-pogrebu': 'glazba na pogrebu',
   'fotografiranje-pogreba': 'fotografiranje pogreba',
+  'ugovaranje-unaprijed': 'ugovaranje unaprijed',
 };
 
 /** Position in canonical order; unknown slugs sort last, never first. */
