@@ -1,0 +1,47 @@
+/* The optional deeper read, folded into the pillar page.
+
+   A <details> rather than a second route: the reader who came for the number
+   should not have to scroll past the list of declinable items, and the reader
+   who wants that list should not have to find another page for it. */
+
+.details {
+  border-top: 1px solid var(--rule-quiet);
+  border-bottom: 1px solid var(--rule-quiet);
+}
+
+.summary {
+  padding: 16px 0;
+
+  font-family: var(--font-text);
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--gold-link);
+
+  cursor: pointer;
+  list-style: none;
+}
+
+/* The marker is drawn rather than inherited, so it reads the same in every
+   browser and turns without any script. */
+.summary::-webkit-details-marker {
+  display: none;
+}
+
+.summary::before {
+  content: '+';
+  display: inline-block;
+  width: 1.1em;
+  font-variant-numeric: tabular-nums;
+}
+
+.details[open] .summary::before {
+  content: '–';
+}
+
+.summary:hover {
+  color: var(--gold-link-hover);
+}
+
+.disclosure {
+  padding-bottom: 8px;
+}

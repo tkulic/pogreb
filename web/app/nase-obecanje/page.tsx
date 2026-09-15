@@ -93,7 +93,7 @@ const PROMISES: { title: string; body: string; excludes: string }[] = [
 /** What the promise does not cover. Stated by us, before anyone asks. */
 const LIMITS: string[] = [
   'Ne ocjenjujemo kvalitetu usluge. Nemamo ocjene ni recenzije jer ih nemamo od koga dobiti, a izmišljene bi bile gore od nikakvih.',
-  'Ne uspoređujemo cijene i ne rangiramo po njima. Pogrebnici u pravilu ne objavljuju cjenike; ako ipak postoji cijena, stoji na stranici pogrebnika i označena je kao orijentacijska.',
+  'Ne rangiramo po cijeni. Objavljujemo okvirne troškove pogreba jer smatramo da ih ljudi imaju pravo znati unaprijed, ali redoslijed pogrebnika o njima ne ovisi.',
   'Ne znamo koji pogrebnik dolazi u koje mjesto. Područje koje navodimo je područje popisa, a ne tvrdnja da svaki pogrebnik s popisa radi u svakom naselju.',
   'Podatke unosimo ručno. Stoga oni mogu zastarjeti. Ako je neki broj, radno vrijeme ili usluga netočna, javite nam i ispravit ćemo — ispravak je pravi lijek za to.',
 ];

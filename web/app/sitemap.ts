@@ -24,6 +24,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticPages: MetadataRoute.Sitemap = [
     { url: `${SITE_ORIGIN}/`, changeFrequency: 'monthly', priority: 1 },
     { url: `${SITE_ORIGIN}/sto-uciniti-prvo`, changeFrequency: 'yearly', priority: 0.5 },
+    // Repriced by the cemeteries each January, so it goes stale on a known
+    // schedule rather than drifting.
+    { url: `${SITE_ORIGIN}/koliko-kosta-pogreb`, changeFrequency: 'yearly', priority: 0.6 },
     { url: `${SITE_ORIGIN}/kako-rangiramo`, changeFrequency: 'yearly', priority: 0.3 },
     { url: `${SITE_ORIGIN}/nase-obecanje`, changeFrequency: 'yearly', priority: 0.3 },
     // Omitted while PROVIDER_FORM_PUBLIC is false: a page kept out of the

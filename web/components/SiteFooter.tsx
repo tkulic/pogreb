@@ -89,8 +89,8 @@ export function SiteFooter() {
       <div className={styles.baseline}>
         <p className={styles.baselineText}>
           Podaci su prikupljeni iz Sudskog registra i javno dostupnih izvora, i
-          unose se ručno. Ne procjenjujemo kvalitetu, ne objavljujemo recenzije
-          i ne navodimo cijene.{' '}
+          unose se ručno. Ne procjenjujemo kvalitetu i ne objavljujemo
+          recenzije.{' '}
           <Link href="/privatnost" className={styles.baselineLink}>
             Privatnost
           </Link>
