@@ -171,6 +171,9 @@ export default function CostPage() {
       </section>
 
       <nav className={styles.footerLinks} aria-label="Povezane stranice">
+        <Link href="/preuzimanje-troskova-pogreba" className={styles.footerLink}>
+          Preuzimanje troškova pogreba →
+        </Link>
         <Link href="/sto-uciniti-prvo" className={styles.footerLink}>
           Što učiniti prvo →
         </Link>

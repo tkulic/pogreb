@@ -140,6 +140,36 @@
   color: var(--gold-link-hover);
 }
 
+/* A group inside the open mobile panel.
+
+   Its children are shown at once rather than behind a second disclosure: the
+   panel is already one, and nesting would cost two taps to reach a page. The
+   label is not a link and must not look like one, so it takes the quiet ink and
+   none of the link gold. */
+
+.menuGroup {
+  display: flex;
+  flex-direction: column;
+  padding-top: 6px;
+}
+
+.menuGroupLabel {
+  padding-block: 8px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+/* Attached to the label above it by a hairline rather than by indent alone,
+   which is how the rest of Kamen says "this belongs to that". */
+.menuChildLink {
+  padding-left: 12px;
+  border-left: 1px solid var(--rule-quiet);
+}
+
 /* --- desktop --- */
 
 @media (min-width: 860px) {
@@ -175,6 +205,100 @@
   }
 
   .navLink:hover {
+    color: var(--gold-link-hover);
+  }
+
+  /* --- a group, as a disclosure in the inline menu ---
+
+     A <details> for the same reason the mobile menu is one: it opens with no
+     JavaScript, and <summary> is focusable and toggles on Enter and Space
+     without any ARIA of ours. CSS cannot open a <details> on hover, and the
+     :focus-within constructions that imitate a hover menu put navigation behind
+     a tabindex on a non-interactive element. */
+
+  .group {
+    position: relative;
+  }
+
+  .groupButton {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 44px;
+    font-family: var(--font-text);
+    font-size: 13px;
+    color: var(--ink-body);
+    white-space: nowrap;
+    cursor: pointer;
+    list-style: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .groupButton::-webkit-details-marker {
+    display: none;
+  }
+
+  /* A chevron, drawn from two borders on a rotated box rather than imported.
+
+     Not a breach of the one-icon rule (SPEC_frontend.md → Icons): that rule is
+     against a *set* of pictograms standing for concepts, and this is a
+     disclosure affordance, the same category as the hamburger's cut rule above.
+     Nothing is loaded for it and it inherits `currentColor`, so it takes the
+     hover gold with the label.
+
+     Down when closed, up when open, and switched instantly — there is no
+     transition, because Kamen does not animate navigation. The margin nudge is
+     optical: a rotated square hangs low against a cap-height label. */
+  .groupButton::after {
+    content: '';
+    width: 6px;
+    height: 6px;
+    margin-top: -3px;
+    border-right: 1px solid currentColor;
+    border-bottom: 1px solid currentColor;
+    transform: rotate(45deg);
+  }
+
+  .group[open] .groupButton::after {
+    margin-top: 3px;
+    transform: rotate(-135deg);
+  }
+
+  .groupButton:hover {
+    color: var(--gold-link-hover);
+  }
+
+  /* The mobile panel's surface, mirrored: it opens down and to the right, so
+     the hairlines sit on the two closed edges. Without them it reads as text
+     floating over the heading it covers rather than as a surface above it. */
+  .groupPanel {
+    position: absolute;
+    left: 0;
+    top: 100%;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    padding: 4px 20px 10px 0;
+    background: var(--stone);
+    border-right: 1px solid var(--rule-quiet);
+    border-bottom: 1px solid var(--rule-gold);
+  }
+
+  /* `text-decoration: none` is not optional here: the global `a` rule underlines
+     every anchor, which is right in prose and wrong in a menu. `.navLink` and
+     `.menuLink` both clear it for the same reason. */
+  .groupLink {
+    display: flex;
+    align-items: center;
+    min-height: 40px;
+    font-family: var(--font-text);
+    font-size: 13px;
+    color: var(--gold-link);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .groupLink:hover {
     color: var(--gold-link-hover);
   }
 }

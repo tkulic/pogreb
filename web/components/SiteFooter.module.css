@@ -110,6 +110,32 @@
   text-decoration: underline;
 }
 
+/* A group in the Stranice column.
+
+   No disclosure: the column is already vertical, so the children cost nothing
+   to show and stay one click from every page. The label is not a link and takes
+   the same treatment as `colHeading` one step quieter, so the column reads as
+   one list with a sub-heading rather than as two competing headings. */
+
+.group {
+  display: flex;
+  flex-direction: column;
+}
+
+.groupLabel {
+  padding-top: 10px;
+  padding-bottom: 2px;
+  font-family: var(--font-text);
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--text-secondary);
+}
+
+.childLink {
+  padding-left: 12px;
+  border-left: 1px solid var(--rule-quiet);
+}
+
 /* --- baseline --- */
 
 .baseline {

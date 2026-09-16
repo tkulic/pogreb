@@ -27,6 +27,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Repriced by the cemeteries each January, so it goes stale on a known
     // schedule rather than drifting.
     { url: `${SITE_ORIGIN}/koliko-kosta-pogreb`, changeFrequency: 'yearly', priority: 0.6 },
+    // Statutory schemes rather than tariffs, so it moves when a Pravilnik does
+    // rather than every January.
+    {
+      url: `${SITE_ORIGIN}/preuzimanje-troskova-pogreba`,
+      changeFrequency: 'yearly',
+      priority: 0.5,
+    },
     { url: `${SITE_ORIGIN}/kako-rangiramo`, changeFrequency: 'yearly', priority: 0.3 },
     { url: `${SITE_ORIGIN}/nase-obecanje`, changeFrequency: 'yearly', priority: 0.3 },
     // Omitted while PROVIDER_FORM_PUBLIC is false: a page kept out of the

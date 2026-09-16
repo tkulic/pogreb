@@ -9,6 +9,28 @@
  */
 
 export type NavLink = { href: string; label: string };
+
+/**
+ * A menu entry that holds other entries and is **not itself a destination**.
+ *
+ * There is deliberately no `href`: a group label that also navigates is the
+ * oldest usability trap in a menu, because a reader who clicks the parent and a
+ * reader who opens it get different things, and on a touch screen the two
+ * gestures are the same one. If a group ever earns a landing page of its own,
+ * it stops being a group and becomes a link with the children beneath it.
+ *
+ * Groups do not nest. One level is what the masthead can carry, and the
+ * renderers assume it.
+ */
+export type NavGroup = { label: string; items: readonly NavLink[] };
+
+export type NavItem = NavLink | NavGroup;
+
+/** Narrows a `NavItem`. The presence of `items` is the whole distinction. */
+export function isNavGroup(item: NavItem): item is NavGroup {
+  return 'items' in item;
+}
+
 /**
  * Whether `/za-pogrebnike` is linked anywhere a stranger can reach it.
  *
@@ -34,11 +56,22 @@ export const PROVIDER_FORM_PUBLIC = true;
 /**
  * The masthead menu, and the first footer column.
  *
- * Four items, and deliberately no "coming soon" entries for the adjacent
- * categories `RESEARCH_market.md` § 3 identifies (klesari, cvjećari,
+ * Four top-level slots, and deliberately no "coming soon" entries for the
+ * adjacent categories `RESEARCH_market.md` § 3 identifies (klesari, cvjećari,
  * glazbenici). Advertising a category that does not exist costs the one thing
  * this product is built on — that everything it states can be checked — and
  * buys an impression of scale we do not need.
+ *
+ * **Cost is a group rather than a fifth slot** (owner decision, 2026-09-16).
+ * Two cost pages exist and more are planned, and the alternative was a flat
+ * menu growing an item per article until it wrapped — the exact pressure the
+ * paragraph above exists to resist. Grouping keeps the top level at four, which
+ * is what the masthead can carry at tablet portrait without the labels
+ * colliding.
+ *
+ * `Troškovi pogreba` is a label, not a link: there is no such route, and
+ * `NavGroup` documents why inventing one would be worse than leaving the parent
+ * inert.
  *
  * The last item is **"Za pogrebnike", not "Kontakt"**, and the difference is
  * not cosmetic: there is no user-facing form and no published address, so
@@ -46,9 +79,18 @@ export const PROVIDER_FORM_PUBLIC = true;
  * label says who the page is for, which is also how the providers who need it
  * find it.
  */
-export const MENU: readonly NavLink[] = [
+export const MENU: readonly NavItem[] = [
   { href: '/sto-uciniti-prvo', label: 'Što učiniti prvo' },
-  { href: '/koliko-kosta-pogreb', label: 'Koliko košta pogreb' },
+  {
+    label: 'Troškovi pogreba',
+    items: [
+      { href: '/koliko-kosta-pogreb', label: 'Koliko košta pogreb' },
+      {
+        href: '/preuzimanje-troskova-pogreba',
+        label: 'Preuzimanje troškova pogreba',
+      },
+    ],
+  },
   { href: '/nase-obecanje', label: 'Naš credo' },
   ...(PROVIDER_FORM_PUBLIC
     ? [{ href: '/za-pogrebnike', label: 'Za pogrebnike' }]

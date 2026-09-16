@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { Logo } from './Logo';
-import { MENU, SOURCES } from '@/lib/nav';
+import { MENU, SOURCES, isNavGroup } from '@/lib/nav';
 import styles from './SiteFooter.module.css';
 
 /**
@@ -61,13 +61,33 @@ export function SiteFooter() {
           </p>
         </div>
 
+        {/*
+          A column is already vertical, so a group needs no disclosure here —
+          every page stays one click away and reachable by a crawler. Only the
+          masthead, which has one row to work with, has to hide anything.
+        */}
         <nav className={styles.col} aria-label="Stranice">
           <h2 className={styles.colHeading}>Stranice</h2>
-          {MENU.map((item) => (
-            <Link key={item.href} href={item.href} className={styles.link}>
-              {item.label}
-            </Link>
-          ))}
+          {MENU.map((item) =>
+            isNavGroup(item) ? (
+              <div key={item.label} className={styles.group}>
+                <p className={styles.groupLabel}>{item.label}</p>
+                {item.items.map((child) => (
+                  <Link
+                    key={child.href}
+                    href={child.href}
+                    className={`${styles.link} ${styles.childLink}`}
+                  >
+                    {child.label}
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <Link key={item.href} href={item.href} className={styles.link}>
+                {item.label}
+              </Link>
+            ),
+          )}
         </nav>
 
         <nav className={styles.col} aria-label="Službeni izvori">

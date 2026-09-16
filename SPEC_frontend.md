@@ -472,6 +472,8 @@ That is a deliberate exception. Choosing between a provider's office and dežurn
 | `/pogrebne-usluge/{grad}/{pogrebnik}` | provider detail |
 | `/pogrebne-usluge/{grad}/usluga/{usluga}` | indexable service-filtered listing |
 | `/sto-uciniti-prvo` | guidance page |
+| `/koliko-kosta-pogreb` | the cost page and the estimator |
+| `/preuzimanje-troskova-pogreba` | who covers funeral costs when the family does not — the statutory schemes |
 | `/kako-rangiramo` | the ranking rules in plain Croatian |
 | `/nase-obecanje` | the four promises in full, each with what it rules out |
 | `/za-pogrebnike` | the provider page — corrections, missing listings, collaboration, and the product's only form |
@@ -622,6 +624,35 @@ Both would have been contradicted by the page directly beneath them, and the pro
 
 It names no provider, quotes no provider's price, and ranks nothing. `/kako-rangiramo` came out of `MENU` when this page went in — the masthead stayed at four items rather than growing to five — and it is still linked from the city pages, the service pages, `/nase-obecanje` and `/za-pogrebnike`, which is where a methodology page belongs anyway.
 
+## The entitlements page — `/preuzimanje-troskova-pogreba`
+
+Shipped **2026-09-16**, from item 7 of [Planned content](#planned-content--the-article-pipeline). Six schemes that cover funeral costs — the social-welfare `naknada za pogrebne troškove`, the veterans' caps under the Pravilnik (NN 51/2018), the City of Zagreb's scheme, Posmrtna pripomoć, body donation to the Zagreb Medical Faculty — plus the fact that registering a death carries no fee at all. They are all published and nobody assembles them in one place.
+
+### The framing rule, which is the page
+
+**It reads as information you are entitled to, never as charity for the poor.** These are statutory rights and a members' association, not help for the unfortunate, and a reader who feels pitied by a paragraph closes the page before reaching the one that would have paid for the funeral. In practice: no *"ako si ne možete priuštiti"*, no sympathy voice, each scheme stated as a condition and an entitlement rather than as a hardship.
+
+**The title carries the same decision.** It was drafted as *"Tko plaća pogreb ako obitelj ne može"*, which names the reader's failure in the headline. The route and the heading now name the mechanism instead — the owner's change, 2026-09-16.
+
+**Body donation is the most delicate item on the site.** A real and dignified choice that removes the cost entirely, and one that reads badly if framed as a way to save money. It is therefore last, opens by saying what it is not, and is described as a decision the person makes for themselves in advance.
+
+### The figures are statutory caps, and that is why they are allowed
+
+Only the veterans' scheme publishes amounts — equipment to 300 €, burial to 200 €, wreath to 110 €, obituaries to 60 €, transport to 0,95 €/km, repatriation to 730 €, a new plot to 270 €. **A cap is not a price**: it is the entitlement itself, nothing on the page says what a funeral costs, and no provider is quoted. They are reproduced exactly rather than rounded to 10 € as the estimator's output is — that rounding exists so an assembled estimate does not claim a precision it lacks, and rounding a statutory limit would misstate what the state pays. Owner decision, 2026-09-15.
+
+### Sources are named in the text, not collected at the foot
+
+Owner decision, 2026-09-16, and a deliberate departure from `/sto-uciniti-prvo`, which lists its sources in a block at the bottom. That suits a page whose claims all come from the same three documents. Here every section is a *different* scheme run by a *different* body and the reader's next action is to contact that body, so the link sits on the institution's name where it already stands in the sentence — someone reading about veterans' entitlements does not have to scroll past four schemes that do not apply to them to find the one that does.
+
+`SOURCES` remains the single place a URL is written and keeps its `supports` notes, but renders inline. What stays at the foot is the note that this describes existing rights rather than giving legal advice, and that the deciding body is the one receiving the request. Inline anchors need no class — the global `a` rule already carries the gold and the underline offset.
+
+### Open on this page
+
+- **The Croatian is the owner's own revision**, not a reviewed text in the sense [Known gaps](#known-gaps-deliberately-deferred) means.
+- **`centar za socijalnu skrb`** appears twice. Those were reorganised into the **Hrvatski zavod za socijalni rad** on 1 January 2023. People still say the old name, so it may be the right word for a reader — but this page's own rule is that body names are quoted exactly, so it wants checking rather than assuming.
+- **Two sentences in the Posmrtna pripomoć section** (*"vrijedi za sve članove, bez obzira na mjesto ukopa"*, *"ne raspolaže javnim sredstvima"*) do not trace to a source in `SOURCES`, which rule 1 forbids.
+- **The estimator's fourth block**, *Možda ne morate platiti*, is designed in the research and unbuilt. This page is what would unlock it.
+
 ## Visual system — Kamen
 
 Chosen from three rendered directions on a design canvas; the two unchosen ones (Ploča, Arhiv) and the earlier round remain there for reference: <https://claude.ai/code/artifact/8d8d6b3e-1215-443d-a8f6-8aa19ab5ebfc>
@@ -766,6 +797,12 @@ Every candidate tested other than Cinzel rendered `Đ`/`đ` correctly (Cormorant
 - **The contextual back link is `PageBack`, not the masthead.** It is the one part of the old header that cannot live in a route-independent layout, because it knows where the reader came from. It stays a real `<Link>` to a known URL rather than `history.back()`, for the reason [Navigation and state rules](#navigation-and-state-rules) gives it as a numbered requirement.
 - **The menu breakpoint is 860px, not 1024px.** Four short labels sit inline well below the width the rail needed, and **this closes the tablet-portrait gap** the rail could not: between 560px and 1024px the layout was previously the centred mobile column, because a 220px rail would not fit beside a 620px content column. A masthead has no such constraint, so 560–1024px now gets the real menu and the horizontal step and promise rows.
 - **The mobile menu is a `<details>` disclosure**, so the header works with no JavaScript and opens nothing that is a modal. The inline desktop nav and the disclosure are separate markup rather than one panel CSS forces open — forcing a closed `<details>` open with CSS is unreliable across browsers, and navigation may not be flaky.
+- **The menu carries one level of grouping** (2026-09-16). `MENU` in `lib/nav.ts` is a list of links *and* groups; a `NavGroup` has children and, deliberately, **no `href`**, because a parent that both navigates and expands gives a click and an open different results, and on a touch screen those are one gesture. Groups do not nest — one level is what a masthead row can carry, and both renderers assume it.
+
+  The two renderings differ on purpose. **Desktop** gives a group its own `<details>`, for the same reason the mobile menu is one; a hover-opened panel is not available, since CSS cannot open a `<details>` on hover and the `:focus-within` constructions that imitate one put navigation behind a tabindex on a non-interactive element. **Mobile shows the children inline under a quiet label** instead, because the panel around them is already a disclosure and nesting would cost two taps for one page. **The footer groups without any disclosure at all** — a column is already vertical, so every page stays one click away and crawlable.
+
+  The group's marker is a **chevron drawn from two borders on a rotated box**, down when closed and up when open, switched instantly because Kamen does not animate navigation. It is not a breach of [Icons](#icons): that rule is against a *set* of pictograms standing for concepts, and this is a disclosure affordance like the hamburger's cut rule beside it.
+- **Both masthead disclosures close themselves on navigation** (`NavDisclosure`). The header lives in the root layout and is never unmounted by a client-side navigation, and `open` is a DOM property React does not control — so an opened menu stayed open over the page it had just pointed at. Two triggers, because one covers only half: the route changing (`usePathname`, which also catches back and forward), and a click landing on a link, which is the only thing that fires when the reader chooses the page they are already on. **This is an enhancement, not a dependency** — with no JavaScript both still open and close on click, exactly as before. Neither closes on an outside click or on Escape; that needs document listeners, which is a real menu implementation.
 - **`fullWidth` buttons cap at 360px on desktop.** `fullWidth` means "fill the thing you are in", and at 620px a filled button stops reading as a button. Buttons that fill a grid column instead (a card's contact row) are unaffected, because the column is narrower than the cap.
 - **Flex/grid with `gap` throughout**, never per-element margins for sibling spacing.
 - Section separation 26–32px; card internal gap 9–10px.
@@ -1053,12 +1090,13 @@ Started as three pages the project owner approved on **2026-09-14**, off the bac
 | 1 | Prijevoz pokojnika iz inozemstva / sprovodnica | approved 2026-09-14, not built |
 | 2 | Dokumenti — smrtni list, izvadak iz matice umrlih | approved 2026-09-14, not built |
 | 3 | Troškovi pogreba | **shipped 2026-09-15** as [`/koliko-kosta-pogreb`](#the-cost-page--koliko-kosta-pogreb) |
-| 4 | Koliko košta kremiranje i gdje se obavlja | approved 2026-09-14 as part of the cost cluster, not built |
-| 5 | Koliko stvarno koštaju lijes i urna | approved 2026-09-14 as part of the cost cluster, not built |
+| 4 | Koliko košta kremiranje i gdje se obavlja | **dropped 2026-09-16** — written, then cut before review |
+| 5 | Koliko stvarno koštaju lijes i urna | **dropped 2026-09-16**, unwritten |
 | 6 | Što morate platiti, a što ne morate | **absorbed** into page 3 as a collapsed section |
-| 7 | Tko plaća pogreb ako obitelj ne može | candidate — researched, not approved |
-| 8 | Grobno mjesto: naknada, nasljeđivanje, napušteni grob | candidate — researched, not approved |
-| 9 | Ugovaranje pogreba unaprijed | candidate — researched, not approved |
+| 7 | Tko plaća pogreb ako obitelj ne može | **shipped 2026-09-16** as [`/preuzimanje-troskova-pogreba`](#the-entitlements-page--preuzimanje-troskova-pogreba) |
+| 8 | Grobno mjesto: naknada, nasljeđivanje, napušteni grob | approved 2026-09-16, not built |
+| 9 | Ugovaranje pogreba unaprijed | approved 2026-09-16, not built |
+| 10 | Krematorij — što je kremiranje i kako teče | candidate, added 2026-09-16. **Informational, not a price page** |
 
 Every one of them is **prose about Croatian procedure or published tariffs**, which means every one inherits the three rules binding `lib/guidance.ts`, not negotiable per page:
 
@@ -1066,21 +1104,25 @@ Every one of them is **prose about Croatian procedure or published tariffs**, wh
 2. **Description of ordinary procedure, never legal advice.** Where practice varies, say what usually happens.
 3. **Deadlines and document names are quoted, not paraphrased.** A family repeating the wrong word at a counter is a real cost.
 
-A fourth rule came out of writing page 3, and binds pages 4 and 5 hardest: **no framing in which the cheaper choice is the lesser one.** A family must be able to pick the plainest coffin without being told, by implication, that they loved someone less. The pages explain the bill; they do not accuse anyone of inflating it.
+A fourth rule came out of writing page 3: **no framing in which the cheaper choice is the lesser one.** A family must be able to pick the plainest coffin without being told, by implication, that they loved someone less. The pages explain the bill; they do not accuse anyone of inflating it.
 
 All of them land in the open [Croatian phrasing review](#known-gaps-deliberately-deferred) the moment they are written, and none should ship without it — sourced facts in unreviewed phrasing is exactly the state the existing guidance text is already in.
 
-**Pages 4–9 are all sourced already**, in `.research/RESEARCH_funeral_costs.md` (gitignored): six municipal tariffs, one national equipment catalogue, the statutory benefit schemes, and the dated journalism behind every range. The research is done; only the writing is not. Its §15 carries the full reasoning for the clustering summarised below.
+**What the 2026-09-16 round settled, and the rule it produced.** Items 4 and 5 were dropped and 7, 8 and 9 approved in the same conversation, and the reasoning is one rule rather than five decisions: **this product publishes one price page, not a price section.** Items whose subject is a *market price* are out; items whose subject is *procedure, rights or a recurring public fee* are in, figures included where a figure is what makes the rule legible. The second half of the same round: page 4 was built on the strongest fact in the research rather than the strongest query, and Google Trends says the query is `krematorij`, not its price — so **check the query before writing, not the evidence file.**
+
+**Sourcing is not uniform, and the difference matters before writing.** Items 7, 8, 9 and the price half of 10 are fully sourced in `.research/RESEARCH_funeral_costs.md` (gitignored). **Items 1 and 2 are not**: item 2 needs its own source for the *izvadak iz matice umrlih*, which nothing we hold covers, and item 1's MVEP page will not carry the whole page alone. Item 10's procedural half — what actually happens between death and the urn — is also unsourced. Those three need a research pass first.
 
 ### 1. Prijevoz pokojnika iz inozemstva / sprovodnica — **a menu item**
 
-The only one of the three that changes navigation: the owner asked for it as a **separate `MENU` entry** in `web/lib/nav.ts`, which takes the masthead from four items to five. That menu's doc comment argues against casual additions, so the reason is recorded here: this is not an adjacent category being advertised before it exists, it is a procedure page for a demand already visible in the data.
+The only one of the three that changes navigation: the owner asked for it as a **separate `MENU` entry** in `web/lib/nav.ts`. That menu's doc comment argues against casual additions, so the reason is recorded here: this is not an adjacent category being advertised before it exists, it is a procedure page for a demand already visible in the data.
+
+**The five-items problem this item raised is now solved differently.** `MENU` carries groups as of 2026-09-16 (see [Layout and shape](#layout-and-shape)), so a new page no longer has to choose between a fifth top-level slot and invisibility.
 
 **Why it earns the slot.** The search read showed impressions from the Netherlands, Canada, Austria, Switzerland, Germany, the UK and the US — 15 impressions and **2 of the 6 total clicks**, from a diaspora that has to repatriate a body and does not know what a *sprovodnica* is. We already list providers offering `prijevoz-pokojnika-inozemstvo`, so the page ends where the product can actually help, which is the test the other two also have to pass.
 
 **Source.** MVEP is already in `nav.ts` → `SOURCES` and already backs the death-abroad case in `guidance.ts`. Start there; it will not cover the whole page alone.
 
-**Open:** the exact route slug, and whether the menu label is short enough at five items on tablet portrait.
+**Open:** the exact route slug, and whether the page sits at the top level or inside a group.
 
 ### 2. Dokumenti — smrtni list, izvadak iz matice umrlih
 
@@ -1104,47 +1146,52 @@ This is the page most at risk of drifting into instruction rather than descripti
 
 The research also turned up two things this item did not anticipate, both now on the page: the **annual grave fee**, which recurs forever and which nobody is told about at the time, and the fact that **the plot itself cannot be priced at all** because it is allocated by registration order rather than sold.
 
-### 4. Koliko košta kremiranje i gdje se obavlja — **route `/koliko-kosta-kremiranje`**
+### 4 and 5 — the rest of the cost cluster, **dropped 2026-09-16**
 
-The strongest single fact the cost research produced, and the one page here that corrects something actively wrong in circulation.
+Both were approved on 2026-09-14 and both are now cut, on the owner's decision. Page 4 (*Koliko košta kremiranje*, `/koliko-kosta-kremiranje`) was written in full and deleted before review; page 5 (*Koliko stvarno koštaju lijes i urna*, `/cijena-lijesa-i-urne`) was never started.
 
-**The claim.** *"Kremiranje je deset puta jeftinije"* is repeated across Croatian media and is **true only where a crematorium is local**. Croatia has two, in Zagreb and Osijek. Everywhere else the body travels, and transport dominates: a published Istrian tariff prices the Zagreb run at **562,50 €** as a single line, and Split works out near **1.066 €** on that cemetery's own per-kilometre rate.
+**Two reasons, and the first one generalises:**
 
-**The proof is a municipal tariff, not an opinion.** Rijeka's KD Kozala charges **21,52 €** for `Organizacija usluge kremiranja` — a fee for *arranging* it — and bills the cremation itself *prema stvarnom trošku*. A city that owned a crematorium would publish a price. Nothing else in the research is as clean.
+- **The product publishes one price page, not a price section.** The owner does not want the site's centre of gravity moving toward exact figures and tariff citations. `/koliko-kosta-pogreb` answers the cost question; a cluster of pages each quoting municipal tariffs turns a directory into a price index, which is not what this is.
+- **The demand was not there.** Google Trends shows the searched term is **`krematorij`**, not the cost of cremation. Page 4 was built on the strongest *fact* in the research rather than on the strongest *query* — a distinction worth keeping in mind for the rest of this list. Page 5 additionally had little to say once the coffin range was already on page 3.
 
-**Route note:** deliberately not a bare `/kremiranje`, which would collide conceptually with the `kremiranje` service slug already used in listing URLs.
+**What survives, and where.** The two facts worth keeping were already on page 3 before either page was written: that a cremation coffin exists and is cheaper, and that the coffin range is wide. The cremation research itself is intact in `.research/RESEARCH_funeral_costs.md` §3 and §6 and is not lost — item 10 below is where its non-price half goes.
 
-**Sensitivity.** Cremation is a religious and cultural question in Croatia. Report costs and availability; do not argue the religious case in either direction, and do not frame cremation as the smart choice.
-
-### 5. Koliko stvarno koštaju lijes i urna — **route `/cijena-lijesa-i-urne`**
-
-The single most marked-up category, and the one where grief is most easily monetised.
-
-**What it has to say.** The Zagreb catalogue is the largest published in the country and runs **208,77 € to 3.863,40 €**. An urn is **9,57 € or 114,44 €** and the difference is entirely appearance. A **cremation coffin is genuinely cheaper** than its burial equivalent and families are routinely not told one exists.
-
-**This is the most delicate page in the pipeline, by a distance.** The whole thing risks reading as *"do not spend money on your mother's coffin."* The framing that works is showing the options and their prices so a family can decide **without being sold to at the worst moment of their life** — information, never judgement. Write it last, once the house voice on pages 3 and 4 is established.
+**Do not revive these under the same framing.** If cremation returns it is as item 10.
 
 ### 6. Što morate platiti, a što ne morate — **absorbed, not dropped**
 
 Planned as its own page; shipped instead as a **collapsed `<details>` section inside page 3**, on the owner's decision of 2026-09-15. A reader who came for the number should not have to scroll past the list of declinable items, and a reader who wants that list should not have to find another page for it. Revisit only if it outgrows the disclosure.
 
-### 7. Tko plaća pogreb ako obitelj ne može — *candidate*
+### 7. Tko plaća pogreb ako obitelj ne može — **shipped**
 
-**Highest human value in the set, and no competitor covers it.** Fully sourced already: the social-welfare `naknada za pogrebne troškove` and its condition that the institution reclaims from the estate; the veterans' caps under the Pravilnik (NN 51/2018) — equipment to **300 €**, burial to **200 €**, wreath to **110 €**, obituaries to **60 €**; **Posmrtna pripomoć**, a mutual-aid association founded in 1931 at ~5–7 €/month; and **body donation to the Zagreb Medical Faculty**, which covers cremation and burial entirely.
+Approved and shipped on **2026-09-16** as [`/preuzimanje-troskova-pogreba`](#the-entitlements-page--preuzimanje-troskova-pogreba), which is where its decisions live now — including the title change away from the one this item is still named after.
 
-It also unlocks a fourth block in the estimator — *Možda ne morate platiti* — shown conditionally and worded as rights.
+It remains the item that unlocks a fourth block in the estimator, *Možda ne morate platiti*, shown conditionally and worded as rights. That block is still unbuilt.
 
-**Two cautions.** It must read as *information you are entitled to*, never as charity for the poor. And the body-donation option is the most delicate item in the whole research: a real and dignified choice that will read badly if framed as a way to save money. Frame it as what it is — a decision the deceased makes in advance, for their own reasons.
-
-### 8. Grobno mjesto: naknada, nasljeđivanje, napušteni grob — *candidate*
+### 8. Grobno mjesto: naknada, nasljeđivanje, napušteni grob — **approved 2026-09-16**
 
 **The best sleeper in the set.** Real search demand, nobody explains it, and the facts are startling: a grave whose fee goes unpaid for ten years can be reallocated, and **tending or visiting it preserves nothing — only paying does**. The city owns the land; the family owns the monument and holds the plot only on allocation, with the right of use passing through `ostavinski postupak` rather than automatically.
 
 Annual fees across the covered cities run **10–80 €**, which page 3 already surfaces without explaining.
 
-### 9. Ugovaranje pogreba unaprijed — *candidate*
+**It is the best fit for what the owner actually wants from this list**, and the reason is the same one that killed pages 4 and 5: the subject is rights and procedure, and the money in it is a recurring municipal fee rather than a market price. The figures are there to make the rule legible, not to build a price index.
 
-Lowest search volume of the nine, and the only one with somewhere specific to land: it gives the wired-but-hidden `planiranje` path (see [Screen 1](#screen-1--situacija)) a destination. Covers allocating a plot before a death is needed — priced in the Zagreb tariff as `dodjela prije nastale potrebe` — and Posmrtna pripomoć.
+### 9. Ugovaranje pogreba unaprijed — **approved 2026-09-16**
+
+Lowest search volume of the set, and the only one with somewhere specific to land: it gives the wired-but-hidden `planiranje` path (see [Screen 1](#screen-1--situacija)) a destination. Covers allocating a plot before a death is needed — priced in the Zagreb tariff as `dodjela prije nastale potrebe` — and Posmrtna pripomoć.
+
+### 10. Krematorij — što je kremiranje i kako teče — *candidate, added 2026-09-16*
+
+What replaces the dropped page 4, and **deliberately not the same page with the prices removed.**
+
+**The query is `krematorij`**, per Google Trends — people want to know what cremation is, where the crematoria are, how the procedure runs, what happens to the urn afterwards and what the Church's position is. They are not searching for what it costs. Page 4 answered a question nobody was asking, which is the mistake this item exists to avoid repeating.
+
+**Scope: informational, not priced.** Where the two crematoria are, what the process involves, what happens between death and the urn coming back, and where an urn can be placed. Costs belong on `/koliko-kosta-pogreb`, which already models cremation, and this page links there rather than restating it.
+
+**Sensitivity is unchanged from page 4** and is the reason it needs writing carefully rather than quickly: cremation is a religious and cultural question in Croatia. Describe the procedure and the availability; do not argue the religious case in either direction, and do not frame cremation as the smart choice.
+
+**Route:** open. Not a bare `/kremiranje`, which would collide conceptually with the `kremiranje` service slug already used in listing URLs.
 
 ## Out of scope for the POC
 
