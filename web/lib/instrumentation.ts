@@ -1,6 +1,6 @@
 import { supabase } from './supabase';
 import { SITE_HOST } from './env';
-import type { EventType } from './database.types';
+import type { CityEventType, EventType } from './database.types';
 
 /**
  * Anonymous usage logging.
@@ -62,5 +62,30 @@ export function logEvent(
     .then(
       () => undefined,
       () => undefined, // swallowed: the contact is the point, the metric is not
+    );
+}
+
+/**
+ * Log one city-level event. Fire and forget, on the same terms as `logEvent`.
+ *
+ * Written to `city_events` via `log_city_event`, a separate table and a
+ * separate function because `events.entity_id` is not null and three
+ * mechanisms depend on it (SPEC_database.md -> City-level logging). The
+ * environment guard is shared rather than reimplemented: there is exactly one
+ * answer to "is this real traffic", and two copies of it would drift.
+ */
+export function logCityEvent(
+  cityId: string,
+  eventType: CityEventType,
+  isTrusted = true,
+): void {
+  if (!isTrusted) return;
+  if (!shouldLog()) return;
+
+  void supabase
+    .rpc('log_city_event', { p_city_id: cityId, p_event_type: eventType })
+    .then(
+      () => undefined,
+      () => undefined, // swallowed: the share is the point, the metric is not
     );
 }

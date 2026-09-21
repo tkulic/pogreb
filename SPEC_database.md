@@ -2,7 +2,7 @@
 
 > Spec module — database schema details for the funeral services portal. See [SPEC.md](SPEC.md) for broader project context and Phase 1 scope.
 >
-> Status: **the whole schema in this document is implemented and applied to the hosted Supabase project** — the four content tables, `entities.slug`, the Croatian `services.slug` values, and all of **Usage logging** (`events` + `log_event`, its enums, index, RLS and grants). Applied 2026-09-02. SQL lives in `supabase/migrations/`; this document stays the source of truth for intent, the migrations for exact DDL.
+> Status: **the whole schema in this document is implemented and applied to the hosted Supabase project** — the four content tables, `entities.slug`, the Croatian `services.slug` values, and all of **Usage logging** (`events` + `log_event`, its enums, index, RLS and grants), applied 2026-09-02; and **City-level logging** (`city_events` + `log_city_event`), applied 2026-09-21. SQL lives in `supabase/migrations/`; this document stays the source of truth for intent, the migrations for exact DDL.
 >
 > **Applied (2026-09-03):** the six-city pilot expansion — Zagreb, Rijeka, Zadar, Osijek, Pula, Dubrovnik. Six `cities` rows, 38 `entities`, 163 `entity_services`, two additions to the `services` lookup, and two corrections to the Split rows. No schema change: every migration is data. Curated source data and the full provenance trail live in `data/` (gitignored). The conventions those migrations follow are recorded in this document, marked *(2026-09-03)*. The hosted database now holds seven cities, and the frontend reads them — see [SPEC_frontend.md](SPEC_frontend.md) → Landing page and Screen 2.
 >
@@ -260,7 +260,7 @@ The function reads request headers via `current_setting('request.headers', true)
 
 Bucketing in the function rather than storing the host keeps cardinality at 4 bytes and guarantees no URL — and therefore no third-party search term or path — is ever persisted.
 
-`source` is the crux of any future pay-per-lead conversation: it is the difference between *"you got 34 calls"* and *"you got 34 calls, and 82% of those families arrived from Google rather than from your own website"*. Without attribution a provider can simply claim they would have won the customer anyway.
+`source` is what makes the numbers mean anything to a provider: it is the difference between *"you got 34 calls"* and *"you got 34 calls, and 82% of those families arrived from Google rather than from your own website"*. Without attribution a provider can simply claim they would have won the customer anyway.
 
 ### Data integrity
 
@@ -269,7 +269,7 @@ The function **silently discards** a call — plain `return`, never `raise` — 
 1. **Self-identified bots.** `user-agent` matched case-insensitively against `bot|crawl|spider|slurp|headless|preview|monitor|curl|wget|python-requests|okhttp`. This catches honest crawlers and link-preview unfurlers, which are the *volume* problem. It does not catch a bot that lies about its UA — that is rule 2's job.
 2. **Hourly cap per target.** If `(entity_id, event_type, date_trunc('hour', now()))` already holds **60** rows, discard. This is the defence against deliberate inflation, and it needs no visitor identifier because it caps the *target* rather than the source. A pilot-city funeral home will never legitimately see 60 phone clicks in one hour, so the cap converts an unbounded integrity failure into a bounded, visible anomaly. Cost is one indexed range scan on `(entity_id, occurred_at)`.
 
-Rule 2 matters more over time, not less: once click counts drive pay-per-lead pricing, a provider has direct financial motive to inflate their own.
+Rule 2 matters more over time, not less: the moment these counts are shown to the provider they describe, that provider has a motive to inflate them.
 
 **Rejection is deliberately narrow.** Only provably worthless traffic is dropped at write time, because a write-time rejection is irreversible — you can never afterwards audit whether the filter was too aggressive. Everything ambiguous is stored and filtered at query time, where the decision stays revisable. There is ample room for this (see Size budget).
 
@@ -316,6 +316,78 @@ Size is not the binding constraint, which is precisely why write-time rejection 
 
 ⚠️ **Timezone.** `occurred_at` is UTC; convert with `at time zone 'Europe/Zagreb'` in every reporting query. "After hours" is a local-time concept and Croatia observes DST — this is the standard way the strongest pitch line (*"31% of your phone clicks arrived outside your posted office hours"*, which directly monetises the `emergency` phone type and `available_24_7`) comes out wrong.
 
+## City-level logging: `city_events`
+
+> **Status: applied to the hosted project on 2026-09-21**, in `20260921120000_city_events_and_log_city_event.sql`, at the project owner's explicit direction (*"write migration and push it"*) — which is the **Ask first** approval this needed, since there is no staging environment and the push hit production.
+>
+> **Verified against the live database, not inferred from a clean push.** A valid call returns 204; `city_events` is not readable through the API at all (401); an invalid enum value is rejected (400); a nonexistent `city_id` with a real user-agent raises `23503` on `city_events_city_id_fkey`, which is what proves the insert path actually executes; and **the same call with a bot user-agent returns 204 with no FK error**, which is what proves the bot filter returns before the insert. One real `brief_export` row for Rijeka exists from that check.
+
+### Why `events` cannot carry these rows
+
+`events.entity_id` is not conventionally provider-scoped; three separate mechanisms depend on it. It is `not null` with an FK to `entities`, and that FK doubles as validation. The abuse cap keys on `(entity_id, event_type, hour)`. The table's only index is `(entity_id, occurred_at)`, serving both the reporting query and that cap.
+
+A row about a *city* is therefore not a missing column, it is a different kind of row.
+
+**The tempting shortcut is rejected:** logging one `brief_export` against every provider shown on the results page. The family did not do anything to those providers, the counts are the only evidence the product has that it works, and inflating them corrupts the one dataset whose entire value is being trustworthy — see What the numbers are worth. It is also a sentence that could not be said out loud to a provider.
+
+**Making `entity_id` nullable was considered and rejected.** It would cost the not-null invariant and the FK validation on the core column of the best-designed table in the schema, need a CHECK that exactly one of two columns is set, need a second cap path for null-entity rows, and add `where entity_id is not null` to every existing query — all to accommodate a row that is not about a provider.
+
+### Scope, stated so the table does not become a junk drawer
+
+`city_events` holds events **about a city**, with `city_id` not null. It is **not** a general page-events table. Page-level events with no city — a completed cost estimate, a read of `/sto-uciniti-prvo` — belong in a sibling table when they are wanted, because they would key on a page identifier rather than a city and need different cap semantics. Two small tables that each mean one thing beat one table with nullable columns that means several, which is the property that makes `events` good.
+
+### Table
+
+| column | type | constraints | notes |
+|---|---|---|---|
+| id | bigint | generated always as identity, PK | |
+| city_id | uuid | FK → cities.id, not null, on delete cascade | the same validation benefit `entity_id` gives `events` — the function cannot record an event for a city that does not exist |
+| occurred_at | timestamptz | not null | truncated to the hour by the function, stored UTC. Not a client parameter |
+| event_type | enum `city_event_type` | not null | `brief_export` at first. Anticipated values below |
+| source | enum `event_source` | not null | reused, not redefined — the buckets and their reasoning are identical |
+| device | enum `event_device` | not null | reused |
+
+**Index:** `(city_id, occurred_at)`, mirroring `events` and serving both reporting and the cap.
+
+### Anticipated enum values
+
+Recorded so the enum's shape is deliberate rather than accidental. Adding a value later is a one-liner that leaves existing rows valid, so only the first ships.
+
+| value | what it buys |
+|---|---|
+| `brief_export` | the sheet a family carried away. **First and only value in the initial migration** |
+| `results_view` | the denominator the product does not have. Per-provider `detail_view` cannot distinguish *"80 families saw the Rijeka list and none called"* from *"nobody reached Rijeka"* — and those imply opposite next moves, which is the question [SPEC.md](SPEC.md) says `events` exists to answer |
+| guided vs. direct arrival | whether the three-screen flow earns its existence or everyone bypasses it from search. Cheapest as two values (`results_view_guided` / `results_view_direct`) rather than a column |
+| chosen `nacin`, per city | a real cremation-intent rate by city, which nobody in Croatia holds — and with only two crematoria, intent against geography is a genuinely sellable aggregate. Still no identifier, hour-truncated, aggregate only. Note this is narrower than the combination Instrumentation rules out: `situacija` + `nacin` + `pokojnik` together start to look like a fingerprint, a single axis does not |
+
+### `log_city_event`
+
+Same posture as `log_event`, which is the template: `security definer`, `set search_path = public, pg_temp`, `returns void`, signature `log_city_event(p_city_id uuid, p_event_type city_event_type)`. `occurred_at`, `source` and `device` are derived server-side from request headers by the identical rules, and the client cannot assert them. The same self-identified-bot filter applies, and rejection is the same silent `return`.
+
+**Caps are per event type, and this is the one thing that must not be copied verbatim.** The existing 60/hour cap is justified by *"a pilot-city funeral home will never legitimately see 60 phone clicks in one hour."* That reasoning holds for `brief_export`. It does **not** hold for a view-type event — Zagreb on a working site would exceed 60 results views in an hour legitimately, and the function discards silently, so the ceiling would appear in the data as a plateau nobody could explain. A single shared cap is therefore a defect waiting for traffic, and the per-type table goes in from the start.
+
+### RLS and grants
+
+Identical to `events`, for identical reasons: RLS enabled, **no read policy at all**, and
+
+```sql
+revoke all on table public.city_events from anon, authenticated;
+grant execute on function public.log_city_event(uuid, city_event_type) to anon, authenticated;
+```
+
+### Client-side rules
+
+All of Client-side rules apply unchanged. Two bite specifically here:
+
+- **The environment guard** — `shouldLog()` in `lib/instrumentation.ts` already covers it and must be reused rather than reimplemented.
+- **Fire and forget** — a `brief_export` is logged on a deliberate gesture, and a failed log must never delay the share or the print.
+
+### The case that does not fit, recorded before it is discovered
+
+**Demand for a city we do not cover.** If a *"my city isn't listed"* affordance is ever added, the city the visitor wanted has no `cities` row, so the FK rejects the write — and that is the single highest-value expansion signal available. Not a reason to change this design: the fix when it is wanted is a `cities` row carrying a not-covered status, not a nullable FK.
+
+Likewise, the `/usluga/{slug}` listings are city **and** service scoped and do not fit a two-column table. They would need their own shape.
+
 ## Row Level Security (RLS)
 
 RLS is enabled on all five tables (`cities`, `entities`, `services`, `entity_services`, `events`).
@@ -331,7 +403,7 @@ RLS is enabled on all five tables (`cities`, `entities`, `services`, `entity_ser
 | `events` | `anon`, `authenticated` | SELECT | **no policy — the log is not readable through the API at all** |
 | all five | `anon` / `authenticated` | INSERT / UPDATE / DELETE | **no policy — no one can write via the API in Phase 1** |
 
-`events` is the one table with **no read access**. Two reasons: the `anon` key is public, so a SELECT policy would let any visitor — including a competing provider — read every provider's click counts; and those counts are the evidence base for future pay-per-lead pricing. The log is written through `log_event` and read only via privileged Studio / CLI access.
+`events` is the one table with **no read access**. Two reasons: the `anon` key is public, so a SELECT policy would let any visitor — including a competing provider — read every provider's click counts; and those counts are the only evidence the product has that it sends anyone business. The log is written through `log_event` and read only via privileged Studio / CLI access.
 
 **Grants** (RLS alone is not sufficient — table privileges are a separate layer):
 
@@ -381,6 +453,7 @@ All applied. Nothing is pending.
 | `20260914102000_cities_slavonski_brod_velika_gorica.sql` | two `cities` rows — the eighth and ninth. 7 → 9 |
 | `20260914103000_entities_slavonski_brod_velika_gorica.sql` | eight providers (4 Slavonski Brod, 4 Velika Gorica) plus **`miraj` relocated** from Zagreb to Velika Gorica by `city_id` update, keeping its slug and nine services. 47 → 55 |
 | `20260914104000_entity_services_2026_09_14.sql` | 75 service rows across the five enriched and eight new providers; zero-service rows 17 → 8 |
+| `20260921120000_city_events_and_log_city_event.sql` | `city_event_type` enum (`brief_export` only); the `city_events` table and its `(city_id, occurred_at)` index; `log_city_event()` with a **per-event-type** cap; RLS enabled with no policies; `revoke all` on the table and `grant execute` on the function. `event_source` and `event_device` are reused, not redefined |
 
 **The 2026-09-14 batch was written and pushed in one pass** at the project owner's explicit direction (*"write all chunks and push to db immediately"*), which waived the chunk-by-chunk migration review in `CLAUDE.md`. Every guard in all five passed, so the counts they assert are confirmed against the live database: **55 entities across 9 cities, 8 rows still carrying no services.** Research and the full decision log are in `data/DATA_REVIEW_2026-09-14.md` (gitignored).
 

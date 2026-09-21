@@ -419,12 +419,108 @@ In order:
 
 **Deliberately not ranking terms:**
 
-- **`events` click or view counts.** Ranking on them makes the metric self-fulfilling and destroys its value as evidence for any future pay-per-lead conversation ([SPEC_database.md](SPEC_database.md) → What the numbers are worth). This is the tempting one; it stays out.
+- **`events` click or view counts.** Ranking on them makes the metric self-fulfilling and destroys its value as evidence of anything ([SPEC_database.md](SPEC_database.md) → What the numbers are worth). This is the tempting one; it stays out.
 - **Anything paid.** No charging in Phase 1 ([SPEC.md](SPEC.md) → Never), and the transparency footer is a promise.
 - **Random or rotating order.** Non-deterministic order breaks the shareable-URL guarantee and makes *"here is why these"* unverifiable.
 - **Price.** No provider in the pilot publishes one — `price_from` and `price_to` are null throughout.
 
 The rules are published, not just documented: the transparency footer links to a short `/kako-rangiramo` page stating them in plain Croatian.
+
+## The list a family carries — `/lista-pogrebnih-usluga`
+
+An export of the flow, as a sheet the family takes to the funeral director: *this is what we need.* Reached from the results page, and from nowhere else.
+
+**It is aimed at two readers, and the second one is the point.** For the family it is the product's stated job — help them understand and say what they need — done in the one place where it pays off, at the counter. For the funeral director it is the first time the brand arrives in his office, carried by a customer he did not have to find. That is provider acquisition with no outreach, which is the cheapest supply-side channel this product will ever have, and it is why the sheet is designed to be *handed over* rather than merely read.
+
+### Route, and why it is not under `/pogrebne-usluge/{grad}`
+
+A top-level route taking `?grad=`, not a segment beneath the city. `/pogrebne-usluge/{grad}/lista` would sit in the same namespace as `{pogrebnik}`, and Resolving the entity/service slug collision settles that question in the other direction: the `usluga` segment exists to make a collision *structurally* impossible rather than accidentally absent. A second literal segment under `[grad]` would reintroduce exactly the unguarded case — a provider one day slugged `lista` — for a page that gains nothing from a pretty path, because it is never indexed.
+
+`?grad=` is also already the flow's spelling for a city held in the query string (`parseGrad` in `lib/answers.ts`), so nothing new is invented.
+
+**`noindex`, and absent from the sitemap.** It is a per-family artifact generated from query state, not content — indexing it would offer a crawler a combinatorial set of near-identical pages, which is the definition of thin content. It is deliberately **not** disallowed in `robots.txt`, for the same reason `/privatnost` is not: a disallowed URL is never fetched, so its `noindex` is never read.
+
+### Where it is reached from, and how loud it is
+
+**Between the shortlist and the others block**, bracketed by gold hairlines, with a full-width outlined action. It shipped at the foot of the page under the guidance strip and that was too quiet — by then the reader has passed every provider and the page has said everything it has to say. The position it moved to is the page's natural pause: the best matches have been read, nobody has been called yet, and a list of what to ask for is the next thought.
+
+**Outlined, never filled, and that is a rule rather than a preference.** `ContactActions.module.css` holds this page to *exactly one solid dark mass per card, and it is the action the product exists to produce*. A filled button for the sheet would be a second dark mass competing with the phone.
+
+**A floating or sticky bar was considered and rejected** (2026-09-21), for three reasons of increasing weight: it competes with the phone action at every scroll position at once rather than at one; it covers a card on a short screen, which on this page means covering a provider; and it reinstates exactly the sticky furniture this layout deleted when the desktop rail went. Prominence here comes from position and width, not from pinning.
+
+### It names no provider
+
+**Provider-neutral by decision** (owner, 2026-09-21). The family may well visit two, so a reusable sheet is worth more to them than a routed one; and naming a single provider on a document carrying our mark would look like a referral, which is the appearance `/kako-rangiramo` exists to deny. The cost is the cleanest attribution signal we could have had, and it is accepted.
+
+### A worksheet, not a receipt
+
+**The flow's four answers are not a brief.** `situacija`, `nacin`, `pokojnik` and the city, printed back, tell a funeral director nothing he would not have in the first five seconds of the call — and a sheet that reads as a gimmick to the person it is meant to impress is worse than no sheet.
+
+So the answers fill the top, and the body of the sheet is a **checklist over `CANONICAL_SERVICE_ORDER`**. That list already runs "roughly in the order a family encounters the decisions" (`lib/services.ts`), which is precisely the spine a brief needs, and it means the vocabulary on the sheet is the same vocabulary the provider pages use. What the director reads is a *scope* — eight ticked lines from someone who has thought about it — rather than a radio button.
+
+It is also where the family does the understanding. Most people have never considered whether they want an osmrtnica or who files the paperwork until they see the words.
+
+**Ticking happens on screen, and the ticks live in the URL** (`?trebam=`), like every other piece of flow state, so a sheet survives a refresh and can be sent to a sibling. Fixed parameter order, for the reason `answersToQuery` has one.
+
+**Pre-ticked from the answers.** Cremation ticks `kremiranje` and `urne`; a burial ticks `lijesovi`; a deceased anywhere but home ticks `prijevoz-pokojnika`, and one abroad ticks `prijevoz-pokojnika-inozemstvo`. `organizacija-pogreba` and `sredivanje-dokumentacije` are always ticked. Nothing else is: a default tick on a genuine choice would be us answering for them.
+
+The pre-ticking is doing more than saving taps — it is the moment the family sees that the site understood them without asking twice.
+
+**`?trebam` present, even empty, is authoritative.** Absent means "derive from the answers"; present means the family has touched the list, including when they have unticked everything.
+
+### Which services show, and which hide
+
+Three sit behind a *prikaži sve* disclosure — `ekshumacija`, `balzamiranje`, `fotografiranje-pogreba`. They are real services and a family that needs one needs it badly, but on a phone they cost three lines of scroll each to the great majority who do not.
+
+**`ugovaranje-unaprijed` is suppressed entirely** unless `situacija = 'planiranje'`. `lib/services.ts` already argues the case for trailing it; on this sheet the stakes are higher, because handing a family whose father died last night a checkbox for booking their own funeral is not a misordered list, it is an insult.
+
+### No text fields anywhere
+
+**Nothing on this page accepts typed input**, and that is a GDPR position rather than a simplification. A name-and-number box would put the family's own contact details into a URL that is meant to be shared and that appears in a server log, reopening the question the no-PII design closes ([SPEC.md](SPEC.md) → Always). The printed sheet carries ruled blank lines instead, filled in by hand.
+
+The *questions worth asking* block replaces the notes box a reader would otherwise expect, and is the better trade: it is guidance, which is what this product is actually good at, and it needs no input at all.
+
+### Print is real, but it is the margin case
+
+Most families will show the sheet on the phone at the counter, or forward it. Printing still has to work, because a leave-behind is worth something — so the same route carries a print stylesheet rather than a separate document:
+
+- **One side of A4 is a hard constraint**, not a target. A two-page brief is a brief nobody reads.
+- **The mark prints.** It is an `<img>` rather than a background so it survives the browser's "no background graphics" default, and carries `print-color-adjust: exact` — it is what makes the paper recognisable as a thing from somewhere when it is lying on a funeral director's desk, which is the only reason the sheet is branded at all.
+- **This is the one route whose `title` is `absolute`**, skipping the layout's `· Pogrebne usluge` template. Browsers print the document title in the page header, and the template put the site's name there while the sheet beneath already carried the mark, `pogreb.net` and its own heading — the same information three times on one side of paper.
+- Kamen's warm greys print faint, so the palette tokens are redefined once inside `@media print` in `globals.css` rather than overridden per component.
+- Masthead, footer, disclosures and every button drop out; unticked services drop out too, since the printed sheet is a statement rather than a worksheet.
+- Ruled blank lines for the family's own name and number, and for anything to add by hand.
+- The site address prints at the foot, so the paper points back.
+
+### Sharing
+
+The phone's own share sheet (`navigator.share`), falling back to copying the link, plus a copy-as-plain-text for pasting into WhatsApp or Viber — which is how this will actually travel. Both are browser APIs; **no integration is added and nothing leaves our origin** ([SPEC.md](SPEC.md) → Boundaries).
+
+**The share payload carries `url` and `title` and never `text` alongside them.** A share containing both is handled inconsistently — WhatsApp, Viber and Messenger concatenate the two and send the address as characters inside a sentence, so the recipient gets neither a tappable link nor the preview card the root layout's OpenGraph tags already describe. Sharing a bare URL is what makes the target treat it as a link. The sheet as prose is the button beside it, not a field in the same call.
+
+### The two strings that are fixed
+
+Recorded because both were changed by the project owner against a draft, and both would otherwise drift:
+
+- The sheet's title is **`Lista pogrebnih usluga`** — not *"Sažetak potreba"*, which was abstract where this says what the thing is, and which does not match the vocabulary of `/pogrebne-usluge/`.
+- The foot carries **`Besplatni agregator pogrebnih usluga u Hrvatskoj.`** It answers the director's first question — *who are these people* — where the draft's neutrality claim answered his second. Noted, because that draft line (*nobody pays for position*) is the sentence that converts later, and the foot is where it would go back.
+
+### Logging — `brief_export`
+
+Written to `city_events` via `log_city_event` ([SPEC_database.md](SPEC_database.md) → City-level logging), applied 2026-09-21. `logCityEvent` in `lib/instrumentation.ts` reuses `shouldLog()` rather than reimplementing the environment guard — there is one answer to *"is this real traffic"*, and two copies of it would drift.
+
+Two rules specific to this event:
+
+- **Logged on an export gesture, never on mount.** Arriving at the sheet is not carrying it away. A mount-time log would count every refresh and every shared link opened merely to look, turning the one number meant to show the feature works into a page view.
+- **Once per mount, not once per button.** A family that shares the sheet and then prints it carried out one export; counting two would inflate precisely the most engaged reader. Held in a ref, so recording it never re-renders.
+
+### The shared card
+
+`noindex` and an OpenGraph card are not in tension here, and the page needs both. `noindex` is about search. The card is about messaging, and this is the **most-shared page in the product by design** — sharing is one of its three actions.
+
+It shipped inheriting the layout's `openGraph`, which titled every sheet *"Pogrebne usluge"* and pointed `og:url` at the site root, so a recipient got a generic site card or no card at all. It now builds its own through `openGraph()` in `lib/seo.ts`, carrying the city and the sheet's own URL, answers and ticks included.
+
+This is also why `robots.txt` must keep **not** disallowing the route: the messengers' fetchers honour `robots.txt` rather than the meta tag, so a disallow would turn them away from the card as well as leaving the `noindex` unread.
 
 ## Provider detail page
 
@@ -471,6 +567,7 @@ That is a deliberate exception. Choosing between a provider's office and dežurn
 | `/pogrebne-usluge/{grad}` | results; screen 2 answered by the path, screens 1 and 3 by query params |
 | `/pogrebne-usluge/{grad}/{pogrebnik}` | provider detail |
 | `/pogrebne-usluge/{grad}/usluga/{usluga}` | indexable service-filtered listing |
+| `/lista-pogrebnih-usluga` | the sheet a family carries to the funeral director, generated from the flow. Carries `?grad=`, the answers, and `?trebam=`. `noindex`, absent from the sitemap, and **not** disallowed in `robots.txt` — see The list a family carries |
 | `/sto-uciniti-prvo` | guidance page |
 | `/koliko-kosta-pogreb` | the cost page and the estimator |
 | `/preuzimanje-troskova-pogreba` | who covers funeral costs when the family does not — the statutory schemes |
@@ -517,7 +614,7 @@ Three rules on it:
 
 1. **`Što bilježimo` is not a disclaimer bolted on** — it is the second promise being honest about its own edge, stated by us rather than discovered by someone reading network requests. It must stay in step with [SPEC_database.md](SPEC_database.md) → Usage logging: if `events` ever gains a column, this section changes in the same pass.
 2. **A promise wording exists once.** The landing page's short form and this page must not drift; a promise worded one way there and another way here reads as the weaker of the two. The 2026-09-07 copy pass broke this for a few hours — the landing promises were retitled and this page's were not — and it was closed the same day by **taking the landing titles as canonical**: the four are now single words on both pages, in the same order, with the sentence and the *što isključuje* line carrying the substance here. A one-word title states the value; a title that is itself a sentence competed with the sentence beneath it.
-3. **The four promises are the product's constraints written down**, so a change to any of them is a change to the product, not to copy. Monetisation in particular touches the first and third directly — see [SPEC.md](SPEC.md) → Boundaries, where charging anyone in Phase 1 is a Never, and `.research/RESEARCH_market.md` § 3, where the reason the highest-revenue model in the field is unavailable to us is precisely promise one.
+3. **The four promises are the product's constraints written down**, so a change to any of them is a change to the product, not to copy. Monetisation in particular touches the first and third directly — see [SPEC.md](SPEC.md) → Boundaries, where charging anyone in Phase 1 is a Never and where the commercial thinking is deliberately kept out of this repository.
 
 **Still absent: a named owner.** A promise page with nobody behind it is the weakest kind, and a name cannot be invented ([SPEC.md](SPEC.md) → Never: fabricating data); the project owner has chosen not to publish one. It waits on `/o-nama`. Tracked under [Known gaps](#known-gaps-deliberately-deferred).
 

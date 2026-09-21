@@ -38,3 +38,12 @@
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
+
+/* Navigation, so it is never printed — the one route in this product designed
+   for paper is the sheet at `/lista-pogrebnih-usluga`, and a back link that
+   cannot be followed is ink spent on nothing. */
+@media print {
+  .bar {
+    display: none;
+  }
+}

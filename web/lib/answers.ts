@@ -154,3 +154,67 @@ export function resultsHref(grad: string, answers: FlowAnswers): string {
 export function isUnanswered(answers: FlowAnswers): boolean {
   return !answers.situacija && !answers.nacin && !answers.pokojnik;
 }
+
+/* --------------------------------------------------------------------------
+   `/lista-pogrebnih-usluga` — the sheet a family carries.
+
+   Its URL state lives here rather than in `lib/brief.ts` for the reason the
+   file header gives: one module owns every URL this product builds, so that no
+   page hand-assembles one. `lib/brief.ts` owns what the sheet *means* — which
+   services are ticked by default, which hide — and imports from here.
+   -------------------------------------------------------------------------- */
+
+/** The route. One constant, because the results page and the sheet share it. */
+export const BRIEF_PATH = '/lista-pogrebnih-usluga';
+
+/**
+ * The ticked services, read out of `?trebam=`.
+ *
+ * **`undefined` and `[]` mean different things, and the distinction is the
+ * whole contract.** Absent means the family has not touched the list, so the
+ * sheet derives its ticks from the flow answers. Present-but-empty means they
+ * have, and unticked everything — a state the page must be able to hold, or
+ * the last untick would silently spring every default back on.
+ *
+ * Unknown slugs are dropped rather than erroring, like every other parser
+ * here: a hand-edited or stale URL must still produce a page.
+ */
+export function parseTrebam(
+  value: string | string[] | undefined,
+  allowed: readonly string[],
+): string[] | undefined {
+  const v = one(value);
+  if (v === undefined) return undefined;
+  if (v === '') return [];
+  const seen = new Set<string>();
+  return v
+    .split(',')
+    .filter((slug) => allowed.includes(slug) && !seen.has(slug) && seen.add(slug));
+}
+
+/**
+ * A link to the sheet, carrying the city, the answers and the ticks.
+ *
+ * Fixed parameter order, for the same reason `answersToQuery` has one: the
+ * same state must produce the same URL every time, so a link the results page
+ * builds and a link the sheet rewrites after a tick are byte-identical.
+ *
+ * `ticks` omitted leaves `trebam` off entirely, which is how the results page
+ * links in — it has no business deciding what the family needs.
+ */
+export function briefHref(opts: {
+  grad: string;
+  answers: FlowAnswers;
+  ticks?: readonly string[];
+}): string {
+  const { grad, answers, ticks } = opts;
+  const params = new URLSearchParams();
+  params.set('grad', grad);
+  if (answers.situacija) params.set('situacija', answers.situacija);
+  if (answers.nacin) params.set('nacin', answers.nacin);
+  if (answers.pokojnik) params.set('pokojnik', answers.pokojnik);
+  // Set even when empty — see `parseTrebam`. `URLSearchParams` renders that as
+  // a bare `trebam=`, which round-trips back to "touched, nothing ticked".
+  if (ticks) params.set('trebam', ticks.join(','));
+  return `${BRIEF_PATH}?${params.toString()}`;
+}

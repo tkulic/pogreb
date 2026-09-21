@@ -100,6 +100,16 @@ export type EventType =
   | 'email_click';
 
 /**
+ * What `log_city_event` accepts — events about a *city* rather than about a
+ * provider (SPEC_database.md → City-level logging).
+ *
+ * Its own type rather than a widening of `EventType`: `city_events` and
+ * `events` are different tables with different keys, and a union that spanned
+ * both would let a `phone_click` be offered to the city logger.
+ */
+export type CityEventType = 'brief_export';
+
+/**
  * `events` has no SELECT policy -- the log is not readable through the API at
  * all (SPEC_database.md -> RLS). It appears here only as the shape of what
  * `log_event` writes; nothing in the app may attempt to read it.
@@ -134,11 +144,16 @@ export type Database = {
         Args: { p_entity_id: string; p_event_type: EventType };
         Returns: undefined;
       };
+      log_city_event: {
+        Args: { p_city_id: string; p_event_type: CityEventType };
+        Returns: undefined;
+      };
     };
     Enums: {
       entity_type: EntityType;
       data_source: DataSource;
       event_type: EventType;
+      city_event_type: CityEventType;
     };
     CompositeTypes: Record<never, never>;
   };

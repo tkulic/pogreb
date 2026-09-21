@@ -268,6 +268,27 @@ export async function getServicePageParams(): Promise<
   return params;
 }
 
+/**
+ * The whole service vocabulary, in canonical order.
+ *
+ * For `/lista-pogrebnih-usluga`, which offers every service as a checkbox
+ * rather than showing what one provider happens to offer. Eighteen rows, so
+ * the sort is in the app for the same reason ranking is — `services` has no
+ * sort column, and `CANONICAL_SERVICE_ORDER` is where that order lives.
+ *
+ * Names come from the table rather than from a map in the code: a second
+ * spelling of a service name is how a checklist and a provider card start
+ * disagreeing about what a service is called.
+ */
+export async function getAllServices(): Promise<Service[]> {
+  const { data, error } = await supabase.from('services').select('*');
+
+  if (error) throw new Error(`Failed to load services: ${error.message}`);
+  return ((data as Service[]) ?? []).sort(
+    (a, b) => canonicalIndex(a.slug) - canonicalIndex(b.slug),
+  );
+}
+
 /** One service by slug, for the service listing page's heading and copy. */
 export async function getServiceBySlug(slug: string): Promise<Service | null> {
   const { data, error } = await supabase

@@ -1,0 +1,430 @@
+/* `/lista-pogrebnih-usluga` — the sheet a family carries.
+
+   Two renderings of one document. On screen it is a worksheet: tappable rows,
+   a disclosure, three actions beneath it. On paper it is a statement: the
+   ticked services only, ruled lines for what has to be written by hand, and
+   nothing that could be clicked.
+
+   Everything printed is governed by one constraint — **one side of A4** — and
+   the @media print block at the foot is where that is enforced. */
+
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding-block: 20px 56px;
+}
+
+/* The document.
+
+   A hairline frame rather than plain flow, and the only place in the product
+   with one. It is the point: this has to read as a *thing that was prepared*
+   when it is turned around on a counter, not as another page of the site. The
+   rule is gold, which is the system's cut line, so the frame stays inside
+   Kamen rather than importing a card style the design deleted. */
+.sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+
+  padding: 22px 20px 20px;
+  border: 1px solid var(--rule-gold);
+  background: var(--stone);
+}
+
+/* ---------- head ---------- */
+
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--rule-gold);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  font-family: var(--font-text);
+  font-size: 10.5px;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+  color: var(--text-label);
+}
+
+/* Smaller than the masthead's 22px: this is a letterhead, and the sheet's own
+   title is the thing to read first. */
+.mark {
+  flex: none;
+  height: 18px;
+  width: auto;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 20px;
+  letter-spacing: 0.07em;
+  line-height: 1.3;
+  color: var(--ink);
+}
+
+.meta {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 13px;
+  letter-spacing: 0.13em;
+  line-height: 1.4;
+  color: var(--text-secondary);
+}
+
+/* ---------- the answers, read back as sentences ---------- */
+
+.situation {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.situation p {
+  font-family: var(--font-text);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+/* ---------- blocks ---------- */
+
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.blockHeading {
+  font-family: var(--font-text);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+  color: var(--text-label);
+}
+
+/* ---------- the checklist ---------- */
+
+.services {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Separated by cut rules, no containers — the same rule that keeps the
+   provider list calm at forty entries keeps this calm at eighteen. */
+.row {
+  border-bottom: 1px solid var(--rule-quiet);
+}
+
+/* A ticked row is the sheet's content; an unticked one is an offer. The
+   difference is weight and a gold edge, never a fill — gold is a cut line. */
+.rowOn {
+  border-bottom-color: var(--rule-gold);
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+
+  /* A full-width, comfortably tappable target: this is a list someone goes
+     down with a thumb, standing up, probably in a hurry. */
+  min-height: 42px;
+  width: 100%;
+
+  font-family: var(--font-text);
+  font-size: 15px;
+  line-height: 1.4;
+  color: var(--ink-body);
+  cursor: pointer;
+}
+
+.rowOn .option {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.option input {
+  flex: none;
+  width: 17px;
+  height: 17px;
+  accent-color: var(--ink);
+  cursor: pointer;
+}
+
+.disclose {
+  align-self: flex-start;
+  padding: 6px 0 0;
+
+  font-family: var(--font-text);
+  font-size: 14px;
+  color: var(--gold-link);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.disclose:hover {
+  color: var(--gold-link-hover);
+}
+
+/* ---------- questions ---------- */
+
+.questions {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.questions li {
+  position: relative;
+  padding-left: 15px;
+
+  font-family: var(--font-text);
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ink-body);
+}
+
+.questions li::before {
+  content: "·";
+  position: absolute;
+  left: 3px;
+  color: var(--gold);
+}
+
+/* ---------- printed-only furniture ---------- */
+
+/* Hidden on screen, and the reason the page has no text input at all: the
+   family writes these in by hand, so we never hold them. */
+.printOnly {
+  display: none;
+}
+
+.ruleLabel {
+  margin-top: 10px;
+  font-family: var(--font-text);
+  font-size: 10.5px;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+  color: var(--text-label);
+}
+
+.ruledLine {
+  display: block;
+  height: 22px;
+  border-bottom: 1px solid var(--rule-quiet);
+}
+
+/* ---------- foot ---------- */
+
+.foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  justify-content: space-between;
+  align-items: baseline;
+
+  padding-top: 14px;
+  border-top: 1px solid var(--rule-gold);
+}
+
+/* The one line on the sheet addressed to the funeral director rather than to
+   the family. */
+.tagline {
+  font-family: var(--font-text);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.url {
+  font-family: var(--font-text);
+  font-size: 10.5px;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+  color: var(--text-label);
+}
+
+/* ---------- actions ---------- */
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.primary {
+  padding: 14px 22px;
+
+  font-family: var(--font-text);
+  font-size: 15px;
+  line-height: 1.3;
+  color: var(--gold-on-ink);
+
+  background: var(--ink);
+  border: 1px solid var(--ink);
+  cursor: pointer;
+}
+
+.primary:hover {
+  background: #000;
+}
+
+.secondary {
+  padding: 14px 18px;
+
+  font-family: var(--font-text);
+  font-size: 15px;
+  line-height: 1.3;
+  color: var(--ink);
+
+  background: none;
+  border: 1px solid var(--rule-gold);
+  cursor: pointer;
+}
+
+.secondary:hover {
+  border-color: var(--ink);
+}
+
+/* Reserves its line whether or not there is a message, so confirming a copy
+   does not shift the buttons the reader is still aiming at. */
+.note {
+  flex-basis: 100%;
+  min-height: 19px;
+
+  font-family: var(--font-text);
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+.help {
+  font-family: var(--font-text);
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+/* --------------------------------------------------------------------------
+   Print.
+
+   One side of A4 is a hard constraint, not a target — a two-page brief is a
+   brief nobody reads. Everything below either removes something that cannot
+   be acted on from paper, or buys back the space that removal needs.
+
+   The masthead and the footer are hidden globally, in globals.css: they are
+   rendered by the root layout, which this module cannot reach.
+   -------------------------------------------------------------------------- */
+
+@media print {
+  .wrap {
+    gap: 0;
+    padding: 0;
+  }
+
+  /* The frame is the screen's way of saying "this is a document". On paper
+     the page already says it, and the border only costs margin. */
+  .sheet {
+    gap: 14px;
+    padding: 0;
+    border: 0;
+    background: none;
+  }
+
+  /* Nothing that can be clicked, and nothing that would print as an empty
+     control: the disclosure, the three actions, its status line, and the
+     on-screen instruction that tells the reader to tick things. */
+  .disclose,
+  .actions,
+  .help {
+    display: none;
+  }
+
+  /* The paper sheet is a statement, not a worksheet — an unticked row is an
+     offer nobody made, and eighteen of them is the difference between one
+     page and two. */
+  .row:not(.rowOn) {
+    display: none;
+  }
+
+  .rowOn {
+    border-bottom: 0;
+  }
+
+  .option {
+    min-height: 0;
+    padding: 1px 0;
+    font-size: 11pt;
+  }
+
+  /* The native checkbox prints unevenly across browsers and carries no
+     meaning here — every row that survives is ticked. A drawn mark is
+     predictable. */
+  .option input {
+    display: none;
+  }
+
+  .option span::before {
+    content: "\2713\00a0\00a0";
+    color: #000;
+  }
+
+  .printOnly {
+    display: block;
+  }
+
+  /* Type set for paper: points, black ink, and no letter-spacing tricks that
+     depend on a screen's rendering. */
+  .title {
+    font-size: 17pt;
+  }
+
+  .meta,
+  .brand {
+    font-size: 8pt;
+  }
+
+  /* The mark is artwork with its own ink, so it needs telling not to be
+     flattened by the browser's colour-saving pass — it is the thing that
+     makes the paper recognisable on a desk. */
+  .mark {
+    height: 13pt;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .situation p {
+    font-size: 11pt;
+  }
+
+  .questions li {
+    font-size: 10pt;
+  }
+
+  .blockHeading {
+    font-size: 8pt;
+  }
+
+  .tagline {
+    font-size: 9pt;
+  }
+}

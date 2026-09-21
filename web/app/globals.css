@@ -335,3 +335,71 @@ a:hover {
 /* Motion: none on the path to results. No scroll reveals, no fades, no
    skeleton shimmer, no page-load sequence. prefers-reduced-motion is satisfied
    trivially, because there is nothing to reduce. */
+
+/* --------------------------------------------------------------------------
+   Print.
+
+   One page in this product is designed to be printed — the sheet a family
+   carries to the funeral director (SPEC_frontend.md → The list a family
+   carries). Its own rules live in `brief.module.css`; what has to live here is
+   the shell, because the masthead and the footer are rendered by the root
+   layout and no page module can reach them.
+
+   These rules are global on purpose. Nothing else here is meant for paper, and
+   a printed page of this site should not carry navigation on any route — a
+   menu that cannot be clicked is ink spent on nothing.
+   -------------------------------------------------------------------------- */
+
+@media print {
+  /* Kamen's palette is warm and desaturated, which is right on a lit screen
+     and wrong on paper: every text token is a mid grey-brown, and the two
+     rules are near-transparent blacks that a printer renders as almost
+     nothing. Redefining the tokens once here fixes every component at the
+     same time — the alternative is a colour override in each module, which is
+     how a palette quietly acquires a second version. */
+  :root {
+    --ink: #000;
+    --ink-body: #000;
+    --ink-quiet: #000;
+    --text-secondary: #333;
+    --text-label: #333;
+    --text-muted: #333;
+    --gold: #000;
+    --rule-gold: #888;
+    --rule-quiet: #bbb;
+  }
+
+  html,
+  body {
+    background: #fff;
+    color: #000;
+  }
+
+  .shell {
+    display: block;
+    min-height: 0;
+  }
+
+  .shell > header,
+  .shell > footer {
+    display: none;
+  }
+
+  /* The measure is a screen concern; on paper the sheet's own margin is set
+     by @page below, and a centred 560px column inside it wastes a third of
+     the width. */
+  .page,
+  .pageWide {
+    max-width: none;
+    margin-inline: 0;
+    padding-inline: 0;
+  }
+
+  /* The contextual back link is navigation too, but it belongs to `PageBack`
+     rather than to the shell, so it hides itself — see PageBack.module.css. */
+}
+
+@page {
+  size: A4 portrait;
+  margin: 16mm 15mm;
+}

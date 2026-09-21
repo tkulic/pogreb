@@ -180,6 +180,70 @@
   color: var(--text-secondary);
 }
 
+/* --- the sheet a family carries ---
+
+   Sits between the shortlist and the others block, which is the page's one
+   genuinely prominent position that is not a card. Held clear of both by gold
+   hairlines top and bottom — the same cut line the shortlist entries use, so
+   the band reads as belonging to the list rather than as an advertisement
+   dropped into it.
+
+   **Nothing here is filled.** ContactActions.module.css holds this page to
+   exactly one solid dark mass per card, and it is the phone button. The
+   outlined action below is deliberately the second-loudest thing on screen
+   and must stay that way. */
+
+.brief {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 18px 0 20px;
+  border-top: 1px solid var(--rule-gold);
+  border-bottom: 1px solid var(--rule-gold);
+}
+
+.briefHeading {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  color: var(--ink);
+}
+
+.briefText {
+  font-family: var(--font-text);
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--ink-body);
+}
+
+/* Full width, because a button the width of its label reads as a footnote at
+   this position and the whole point of the move was weight. 48px matches the
+   card actions' minimum, so the two are the same size of gesture. */
+.briefAction {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  margin-top: 3px;
+  padding: 10px 16px;
+
+  font-family: var(--font-text);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  line-height: 1.25;
+  color: var(--ink);
+  text-decoration: none;
+
+  border: 1px solid var(--ink);
+}
+
+.briefAction:hover {
+  color: var(--ink);
+  background: var(--stone-inset);
+}
+
 /* --- desktop ---
 
    The list stays one column at every width, deliberately: cards in a grid

@@ -8,6 +8,7 @@ import { SectionHeading } from '@/components/SectionHeading';
 import { PageBack } from '@/components/PageBack';
 import {
   answersToQuery,
+  briefHref,
   flowHref,
   isUnanswered,
   parseAnswers,
@@ -216,6 +217,45 @@ export default async function ResultsPage({ params, searchParams }: PageProps) {
           </section>
         )
       )}
+
+      {/*
+        The sheet a family carries to the funeral director
+        (SPEC_frontend.md → The list a family carries).
+
+        **Directly under the shortlist, which is the only prominent position
+        this page has to give.** It was at the foot, under the guidance strip,
+        and that was too quiet: by then the reader has passed every provider
+        and the page has said everything it has to say. Here it lands at the
+        natural pause — the best matches have been read, nobody has been
+        called yet, and a list of what to ask for is exactly the next thought.
+
+        **Outlined, never filled**, and that is a rule rather than a
+        preference: `ContactActions.module.css` holds the page to *exactly one
+        solid dark mass per card, and it is the action the product exists to
+        produce*. A filled button here would be a second dark mass competing
+        with the call — which is also why this is not a floating bar. A
+        control pinned over the list would compete with the phone action on
+        every scroll position at once, cover a card on a short screen, and
+        reinstate the sticky furniture this layout deleted.
+      */}
+      <section className={styles.brief}>
+        <h2 className={styles.briefHeading}>Pripremite listu pogrebnih usluga</h2>
+        <p className={styles.briefText}>
+          Označite što vam treba i pokažite listu pogrebniku — tako ne morate
+          sve pamtiti niti objašnjavati ispočetka.
+        </p>
+        {/*
+          No `trebam`. The results page has no business deciding what the
+          family needs; the sheet derives its first ticks from the answers and
+          hands the rest to them.
+        */}
+        <Link
+          className={styles.briefAction}
+          href={briefHref({ grad: city.slug, answers })}
+        >
+          Pripremite razgovor s pogrebnikom
+        </Link>
+      </section>
 
       {others.length > 0 && (
         <section className={styles.block}>
