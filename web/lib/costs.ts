@@ -1,4 +1,4 @@
-import type { Nacin } from './ranking';
+import type { Nacin } from './listing';
 
 /**
  * What a funeral costs — the figures the estimate is built from.

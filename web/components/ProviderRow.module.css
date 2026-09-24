@@ -1,0 +1,82 @@
+/* A provider, as a row.
+
+   Kamen has no containers: entries are separated by rules cut on one tablet,
+   never boxed. At seventeen rows the rule is what makes this read as a list
+   rather than a stack — so it is `--rule-quiet` here rather than the gold cut
+   the two-block layout used, which at this density was seventeen gold lines. */
+
+.row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 0 7px;
+  border-bottom: 1px solid var(--rule-quiet);
+}
+
+.head {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  min-width: 0;
+}
+
+/* Truncates rather than wraps. 11 of 55 names exceed 24 characters
+   (`Piramida, pogrebne usluge i cvjećarna` is 37), and letting those wrap to a
+   second line would cost more than the tail of the name is worth — the address
+   below disambiguates, and the detail page carries the name in full. */
+.name {
+  flex-grow: 1;
+  min-width: 0;
+
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 15.5px;
+  letter-spacing: 0.03em;
+  line-height: 1.3;
+  color: var(--ink);
+  text-decoration: none;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.name:hover {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Operating address, and **without the city appended**. The `<h1>` already
+   names it, so `", Zagreb"` was eight characters on every row saying nothing;
+   the settlement stays where one is stored, which is the part that informs. */
+.address {
+  font-family: var(--font-text);
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+/* The third line: services on the left, actions on the right. */
+.foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+  padding-top: 1px;
+}
+
+@media (min-width: 1024px) {
+  .row {
+    padding: 11px 0 8px;
+  }
+
+  .name {
+    font-size: 16.5px;
+  }
+
+  .address {
+    font-size: 12.5px;
+  }
+}

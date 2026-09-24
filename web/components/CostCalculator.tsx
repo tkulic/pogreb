@@ -14,7 +14,7 @@ import {
   type ExtraKey,
   type Krematorij,
 } from '@/lib/costs';
-import type { Nacin } from '@/lib/ranking';
+import type { Nacin } from '@/lib/listing';
 import { flowHref } from '@/lib/answers';
 import styles from './CostCalculator.module.css';
 

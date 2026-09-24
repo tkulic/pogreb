@@ -76,24 +76,24 @@ const PROMISES: { title: string; body: string; excludes: string }[] = [
       'nije obećanje.',
   },
   {
-    title: 'Transparentno',
+    title: 'Ne rangiramo',
     body:
-      'Pravila po kojima sastavljamo popis objavljena su u cijelosti i ' +
-      'razumljivim jezikom, na stranici Kako rangiramo. Isti odgovori uvijek ' +
-      'daju isti popis, pa se poveznica koju pošaljete ukućanima njima ' +
-      'otvara jednako kao vama.',
+      'Pogrebnike na popisu ne ocjenjujemo i ne slažemo po nekakvoj ' +
+      'prednosti. Popis je abecedan, uvijek i svima jednak. Ako ste rekli ' +
+      'da vam treba kremiranje, popis se suzi na one koji je nude — to je ' +
+      'činjenica o njima, a ne naša ocjena.',
     excludes:
-      'Popis nije slučajan, ne rotira i ne ovisi o broju klikova. Ako ' +
-      'mislite da je neko pravilo pogrešno, možete ga pročitati i predložiti ' +
-      'promjenu — to je razlika između objavljenog pravila i ' +
-      '„našeg algoritma”.',
+      'Nema prvog mjesta, pa se ni ne može kupiti. Popis ne rotira, ne ' +
+      'ovisi o broju klikova i ne ovisi o tome koliko smo podataka o nekome ' +
+      'uspjeli prikupiti. Poveznica koju pošaljete ukućanima njima se ' +
+      'otvara jednako kao vama.',
   },
 ];
 
 /** What the promise does not cover. Stated by us, before anyone asks. */
 const LIMITS: string[] = [
   'Ne ocjenjujemo kvalitetu usluge. Nemamo ocjene ni recenzije jer ih nemamo od koga dobiti, a izmišljene bi bile gore od nikakvih.',
-  'Ne rangiramo po cijeni. Objavljujemo okvirne troškove pogreba jer smatramo da ih ljudi imaju pravo znati unaprijed, ali redoslijed pogrebnika o njima ne ovisi.',
+  'Ne uspoređujemo cijene pogrebnika. Objavljujemo okvirne troškove pogreba jer smatramo da ih ljudi imaju pravo znati unaprijed, ali to su općinske cijene, a ne ničiji cjenik.',
   'Ne znamo koji pogrebnik dolazi u koje mjesto. Područje koje navodimo je područje popisa, a ne tvrdnja da svaki pogrebnik s popisa radi u svakom naselju.',
   'Podatke unosimo ručno. Stoga oni mogu zastarjeti. Ako je neki broj, radno vrijeme ili usluga netočna, javite nam i ispravit ćemo — ispravak je pravi lijek za to.',
 ];
@@ -182,9 +182,6 @@ export default function PromisePage() {
       </p>
 
       <div className={styles.footerLinks}>
-        <Link href="/kako-rangiramo" className={styles.footerLink}>
-          Kako rangiramo
-        </Link>
         <Link href="/" className={styles.footerLink}>
           Pronađite pogrebnika
         </Link>

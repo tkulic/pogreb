@@ -1,0 +1,88 @@
+/* The filter panel.
+
+   Held by gold hairlines and tinted, so it reads as a drawer opened over the
+   list rather than as another band of page. It bleeds to the viewport edges
+   (negative inline margin against the shell's gutter) for the same reason. */
+
+.panel {
+  margin-inline: calc(var(--gutter) * -1);
+  padding: 5px var(--gutter) 7px;
+  background: color-mix(in srgb, var(--stone-inset) 55%, transparent);
+  border-block: 1px solid var(--rule-gold);
+}
+
+/* 36px rather than 44. The rows tile with no gaps and span the full column, so
+   each target is ~346 × 36 — several times the area a 44 × 44 square
+   guarantees. Recorded as a stated exception rather than left to look like
+   drift (SPEC_frontend.md → Accessibility). */
+.option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 36px;
+  cursor: pointer;
+
+  font-family: var(--font-text);
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.option:hover {
+  color: var(--gold-link-hover);
+}
+
+/* A real checkbox, restyled rather than replaced: it keeps the keyboard
+   behaviour, the label association and the announced state for free. */
+.box {
+  appearance: none;
+  -webkit-appearance: none;
+  flex-shrink: 0;
+  margin: 0;
+
+  width: 17px;
+  height: 17px;
+  border: 1px solid var(--gold);
+  background: transparent;
+  cursor: pointer;
+}
+
+.box:checked {
+  background-color: var(--ink);
+  border-color: var(--ink);
+  /* The tick is drawn rather than typed: a text glyph would inherit the
+     label's font and shift with it. */
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23dfc489' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><path d='m4.5 12.5 5 5 10-11'/></svg>");
+  background-size: 13px 13px;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.box:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+.label {
+  flex-grow: 1;
+  min-width: 0;
+}
+
+.option:has(.box:checked) .label {
+  font-weight: 500;
+}
+
+/* Tabular, so the column of counts stays a column as the numbers change. */
+.count {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+}
+
+/* Separates the three filters from the one control that orders rather than
+   narrows. The wording carries that distinction; this only reinforces it. */
+.divider {
+  display: block;
+  height: 1px;
+  margin: 3px 0;
+  background: color-mix(in srgb, var(--rule-gold) 70%, transparent);
+}

@@ -25,8 +25,8 @@ import styles from '@/app/landing.module.css';
  *
  * Two guardrails on that, both binding:
  *
- * - **The claim keeps one wording.** `coverageClaim` is still the only place it
- *   is written, and it still appears on this page exactly once — a promise
+ * - **The claim keeps one wording.** It is written in one place and appears on
+ *   this page exactly once — a promise
  *   worded one way here and another way on `/nase-obecanje` reads as the weaker
  *   of the two.
  * - **The `<h1>` still carries the search terms.** "Pogrebne usluge u Splitu i
@@ -171,11 +171,12 @@ export function Landing({ cities }: { cities: CityCoverage[] }) {
 
                 The completeness promise did not survive on this page at all:
                 it moved to the note below the list for a few hours, and the
-                owner then removed that note outright in the same session. It
-                still runs on every city page through `coverageClaim`, which is
-                the page where a reader can actually check it — so the landing
-                page now shows the reader the numbers and lets the city page
-                make the claim about them.
+                owner then removed that note outright in the same session. The city
+                page carried it under its heading until 2026-09-24, when that
+                line went too; the claim now sits in that page's transparency
+                footer, where a qualification belongs. So the landing page
+                shows the reader the numbers and the city page stands behind
+                them.
 
                 Numeral agreement goes through `providerCountLabel`; see the
                 rule there before touching this. A city with no providers yet

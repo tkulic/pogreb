@@ -2,39 +2,46 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { JsonLd } from '@/components/JsonLd';
-import { ProviderCard } from '@/components/ProviderCard';
-import { QuietProviderCard } from '@/components/QuietProviderCard';
-import { SectionHeading } from '@/components/SectionHeading';
-import { PageBack } from '@/components/PageBack';
-import {
-  answersToQuery,
-  briefHref,
-  flowHref,
-  isUnanswered,
-  parseAnswers,
-} from '@/lib/answers';
-import { CATCHMENT, NACIN_LABEL, SITUACIJA_LABEL, coverageClaim } from '@/lib/copy';
-import { getCityBySlug, getCityProviders } from '@/lib/queries';
-import { rankProviders } from '@/lib/ranking';
+import { CityListing } from '@/components/CityListing';
+import { CATCHMENT } from '@/lib/copy';
+import { getCities, getCityBySlug, getCityProviders } from '@/lib/queries';
+import { filtersAvailable, orderProviders } from '@/lib/listing';
 import { openGraph } from '@/lib/seo';
 import { breadcrumbs, providerItemList } from '@/lib/structured-data';
-import { guidanceFor } from '@/lib/guidance';
 import styles from './results.module.css';
 
 /**
- * The results page — the destination of the flow, and the page the whole
- * product exists to render.
+ * A city's providers — the page the whole product exists to render.
  *
- * **Dynamic, deliberately.** Two reasons, either of which would be enough: the
- * page reads live provider data, and the phone-selection rule depends on the
- * current time in Europe/Zagreb, so a cached render would hand a family the
- * office number at 3am.
+ * ## Statically rendered, and that is a search decision
+ *
+ * This page was `force-dynamic` until 2026-09-24, for two reasons that both
+ * expired. The phone-selection rule depends on the current time, which now
+ * runs in the browser (`ContactActions`); and the page read `searchParams` on
+ * the server for ranking and guidance, which opts a route into per-request
+ * rendering whatever `revalidate` says. **Removing ranking removed the last
+ * server-side use of the answers**, so everything answer-dependent moved into
+ * `CityListing` and the route became cacheable — the last uncached indexable
+ * URLs on the site, on the page that draws the most impressions of any
+ * (SPEC_frontend.md → Rendering).
+ *
+ * `generateStaticParams` is required, not optional: `revalidate` alone on a
+ * dynamic segment leaves the route served on demand, so the first crawl of
+ * each city still pays full origin cost.
+ *
+ * **What a crawler gets is the complete, unfiltered, alphabetical list** with
+ * its `ItemList` — the same thing a reader with no JavaScript gets. The filter
+ * narrows it afterwards, in the browser, on the reader's own instruction.
  */
-export const dynamic = 'force-dynamic';
+export const revalidate = 3600;
+
+export async function generateStaticParams() {
+  const cities = await getCities();
+  return cities.map((city) => ({ grad: city.slug }));
+}
 
 type PageProps = {
   params: Promise<{ grad: string }>;
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -57,15 +64,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   // okolici · Pogrebne usluge" — 68 characters, truncated in the SERP, and
   // stuffed. Trading a position that works for one that might is the wrong
   // bet at 27% query visibility, so the second phrasing goes in the
-  // description and the page's own first line instead. If those do not move
-  // it in ~4 weeks, this title is the next lever.
+  // description and the page's own first line instead. The 4-week test this
+  // records runs to ≈2026-10-12.
   const title = `Pogrebnici u ${locative}`;
   // Carries the two phrasings the title cannot: "pogrebna poduzeća" in the
   // nominative, and "pogrebne usluge" adjacent to the city name rather than
   // stranded after the template's separator. The completeness promise still
   // leads, because it is the reason to click this result over a directory.
   //
-  // The three nouns are what a `ProviderCard` actually renders — services,
+  // The three nouns are what a `ProviderRow` actually renders — services,
   // address, contact actions. "Radno vrijeme" was in an earlier draft and was
   // wrong: hours live on the provider detail page, one click further on. A
   // description that promises what the landed-on page does not show is a
@@ -85,233 +92,79 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-export default async function ResultsPage({ params, searchParams }: PageProps) {
+export default async function CityPage({ params }: PageProps) {
   const { grad } = await params;
-  const [city, rawSearch] = await Promise.all([getCityBySlug(grad), searchParams]);
+  const city = await getCityBySlug(grad);
 
   // Unknown city → 404, not a redirect to something plausible.
   if (!city) notFound();
 
-  const answers = parseAnswers(rawSearch);
-  const query = answersToQuery(answers);
-
-  // Back into the questions, with every answer still selected and this city
-  // already chosen — `/${query}` used to land on the *landing page*, because a
-  // query string with no `korak` is the landing page. Screen 3 is the right
-  // destination: it is the last question, and screen 2 is already answered by
-  // being here at all.
-  const questionsHref = flowHref({ answers, grad: city.slug, korak: 'potrebe' });
-
   const providers = await getCityProviders(city.id);
-  const { shortlist, others, noMatches } = rankProviders(providers, answers);
+  // Alphabetical, complete, unfiltered -- what a crawler and a reader with no
+  // JavaScript both get. `CityListing` re-orders and narrows it in the browser
+  // if the reader asks.
+  const listed = orderProviders(providers);
 
   const catchment = CATCHMENT[city.slug];
   const areaLabel = catchment?.label ?? city.name;
   // The form that follows "u". Stored, never derived — Croatian case endings
   // cannot be produced by string manipulation. See CATCHMENT.
   const areaLocative = catchment?.locative ?? city.name;
-  const guidance = guidanceFor(answers);
-
-  // Read back only what the user actually answered. `pokojnik` is deliberately
-  // absent here: it changes guidance, not the list, so echoing it in a strip
-  // about the list would misrepresent what it did.
-  const chosen = [
-    answers.situacija ? SITUACIJA_LABEL[answers.situacija] : null,
-    answers.nacin ? NACIN_LABEL[answers.nacin] : null,
-  ].filter((v): v is string => v !== null);
 
   return (
     <main className={`page ${styles.page}`}>
       {/*
         The list as the reader sees it, in the order the reader sees it —
-        shortlist first, then the rest, which is exactly what `rankProviders`
-        returned above. Handing a crawler a different order than the page shows
-        would contradict `/kako-rangiramo`, which is the page that promises the
-        ordering is explained rather than sold.
+        alphabetical, complete, unfiltered. Since 2026-09-24 that is trivially
+        true rather than something to keep in step: there is one order, nothing
+        is promoted, and the filter that narrows the page for a reader runs
+        after this markup is served.
       */}
-      <JsonLd
-        data={providerItemList(
-          [...shortlist, ...others].map((r) => r.provider),
-          city.slug,
-        )}
-      />
+      <JsonLd data={providerItemList(listed, city.slug)} />
       <JsonLd
         data={breadcrumbs([
           { name: 'Pogrebne usluge', path: '/' },
-          { name: `Pogrebnici u ${areaLocative}`, path: `/pogrebne-usluge/${city.slug}` },
+          // Matches the visible trail word for word. Structured data that
+          // describes a breadcrumb the page does not show is the state this
+          // page was in until 2026-09-24, and it is what the markup is for.
+          { name: areaLabel, path: `/pogrebne-usluge/${city.slug}` },
         ])}
       />
 
-      <PageBack href={questionsHref} label="← Pitanja" />
-
       {/*
-        The header is deliberately compact. Everything in it is orientation, and
-        orientation should cost one glance — the cards are the page. The
-        provider count that used to lead the context strip is gone: the section
-        headings already carry `· N`, so it was the same number said three
-        times, in the most prominent position on the page.
+        Everything that depends on the URL, in the browser — the header
+        included, since the count and the funnel are both client state. It
+        deliberately does not use `useSearchParams`: that would put a Suspense
+        fallback in the served HTML where the provider list should be. See
+        `CityListing`.
       */}
-      <header className={styles.header}>
-        {/*
-          Both lines sit inside the `<h1>`, so the heading names the city rather
-          than saying "Pogrebnici" on all seven pages. Rendered identically to
-          the two-element version it replaces — see `results.module.css`.
-        */}
-        <h1 className={styles.title}>
-          <span className={styles.titleName}>Pogrebnici</span>
-          <span className={styles.city}>{areaLabel}</span>
-        </h1>
-        {/*
-          The coverage claim, stated where the list is rather than only in the
-          footer. It is the reason to trust this page over a search result, and
-          it is count-free by decision — see `coverageClaim`. Neutrality
-          ("nitko nam ne plaća") stays in the footer so the two claims are not
-          said twice on one screen.
-        */}
-        <p className={styles.coverage}>{coverageClaim(areaLocative)}.</p>
-        {chosen.length > 0 && (
-          <p className={styles.chosen}>
-            <span className={styles.chosenLabel}>odabrali ste</span>{' '}
-            {chosen.join(' · ')}{' '}
-            <Link className={styles.change} href={questionsHref}>
-              promijenite
-            </Link>
-          </p>
-        )}
-        {isUnanswered(answers) && (
-          <p className={styles.chosen}>
-            <Link className={styles.change} href={questionsHref}>
-              Odgovorite na dva pitanja
-            </Link>{' '}
-            i predložit ćemo koga kontaktirati prvog.
-          </p>
-        )}
-      </header>
-
-      {/*
-        The shortlist block is omitted entirely when nothing matched — an empty
-        heading would be worse than no heading. The page itself is never empty.
-      */}
-      {noMatches ? (
-        <p className={styles.noMatches}>
-          Nijedan pogrebnik u {areaLocative} ne nudi{' '}
-          {answers.nacin ? NACIN_LABEL[answers.nacin].toLowerCase() : 'traženu uslugu'}.
-          Prikazujemo sve.
-        </p>
-      ) : (
-        shortlist.length > 0 && (
-          <section className={styles.block}>
-            <SectionHeading count={shortlist.length}>Najbolje odgovara</SectionHeading>
-            <ul className={styles.list}>
-              {shortlist.map((entry) => (
-                <ProviderCard
-                  key={entry.provider.id}
-                  provider={entry.provider}
-                  reason={entry.reason!}
-                  cityName={city.name}
-                  citySlug={city.slug}
-                  query={query}
-                />
-              ))}
-            </ul>
-          </section>
-        )
-      )}
-
-      {/*
-        The sheet a family carries to the funeral director
-        (SPEC_frontend.md → The list a family carries).
-
-        **Directly under the shortlist, which is the only prominent position
-        this page has to give.** It was at the foot, under the guidance strip,
-        and that was too quiet: by then the reader has passed every provider
-        and the page has said everything it has to say. Here it lands at the
-        natural pause — the best matches have been read, nobody has been
-        called yet, and a list of what to ask for is exactly the next thought.
-
-        **Outlined, never filled**, and that is a rule rather than a
-        preference: `ContactActions.module.css` holds the page to *exactly one
-        solid dark mass per card, and it is the action the product exists to
-        produce*. A filled button here would be a second dark mass competing
-        with the call — which is also why this is not a floating bar. A
-        control pinned over the list would compete with the phone action on
-        every scroll position at once, cover a card on a short screen, and
-        reinstate the sticky furniture this layout deleted.
-      */}
-      <section className={styles.brief}>
-        <h2 className={styles.briefHeading}>Pripremite listu pogrebnih usluga</h2>
-        <p className={styles.briefText}>
-          Označite što vam treba i pokažite listu pogrebniku — tako ne morate
-          sve pamtiti niti objašnjavati ispočetka.
-        </p>
-        {/*
-          No `trebam`. The results page has no business deciding what the
-          family needs; the sheet derives its first ticks from the answers and
-          hands the rest to them.
-        */}
-        <Link
-          className={styles.briefAction}
-          href={briefHref({ grad: city.slug, answers })}
-        >
-          Pripremite razgovor s pogrebnikom
-        </Link>
-      </section>
-
-      {others.length > 0 && (
-        <section className={styles.block}>
-          <SectionHeading count={others.length} quiet>
-            Ostali pogrebnici
-          </SectionHeading>
-          <ul className={styles.list}>
-            {others.map((entry) => (
-              <QuietProviderCard
-                key={entry.provider.id}
-                provider={entry.provider}
-                cityName={city.name}
-                citySlug={city.slug}
-                query={query}
-              />
-            ))}
-          </ul>
-        </section>
-      )}
-
-      {/*
-        Guidance sits *below* the providers, not above them.
-
-        It is genuinely useful and it is honestly sourced, but a family that
-        arrived here to find someone to call should meet the providers first.
-        Above the list it pushed the product's actual service into second place
-        and read as the page's main content; here it catches the reader who did
-        not find what they needed in the list.
-      */}
-      {guidance && (
-        <section className={styles.guidance} aria-label="Što učiniti prvo">
-          <h2 className={styles.guidanceHeading}>Što učiniti prvo</h2>
-          {guidance.lines.map((line) => (
-            <p key={line} className={styles.guidanceText}>
-              {line}
-            </p>
-          ))}
-          <Link className={styles.footerLink} href="/sto-uciniti-prvo">
-            Cijeli postupak
-          </Link>
-        </section>
-      )}
+      <CityListing
+        providers={listed}
+        citySlug={city.slug}
+        areaLabel={areaLabel}
+        areaLocative={areaLocative}
+        filtersAvailable={filtersAvailable(providers.length)}
+      />
 
       <footer className={styles.footer}>
-        {/* Coverage is claimed in the header now; the footer carries what
-            qualifies it — neutrality, the settlement list, and the rules. */}
-        <p>Nitko nam ne plaća za bolju poziciju i nitko nije izostavljen.</p>
-        <p className={styles.settlements}>
-          {/* No verb — see Landing: the accusative would be "okolicu". */}
-          {catchment ? `${areaLabel} — ${catchment.settlements.join(', ')}.` : null}
+        {/*
+          The coverage summary and the settlement list, as one sentence
+          (owner, 2026-09-24). They were two separate things in two places —
+          a claim under the heading and a bare list at the foot — and neither
+          said what the other was for. Together they read as what they are:
+          what this page shows, and where.
+
+          It is the footer rather than the header because it qualifies the
+          list; the heading and the rows come first.
+        */}
+        <p>
+          Prikazujemo registrirane pogrebnike u {areaLocative}
+          {catchment ? `: ${catchment.settlements.join(', ')}.` : '.'}
         </p>
-        {/* Both links also sit in the desktop rail; on a phone this footer is
-            the only route to them from the list. */}
-        <Link className={styles.footerLink} href="/kako-rangiramo">
-          Kako rangiramo
-        </Link>
+        <p>
+          Ne rangiramo pogrebnike. Popis je abecedni, nitko nam ne plaća za
+          poziciju i nitko nije izostavljen.
+        </p>
         <Link className={styles.footerLink} href="/nase-obecanje">
           Naš credo
         </Link>

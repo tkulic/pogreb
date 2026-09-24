@@ -9,8 +9,8 @@ import type { Metadata } from 'next';
  * `og:type` -- silently vanish from exactly the pages that bothered to write a
  * good title. The same shallow replacement drops the file-based `og:image` on
  * nested dynamic routes, which is how the city and provider pages ended up
- * previewing with no card image at all while `/kako-rangiramo`, which sets no
- * `openGraph`, had one.
+ * previewing with no card image at all while a prose page setting no
+ * `openGraph` of its own kept a complete set.
  *
  * So every page that wants a per-page title goes through here, and no page
  * hand-writes an `openGraph` object. The image is referenced by its stable

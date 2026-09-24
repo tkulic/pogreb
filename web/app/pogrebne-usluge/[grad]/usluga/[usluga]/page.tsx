@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { JsonLd } from '@/components/JsonLd';
-import { ProviderCard } from '@/components/ProviderCard';
+import { ProviderRow } from '@/components/ProviderRow';
 import { SectionHeading } from '@/components/SectionHeading';
 import { CATCHMENT, providerShare } from '@/lib/copy';
 import {
@@ -11,7 +11,7 @@ import {
   getServiceBySlug,
   getServicePageParams,
 } from '@/lib/queries';
-import { rankProviders } from '@/lib/ranking';
+import { orderProviders } from '@/lib/listing';
 import { openGraph } from '@/lib/seo';
 import { breadcrumbs, providerItemList } from '@/lib/structured-data';
 import styles from './service.module.css';
@@ -82,11 +82,10 @@ export default async function ServiceListingPage({ params }: PageProps) {
   // with nobody offering it.
   if (offering.length === 0) notFound();
 
-  // Ranked with no flow answers — this page is reached from search, not from
-  // the wizard, so there is no situacija to weight urgency by. Reason lines
-  // are still composed, because "why this one" is useful however you arrived.
-  const { shortlist, others } = rankProviders(offering, {});
-  const ranked = [...shortlist, ...others];
+  // Alphabetical, like every listing in the product since 2026-09-24. No
+  // filters here: the page is already one service wide, which is what the
+  // heading says, so narrowing it further would be filtering inside a filter.
+  const listed = orderProviders(offering);
 
   const catchment = CATCHMENT[city.slug];
   const areaLabel = catchment?.label ?? city.name;
@@ -97,7 +96,7 @@ export default async function ServiceListingPage({ params }: PageProps) {
     <main className={`page ${styles.page}`}>
       <JsonLd
         data={providerItemList(
-          ranked.map((r) => r.provider),
+          listed,
           city.slug,
         )}
       />
@@ -142,14 +141,12 @@ export default async function ServiceListingPage({ params }: PageProps) {
       </header>
 
       <section>
-        <SectionHeading count={ranked.length}>Pogrebnici</SectionHeading>
+        <SectionHeading count={listed.length}>Pogrebnici</SectionHeading>
         <ul className={styles.list}>
-          {ranked.map((entry) => (
-            <ProviderCard
-              key={entry.provider.id}
-              provider={entry.provider}
-              reason={entry.reason}
-              cityName={city.name}
+          {listed.map((provider) => (
+            <ProviderRow
+              key={provider.id}
+              provider={provider}
               citySlug={city.slug}
               query=""
             />
@@ -160,11 +157,9 @@ export default async function ServiceListingPage({ params }: PageProps) {
       <footer className={styles.footer}>
         <p>
           Prikazujemo sve registrirane pogrebnike u {areaLocative} koji nude ovu
-          uslugu. Nitko nam ne plaća za bolju poziciju.
+          uslugu, abecednim redom. Ne rangiramo ih i nitko nam ne plaća za
+          poziciju.
         </p>
-        <Link className={styles.footerLink} href="/kako-rangiramo">
-          Kako rangiramo
-        </Link>
         <Link className={styles.footerLink} href="/nase-obecanje">
           Naš credo
         </Link>

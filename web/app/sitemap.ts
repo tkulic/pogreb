@@ -34,7 +34,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'yearly',
       priority: 0.5,
     },
-    { url: `${SITE_ORIGIN}/kako-rangiramo`, changeFrequency: 'yearly', priority: 0.3 },
     { url: `${SITE_ORIGIN}/nase-obecanje`, changeFrequency: 'yearly', priority: 0.3 },
     // Omitted while PROVIDER_FORM_PUBLIC is false: a page kept out of the
     // navigation for a compliance reason must not be handed to a crawler

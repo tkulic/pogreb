@@ -20,8 +20,8 @@ import styles from './provider.module.css';
  * is what keeps it honest, which is why the note below the form exists and is
  * not optional.
  *
- * It is built to close half of a tracked gap — `/kako-rangiramo` and
- * `/nase-obecanje` both say "javite nam" with nowhere to write — but it does
+ * It is built to close half of a tracked gap — the prose pages said "javite
+ * nam" with nowhere to write — but it does
  * not close it yet. **Nothing links here** while `PROVIDER_FORM_PUBLIC` is
  * false: the form collects personal data and there is no `/privatnost` and no
  * named controller to put in it. The other half of the gap, a route for members
@@ -86,12 +86,13 @@ export default function ProviderPage() {
             </span>
           </li>
           <li className={styles.fact}>
-            <span className={styles.factTitle}>Pozicija se ne može kupiti</span>
+            <span className={styles.factTitle}>Ne rangiramo</span>
             <span className={styles.factBody}>
-              Redoslijed određuju objavljena pravila — dostupnost, potpunost
-              podataka i abeceda. Ne postoji iznos koji ga mijenja.{' '}
-              <Link href="/kako-rangiramo">Pravila su ovdje</Link>, i ako
-              mislite da su pogrešna, recite nam.
+              Popis je abecedan. Nema prvog mjesta, pa ga ni ne možete kupiti
+              niti izgubiti. Suzi se jedino kad obitelj kaže što joj treba, a
+              to ovisi o uslugama koje ste nam prijavili.{' '}
+              <Link href="/nase-obecanje">Što obećavamo</Link> — i ako mislimo
+              krivo o vašim uslugama, recite nam.
             </span>
           </li>
           <li className={styles.fact}>

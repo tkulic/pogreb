@@ -1,0 +1,93 @@
+/* The icon actions on a listing row.
+
+   Exactly one solid dark mass per row, and it is the call — the same rule
+   `ContactActions.module.css` holds the card to. At seventeen rows three
+   filled buttons would have been fifty-one dark blocks; the other two actions
+   are outlined, which is what keeps the phone the loudest thing in the list. */
+
+.wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* 42px rather than the 48px a labelled contact button gets. The label is gone,
+   so the box is square and the glyph is the whole control; 42 clears the 44px
+   guidance once the row's own padding is counted, and three of them fit beside
+   the services disclosure at 360px. */
+.call,
+.quiet {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  text-decoration: none;
+}
+
+.call {
+  width: 46px;
+  background: var(--ink);
+  color: var(--gold-on-ink);
+}
+
+.call:hover {
+  color: var(--gold-on-ink);
+  background: #2a261f;
+}
+
+.quiet {
+  border: 1px solid var(--rule-gold);
+  color: var(--gold-link);
+}
+
+.quiet:hover {
+  color: var(--gold-link-hover);
+  background: var(--stone-inset);
+}
+
+.call:focus-visible,
+.quiet:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* The revealed number. On mobile the dialer has already opened by the time
+   this paints; on desktop, where `tel:` usually does nothing visible, this is
+   the outcome of the click. */
+.revealed {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+
+  font-family: var(--font-text);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.revealed:hover {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Never colour-only: the word is rendered, so the claim survives a
+   colour-blind reader and a monochrome print. */
+.afterHours {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold-link);
+}

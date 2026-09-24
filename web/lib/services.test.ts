@@ -1,10 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  CANONICAL_SERVICE_ORDER,
-  REASON_ELIGIBLE_SERVICES,
-  SERVICE_SHORT_PHRASE,
-  canonicalIndex,
-} from './services';
+import { CANONICAL_SERVICE_ORDER, canonicalIndex } from './services';
 
 /**
  * The service vocabulary's internal invariants.
@@ -51,31 +46,17 @@ describe('service vocabulary', () => {
     expect(CANONICAL_SERVICE_ORDER).toEqual(PRODUCTION_SLUGS);
   });
 
-  it('gives every ordered service a short phrase', () => {
-    // The documented invariant: "Every slug in CANONICAL_SERVICE_ORDER has an
-    // entry, so a service becoming rare enough to surface can never render as
-    // a raw slug." It was documented and unenforced, which is why it broke.
-    const missing = CANONICAL_SERVICE_ORDER.filter(
-      (slug) => !(slug in SERVICE_SHORT_PHRASE),
-    );
-    expect(missing).toEqual([]);
-  });
-
-  it('has no short phrase for a service that is not ordered', () => {
-    // The reverse direction. An orphan here means a slug was renamed in one
-    // place and not the other.
-    const orphans = Object.keys(SERVICE_SHORT_PHRASE).filter(
-      (slug) => !CANONICAL_SERVICE_ORDER.includes(slug),
-    );
-    expect(orphans).toEqual([]);
-  });
-
-  it('only marks orderable services as reason-eligible', () => {
-    const unknown = [...REASON_ELIGIBLE_SERVICES].filter(
-      (slug) => !CANONICAL_SERVICE_ORDER.includes(slug),
-    );
-    expect(unknown).toEqual([]);
-  });
+  /*
+   * Three tests stood here until 2026-09-24 and went with what they guarded:
+   * `SERVICE_SHORT_PHRASE` and `REASON_ELIGIBLE_SERVICES` existed only to
+   * compose the gold reason line, and the reason line was removed with
+   * ranking (SPEC_frontend.md -> Order and filtering). They were good tests --
+   * one of them caught an invariant that had been documented and unenforced --
+   * but there is nothing left for them to hold.
+   *
+   * `CANONICAL_SERVICE_ORDER` is still load-bearing: it orders the services
+   * inside a row's disclosure and drives `/lista-pogrebnih-usluga`.
+   */
 
   it('lists each service exactly once', () => {
     expect(new Set(CANONICAL_SERVICE_ORDER).size).toBe(

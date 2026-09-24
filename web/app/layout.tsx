@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   /**
    * What every page's relative `alternates.canonical` is resolved against.
    *
-   * Without it Next emits the canonical exactly as written -- `/kako-rangiramo`
+   * Without it Next emits the canonical exactly as written -- `/nase-obecanje`
    * rather than an absolute URL. A relative canonical is legal and self-refers,
    * which is survivable, but it also means every host that can serve this app
    * declares itself canonical: the `.netlify.app` deploy domain, `www`, and the
@@ -24,9 +24,8 @@ export const metadata: Metadata = {
   /**
    * The fallback description, shown for any page that does not set its own.
    *
-   * It says "Popis", not "Svi": the completeness promise belongs to
-   * `coverageClaim` in lib/copy.ts, on the city pages where a reader can
-   * actually check it. Naming the country here is a statement of what the
+   * It says "Popis", not "Svi": the completeness promise belongs to the city
+   * pages' transparency footer, where a reader can actually check it. Naming the country here is a statement of what the
    * product is, not a claim to hold every provider in it -- which is also why
    * this line does not need editing each time a city is added.
    */

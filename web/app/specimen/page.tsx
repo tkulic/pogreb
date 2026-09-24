@@ -27,21 +27,23 @@ const TEST_LINE = 'Pogrebne usluge Čagalj · Žrnovnica · Đakovo · Šibenik'
 
 const COLOURS: { token: string; ratio: string; use: string }[] = [
   { token: '--ink', ratio: '13.64:1', use: 'names, headings, call-button fill' },
-  { token: '--ink-quiet', ratio: '9.53:1', use: 'names in the others block' },
+  { token: '--ink-quiet', ratio: '9.53:1', use: 'quieter names' },
   { token: '--ink-body', ratio: '8.31:1', use: 'service lists, body copy' },
   { token: '--text-secondary', ratio: '4.52:1', use: 'addresses, footer' },
   { token: '--text-label', ratio: '4.52:1', use: 'uppercase tracked labels' },
   { token: '--text-muted', ratio: '4.52:1', use: 'helper lines' },
-  { token: '--gold', ratio: '4.79:1', use: 'rules, reason line, 24-hour mark' },
+  { token: '--gold', ratio: '4.79:1', use: 'rules, the 0–24 mark, checkbox borders' },
   { token: '--gold-link', ratio: '4.79:1', use: 'links' },
 ];
 
 const SCALE: { role: string; className: keyof typeof styles }[] = [
   { role: 'page title · Spectral SC 600 · 22px · .08em', className: 'pageTitle' },
   { role: 'city line · Spectral SC 400 · 14.5px · .13em', className: 'cityLine' },
-  { role: 'card name · Spectral SC 600 · 17px · .05em', className: 'cardName' },
-  { role: 'card name, others · Spectral SC 400 · 14px · .05em', className: 'cardNameQuiet' },
-  { role: 'reason line · Spectral SC 400 · 13px · .04em', className: 'reasonLine' },
+  { role: 'row name · Spectral SC 600 · 15.5px · .03em', className: 'cardName' },
+  { role: 'detail name · Spectral SC 400 · 14px · .05em', className: 'cardNameQuiet' },
+  // Kept as a type-scale sample after the reason line itself was removed on
+  // 2026-09-24: the size and tracking still run on the detail page.
+  { role: 'gold annotation · Spectral SC 400 · 13px · .04em', className: 'reasonLine' },
   { role: 'uppercase label · Archivo 400 · 10.5px · .17em', className: 'label' },
   { role: 'context value · Archivo 400 · 14.5px', className: 'contextValue' },
   { role: 'address · Archivo 400 · 13px', className: 'address' },
@@ -113,22 +115,23 @@ export default function SpecimenPage() {
 
       <section className={styles.section}>
         <h2 className={styles.h2}>Section headings</h2>
-        <SectionHeading count={4}>Najbolje odgovara</SectionHeading>
-        <SectionHeading count={3} quiet>
-          Ostali pogrebnici
+        <SectionHeading count={13}>Pogrebnici</SectionHeading>
+        <SectionHeading count={5} quiet>
+          Nude kremiranje
         </SectionHeading>
       </section>
 
       <section className={styles.section}>
         <h2 className={styles.h2}>24-hour mark</h2>
         <p className={styles.note}>
-          Never colour-only — both variants carry the words. Filled uses{' '}
-          <code>--stone</code> on <code>--gold</code> (4.79:1);{' '}
-          <code>--gold-on-ink</code> would measure 3.55 here and fail.
+          Never colour-only — it carries the words. Uses <code>--stone</code> on{' '}
+          <code>--gold</code> (4.79:1); <code>--gold-on-ink</code> would measure
+          3.55 here and fail. One variant since 2026-09-24: the filled/outlined
+          pair separated the shortlist from the others block, and both went with
+          ranking.
         </p>
         <div className={styles.row}>
-          <AvailabilityMark variant="filled" />
-          <AvailabilityMark variant="outlined" />
+          <AvailabilityMark />
         </div>
       </section>
 

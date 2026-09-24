@@ -1,12 +1,15 @@
 import styles from './SectionHeading.module.css';
 
 /**
- * A section heading with its count — `NAJBOLJE ODGOVARA · 4`.
+ * A section heading with its count — `POGREBNICI · 13`.
  *
  * The count is required, not optional. SPEC_frontend.md → Guarantees: `N` is
- * stated in both headings so the reader can see the two blocks partition the
- * set rather than subset it. A heading without its count would quietly break
- * that guarantee, so the prop is not nullable.
+ * stated so the reader can see that what is on screen is the whole of what the
+ * heading claims. A heading without its count would quietly break that
+ * guarantee, so the prop is not nullable.
+ *
+ * Since 2026-09-24 only the service listings use it: the city page states its
+ * count in the header instead, beside the funnel that changes it.
  *
  * Renders an `<h2>`: one `<h1>` per page, section headings are `<h2>`.
  */

@@ -1,4 +1,4 @@
-import type { Answers, Nacin, Situacija } from './ranking';
+import { FILTERS, type Answers, type Filter, type Nacin, type Situacija } from './listing';
 
 /**
  * The flow's answers, as they live in the URL.
@@ -147,7 +147,68 @@ export function flowHref(opts: {
  * two spellings of the same page for search engines to reconcile.
  */
 export function resultsHref(grad: string, answers: FlowAnswers): string {
-  return `/pogrebne-usluge/${grad}${answersToQuery(answers)}`;
+  const params = new URLSearchParams();
+  // `situacija` and `pokojnik` survive because the guidance strip reads them.
+  if (answers.situacija) params.set('situacija', answers.situacija);
+  if (answers.pokojnik) params.set('pokojnik', answers.pokojnik);
+  // **`nacin` is translated, not carried.** On a city page the list is
+  // narrowed by `filtri`, so shipping `nacin` as well would put the same
+  // instruction in the URL twice and let the two disagree. `ukop` translates
+  // to nothing at all -- every provider does burials.
+  if (answers.nacin === 'kremiranje') params.set('filtri', 'kremiranje');
+  const qs = params.toString();
+  return `/pogrebne-usluge/${grad}${qs ? `?${qs}` : ''}`;
+}
+
+/* --------------------------------------------------------------------------
+   City-page filters and order.
+
+   Separate from `FlowAnswers` on purpose. The flow's answers describe the
+   family's situation and drive the guidance strip; these describe what the
+   reader has asked this one list to do. Keeping them apart is what let
+   `nacin` stop being a filter when ranking was removed without disturbing the
+   guidance that still depends on it.
+   -------------------------------------------------------------------------- */
+
+/**
+ * The active filters, read out of `?filtri=`.
+ *
+ * Unknown values are dropped rather than erroring, like every other parser
+ * here: a hand-edited or stale URL must still produce a page. Order is
+ * normalised to `FILTERS` order so the same selection always spells the same
+ * URL, whichever order the reader ticked them in.
+ */
+export function parseFiltri(
+  value: string | string[] | undefined,
+  available = true,
+): Filter[] {
+  // **Below the size threshold a city ignores filters entirely.** Without
+  // this, a link carrying `?filtri=kremiranje` opened on Zadar -- which has no
+  // cremation provider at all -- renders an empty page, and no amount of
+  // chip logic can prevent that because the state arrives by URL rather than
+  // by click. Ignoring it is safe precisely where it applies: at six providers
+  // or fewer the whole list is on one screen with nothing hidden.
+  if (!available) return [];
+  const v = one(value);
+  if (!v) return [];
+  const picked = new Set(v.split(','));
+  return FILTERS.filter((f) => picked.has(f));
+}
+
+/** Serialise filters back, in a fixed order. `''` when nothing is active. */
+export function filtriToQuery(filters: readonly Filter[]): string {
+  const ordered = FILTERS.filter((f) => filters.includes(f));
+  return ordered.join(',');
+}
+
+/**
+ * Whether the reader asked for round-the-clock providers first.
+ *
+ * Absent means alphabetical, which is the default and the only order we ever
+ * choose ourselves.
+ */
+export function parsePoredak(value: string | string[] | undefined): boolean {
+  return one(value) === 'dostupnost';
 }
 
 /** True when the user answered nothing — the bypass path, or a bare city URL. */

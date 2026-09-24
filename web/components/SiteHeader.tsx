@@ -72,7 +72,14 @@ export function SiteHeader() {
       <div className={styles.inner}>
         <Link href="/" className={styles.brand}>
           <Logo className={styles.mark} />
-          <span className={styles.wordmark}>Pogrebne usluge</span>
+          {/*
+            The domain, not the category (owner, 2026-09-24). "Pogrebne usluge"
+            in the masthead described what the site is about; on a directory of
+            funeral services that is the one thing every page already says, so
+            it read as a label rather than as a name. `pogreb.net` is what a
+            reader repeats to a relative.
+          */}
+          <span className={styles.wordmark}>pogreb.net</span>
         </Link>
 
         {/* Desktop: the menu inline, groups behind their own disclosure. */}

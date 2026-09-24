@@ -1,4 +1,4 @@
-import type { Nacin, Situacija } from './ranking';
+import type { Nacin, Situacija } from './listing';
 import type { Pokojnik } from './answers';
 
 /**
@@ -24,12 +24,13 @@ export const SITUACIJA_LABEL: Record<Situacija, string> = {
  * with a different pace — the whole flow is built around someone who has hours
  * rather than days — and it is not yet clear it belongs here at all. Hiding the
  * tile is the reversible half of that decision: the value still parses from a
- * URL, still ranks, and still drives copy, so an old shared link keeps working
- * and turning it back on is one entry in this array.
+ * URL and still drives copy, so an old shared link keeps working and turning it
+ * back on is one entry in this array.
  *
  * If it is ever dropped for good, the things to remove with it are the
- * `planiranje` entry in `Situacija`, its label below, and the ranking note in
- * `lib/ranking.ts` about urgency applying only to `preminuo`.
+ * `planiranje` entry in `Situacija` and its label below. There is no longer a
+ * ranking note to remove with them: `situacija` stopped affecting the list at
+ * all when ranking was removed on 2026-09-24, and now drives guidance only.
  */
 export const VISIBLE_SITUACIJA: readonly Situacija[] = ['preminuo', 'posljednji-dani'];
 
@@ -77,9 +78,10 @@ export const PHONE_TYPE_LABEL: Record<string, string> = {
  *
  * **A city with no entry here still renders**, because every consumer falls
  * back to `city.name` — but the fallback produces broken Croatian in the one
- * place it matters most: `coverageClaim` would read "u Zagreb" rather than "u
- * Zagrebu". Adding a city to `cities` without adding it here is therefore a
- * visible defect, not a graceful degradation.
+ * place it matters most: a city page's heading would read "Pogrebnici u
+ * Zagreb" rather than "u Zagrebu", and so would its title and description.
+ * Adding a city to `cities` without adding it here is therefore a visible
+ * defect, not a graceful degradation.
  */
 export const CATCHMENT: Record<
   string,
@@ -235,53 +237,24 @@ export const CATCHMENT: Record<
 };
 
 /**
- * The product's headline claim, in the one wording the data actually supports:
- * every entity registered under NKD 96.03 in the pilot city, none omitted.
+ * `coverageClaim` stood here and was deleted on 2026-09-24, with the line it
+ * produced. It rendered "Svi registrirani pogrebnici u {locative} — pogrebna
+ * poduzeća i obrti" under the city page's heading, and the project owner
+ * removed it because the `<h1>` immediately above had just given the locative:
+ * the sentence spent two lines of the most valuable space on the page
+ * repeating the city.
  *
- * **Deliberately count-free.** Stating "svih sedam" made the strongest fact we
- * have — that nobody is missing — read as a small number, and a visitor who
- * has never heard of us reads "seven" as the size of our database rather than
- * the size of the market. Coverage is the claim; the count is a detail.
+ * **The completeness claim itself did not go.** It moved to the transparency
+ * footer, which is where a qualification belongs — "Ne rangiramo pogrebnike.
+ * Popis je abecedni, nitko nam ne plaća za poziciju i nitko nije izostavljen."
+ * The settlement list moved the other way, up beside the count it qualifies.
  *
- * **As of 2026-09-07 that rule is absolute in prose:** no exact provider count
- * appears in customer-facing sentences anywhere. The service page's
- * "šest od sedam" and the counts in `/sto-uciniti-prvo` are gone, replaced by
- * `providerShare`. That still holds — but "in prose" is now load-bearing, and
- * there are **two** positions outside it where a bare figure stands in a
- * column or a heading rather than a sentence: `· N` on a results section
- * heading, which counts the cards below it rather than the market, and
- * `providerCountLabel` in the landing page's city list, restored by the owner
- * on 2026-09-14.
- *
- * Centralised because it appears on the results header, the service listings
- * and the provider pages. If it is ever hedged or widened it has to change in
- * all of them at once — a claim stated absolutely on one page and hedged on
- * the next reads as the hedge. The landing page uses `nationalCoverageClaim`
- * below, for the reason given there.
- *
- * Two limits carried over from CATCHMENT, both still binding: the claim is
- * about **the pilot area, not about any individual provider's service radius**,
- * and it says "registrirani" rather than "svi" because that is what we can
- * stand behind — a provider operating without a registry entry we could not
- * find is exactly the case the qualifier is honest about.
- *
- * **The trailing apposition was added 2026-09-14, from search data.** The
- * first Search Console read showed the market types *"pogrebno poduzeće
- * {grad}"* at least as often as *"pogrebne usluge {grad}"*, and the Zagreb
- * variants of it ranked 55–64 — page six — because the phrase appeared
- * nowhere on a city page. This is not a keyword bolted onto a sentence: it is
- * the **more precise** name for what the list contains, since `entity_type` is
- * `doo | jdoo | dd` (trgovačka društva — *poduzeća*) or `obrt` (a sole trader,
- * which is not a *poduzeće* and should not be called one). Saying "pogrebnici"
- * alone was the loose word.
- *
- * So it stays only while it stays true. If the data ever holds an entity that
- * is neither, this sentence is wrong on the most prominent line of the page and
- * has to change with it.
+ * If a coverage sentence is ever wanted back, the two constraints it carried
+ * are worth keeping: it was about **the pilot area, not any provider's service
+ * radius**, and it said "registrirani" rather than "svi" because a provider
+ * operating without a findable registry entry is exactly the case that
+ * qualifier is honest about.
  */
-export function coverageClaim(areaLocative: string): string {
-  return `Svi registrirani pogrebnici u ${areaLocative} — pogrebna poduzeća i obrti`;
-}
 
 /**
  * `nationalCoverageClaim`, `cityCount`, `numberWord` and `NUMBER_WORD` stood

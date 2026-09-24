@@ -49,7 +49,8 @@ export function SiteFooter() {
         <div className={styles.brandCol}>
           <Link href="/" className={styles.brand}>
             <Logo className={styles.mark} />
-            <span className={styles.wordmark}>Pogrebne usluge</span>
+            {/* Matches the masthead: the domain, not the category. */}
+            <span className={styles.wordmark}>pogreb.net</span>
           </Link>
           <p className={styles.claim}>
             Besplatan popis registriranih pogrebnika, bez prijave i bez

@@ -151,9 +151,10 @@ export function funeralHome(provider: Entity, city: City, servicesOffered: strin
 /**
  * The provider list on a city page, in the order the page renders it.
  *
- * Order is the point: this page's whole claim is that the ranking is explained
- * and not sold (`/kako-rangiramo`), so the list a crawler reads must be the
- * list a reader sees.
+ * **Alphabetical, complete and unfiltered**, which since 2026-09-24 is the only
+ * order there is: nothing is ranked, so a crawler and a reader cannot be shown
+ * different lists even by accident. The filter that narrows the page for a
+ * reader runs in the browser, after this markup is served.
  */
 export function providerItemList(
   providers: readonly { name: string; slug: string }[],

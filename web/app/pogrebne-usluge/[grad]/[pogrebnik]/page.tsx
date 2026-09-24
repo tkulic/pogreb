@@ -178,7 +178,7 @@ export default async function ProviderPage({ params }: PageProps) {
       <div className={styles.head}>
         <div className={styles.nameRow}>
           <h1 className={styles.name}>{provider.name}</h1>
-          {provider.available_24_7 && <AvailabilityMark variant="filled" />}
+          {provider.available_24_7 && <AvailabilityMark long />}
         </div>
 
         {/*

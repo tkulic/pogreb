@@ -1,0 +1,63 @@
+/* The funnel. Outlined when shut, filled while open — the same one-dark-mass
+   logic the rows use, except that here the fill means "this is on" rather than
+   "this is the primary action". */
+
+.toggle {
+  position: relative;
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+
+  background: transparent;
+  border: 1px solid var(--rule-gold);
+  color: var(--gold-link);
+  cursor: pointer;
+}
+
+.toggle:hover {
+  background: var(--stone-inset);
+}
+
+.toggle:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+.open {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--gold-on-ink);
+}
+
+.open:hover {
+  background: #2a261f;
+}
+
+/* How many controls are on, for a reader who has scrolled past the panel. A
+   number rather than a dot: "the list is narrowed" is less useful than "by two
+   things", and it costs the same space. */
+.count {
+  position: absolute;
+  top: -7px;
+  right: -7px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+
+  font-family: var(--font-text);
+  font-size: 10px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+
+  color: var(--stone);
+  background: var(--gold);
+}

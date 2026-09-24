@@ -1,0 +1,215 @@
+/* The body of a city page: header, filter panel, list, sheet, guidance.
+
+   It carries the header too, because the count and the funnel are client
+   state — see the component. The page shell keeps only the transparency
+   footer, which now carries the coverage summary and the settlement list as
+   one sentence. */
+
+/* --- header ---
+
+   Orientation only, and it should cost one glance. The rows are the page. */
+
+.header {
+  display: flex;
+  flex-direction: column;
+  /* Matches the page's top padding, so the back link above has equal space on
+     both sides. See BackHome.module.css. */
+  gap: 6px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--rule-gold);
+}
+
+.titleRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* Two lines in one `<h1>`.
+
+   This is a search decision as much as a type one. `/pogrebne-usluge/{grad}`
+   is the page that has to rank for "pogrebne usluge {grad}", and while the
+   city sat in a sibling element the strongest on-page signal read only
+   "Pogrebnici" — true of all nine pages at once. */
+.title {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+/* The first line of the heading: the word and the count that belongs to it. */
+.titleLine {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  min-width: 0;
+}
+
+/* Tabular, so the heading does not shift as the funnel changes the number. */
+.count {
+  flex-shrink: 0;
+  font-family: var(--font-text);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+}
+
+.titleName {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 21px;
+  letter-spacing: 0.06em;
+  line-height: 1.25;
+  color: var(--ink);
+}
+
+.city {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  line-height: 1.4;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+/* --- what the reader picked, read back --- */
+
+.chosen {
+  font-family: var(--font-text);
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--text-secondary);
+}
+
+.chosenLabel {
+  font-size: 10.5px;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+  color: var(--text-label);
+}
+
+.change {
+  color: var(--gold-link);
+}
+
+/* Reachable only by URL — see the component. The page still has to say
+   something, and it has to offer the way out. */
+.empty {
+  font-family: var(--font-text);
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--ink-body);
+  padding-block: 6px 10px;
+}
+
+/* --- the list --- */
+
+.list {
+  display: flex;
+  flex-direction: column;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* --- the sheet a family carries ---
+
+   After the list (owner, 2026-09-24): the reader has scanned, nobody has been
+   called yet, and a list of what to ask for is the next thought. Held by gold
+   hairlines — the same cut the header uses — so it reads as part of the page
+   rather than an advertisement dropped into it.
+
+   **Nothing here is filled.** RowActions.module.css holds the page to exactly
+   one solid dark mass per row, and it is the call. */
+
+.brief {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 15px 0 16px;
+  border-bottom: 1px solid var(--rule-gold);
+}
+
+.briefText {
+  flex-grow: 1;
+  font-family: var(--font-text);
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--ink-body);
+}
+
+.briefAction {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  min-height: 42px;
+  padding: 0 15px;
+
+  font-family: var(--font-text);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ink);
+  text-decoration: none;
+
+  border: 1px solid var(--ink);
+}
+
+.briefAction:hover {
+  color: var(--ink);
+  background: var(--stone-inset);
+}
+
+/* --- guidance ---
+
+   Below the providers, not above them. It is useful and honestly sourced, but
+   a family that came here to find someone to call should meet the providers
+   first. Quiet enough to be a note attached to the page rather than the page. */
+
+.guidance {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 0 4px;
+  border-top: 1px solid var(--rule-quiet);
+}
+
+.guidanceHeading {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-label);
+}
+
+.guidanceText {
+  font-family: var(--font-text);
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--text-secondary);
+}
+
+.footerLink {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--gold-link);
+}
+
+@media (min-width: 1024px) {
+  .header {
+    padding-bottom: 14px;
+  }
+
+  .titleName {
+    font-size: 25px;
+  }
+
+  .count {
+    font-size: 13px;
+  }
+}
