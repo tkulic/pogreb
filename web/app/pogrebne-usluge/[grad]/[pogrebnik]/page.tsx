@@ -1,29 +1,60 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
-import { ActionLink } from '@/components/ActionLink';
 import { AvailabilityMark } from '@/components/AvailabilityMark';
 import { DetailViewLogger } from '@/components/DetailViewLogger';
 import { EmailAction } from '@/components/EmailAction';
 import { ExternalLink } from '@/components/ExternalLink';
+import { FlowBackLink } from '@/components/FlowBackLink';
 import { JsonLd } from '@/components/JsonLd';
-import { PhoneIcon } from '@/components/PhoneIcon';
+import { OpenStatus } from '@/components/OpenStatus';
 import { PhoneList } from '@/components/PhoneList';
-import { answersToQuery, parseAnswers } from '@/lib/answers';
+import { AfterHoursNote, PrimaryCallAction } from '@/components/PrimaryCallAction';
 import { CATCHMENT } from '@/lib/copy';
-import { openState, openStateLabel, selectDisplayPhone } from '@/lib/hours';
-import { getCityBySlug, getProviderBySlug } from '@/lib/queries';
+import { getCityBySlug, getProviderBySlug, getProviderPageParams } from '@/lib/queries';
 import { openGraph } from '@/lib/seo';
 import { breadcrumbs, funeralHome } from '@/lib/structured-data';
 import type { WeekDay, WorkingHoursDay } from '@/lib/database.types';
 import styles from './detail.module.css';
 
-/** Time-dependent (open-now, after-hours phone) and reads live data. */
-export const dynamic = 'force-dynamic';
+/**
+ * **Statically rendered, revalidated hourly.** This page used to be
+ * `force-dynamic` for two reasons, and neither survived inspection:
+ *
+ * 1. *Time-dependent* — the open-now badge and the dežurni-phone rule. Both
+ *    are pure functions of the current time over static columns, so they moved
+ *    into `OpenStatus` and `PrimaryCallAction` and now run in the browser.
+ *    That is **more** accurate, not less: a per-request render is right for the
+ *    instant it ran, a client computation is right for the moment the reader is
+ *    looking.
+ * 2. *Reads live data* — true, but that is what `revalidate` is for. Provider
+ *    rows change when a migration runs, which is not per request.
+ *
+ * The cost of getting this wrong was the whole crawl. 55 uncacheable pages
+ * meant every Googlebot fetch ran a function and hit the database; under
+ * concurrency TTFB went from 0.8s to 4.4s, Google read that as a host that
+ * could not take the load, and rescheduled — leaving 88 URLs in *Discovered –
+ * currently not indexed* (`.seo/ANALYSIS_2026-09-24.md` → ROOT CAUSE).
+ *
+ * `dynamicParams` stays at its default of `true`, so a provider added to the
+ * database renders on demand and is cached from then on, without a rebuild.
+ */
+export const revalidate = 3600;
+
+/**
+ * All 55 provider pages, prerendered at build.
+ *
+ * `revalidate` alone was not enough: a dynamic segment with no params to build
+ * is rendered on demand, so the first crawl of each page would still have paid
+ * full origin cost. Enumerating them means Googlebot meets a file on the CDN.
+ */
+export async function generateStaticParams() {
+  return getProviderPageParams();
+}
 
 type PageProps = {
   params: Promise<{ grad: string; pogrebnik: string }>;
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
 const DAYS: { key: WeekDay; label: string }[] = [
@@ -72,21 +103,20 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-export default async function ProviderPage({ params, searchParams }: PageProps) {
+export default async function ProviderPage({ params }: PageProps) {
   const { grad, pogrebnik } = await params;
-  const [city, rawSearch] = await Promise.all([getCityBySlug(grad), searchParams]);
+  const city = await getCityBySlug(grad);
   if (!city) notFound();
 
   const provider = await getProviderBySlug(city.id, pogrebnik);
   // Unknown slug → 404, never a redirect to the city page.
   if (!provider) notFound();
 
-  const answers = parseAnswers(rawSearch);
-  const query = answersToQuery(answers);
-
-  const selected = selectDisplayPhone(provider);
-  const status = openStateLabel(openState(provider));
   const phones = provider.phones ?? [];
+  // Whether there is a phone block at all is time-independent — the selection
+  // rule returns null only for a provider holding no numbers. The *which* and
+  // the after-hours note are decided in the browser; see PrimaryCallAction.
+  const hasPhone = phones.length > 0;
 
   const hourRows = provider.working_hours
     ? DAYS.map((d) => ({ ...d, value: dayLabel(provider.working_hours?.[d.key]) })).filter(
@@ -132,10 +162,18 @@ export default async function ProviderPage({ params, searchParams }: PageProps) 
       <DetailViewLogger entityId={provider.id} />
 
       {/* Back to the results with the answers intact, so returning does not
-          restart the flow. */}
-      <Link href={`/pogrebne-usluge/${city.slug}${query}`} className={styles.back}>
-        ← Svi pogrebnici
-      </Link>
+          restart the flow. Read in the browser rather than from `searchParams`,
+          which would make this whole route per-request — see `revalidate`
+          above and FlowBackLink. */}
+      <Suspense
+        fallback={
+          <Link href={`/pogrebne-usluge/${city.slug}`} className={styles.back}>
+            ← Svi pogrebnici
+          </Link>
+        }
+      >
+        <FlowBackLink citySlug={city.slug} className={styles.back} />
+      </Suspense>
 
       <div className={styles.head}>
         <div className={styles.nameRow}>
@@ -156,18 +194,11 @@ export default async function ProviderPage({ params, searchParams }: PageProps) 
 
           The row collapses to one column on a phone — see `detail.module.css`.
         */}
-        {(selected || provider.email) && (
+        {(hasPhone || provider.email) && (
           <>
             <div className={styles.actions}>
-              {selected && (
-                <ActionLink
-                  variant="primary"
-                  className={styles.action}
-                  href={`tel:${selected.phone.number}`}
-                >
-                  <PhoneIcon />
-                  Nazovite
-                </ActionLink>
+              {hasPhone && (
+                <PrimaryCallAction provider={provider} className={styles.action} />
               )}
               {provider.email && (
                 <EmailAction
@@ -177,9 +208,7 @@ export default async function ProviderPage({ params, searchParams }: PageProps) 
                 />
               )}
             </div>
-            {selected?.isAfterHours && (
-              <span className={styles.afterHours}>dežurni telefon</span>
-            )}
+            <AfterHoursNote provider={provider} className={styles.afterHours} />
           </>
         )}
 
@@ -189,8 +218,10 @@ export default async function ProviderPage({ params, searchParams }: PageProps) 
           </p>
         )}
 
-        {/* Absent when we hold no hours at all — no open/closed claim anywhere. */}
-        {status && <p className={styles.status}>{status}</p>}
+        {/* Absent when we hold no hours at all — no open/closed claim anywhere.
+            Computed in the browser so a cached page cannot claim "otvoreno" at
+            midnight; see OpenStatus. */}
+        <OpenStatus provider={provider} className={styles.status} />
       </div>
 
       {/*

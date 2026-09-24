@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { AvailabilityMark } from './AvailabilityMark';
 import { ContactActions } from './ContactActions';
-import { selectDisplayPhone } from '@/lib/hours';
 import type { Provider } from '@/lib/queries';
 import styles from './ProviderCard.module.css';
 
@@ -37,7 +36,6 @@ export function ProviderCard({
   citySlug,
   query,
 }: ProviderCardProps) {
-  const selected = selectDisplayPhone(provider);
   const detailHref = `/pogrebne-usluge/${citySlug}/${provider.slug}${query}`;
 
   return (
@@ -63,10 +61,15 @@ export function ProviderCard({
         </p>
       )}
 
+      {/*
+        The raw fields go in, not a chosen number: the dežurni rule depends on
+        the current time, so it runs in the browser. On these statically
+        prerendered service listings a server-side choice would have frozen at
+        build time — see ContactActions.
+      */}
       <ContactActions
         entityId={provider.id}
-        phoneNumber={selected?.phone.number ?? null}
-        isAfterHours={selected?.isAfterHours ?? false}
+        provider={provider}
         email={provider.email}
         detailHref={detailHref}
       />

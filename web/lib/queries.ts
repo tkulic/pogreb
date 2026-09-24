@@ -244,6 +244,36 @@ export async function getProviderBySlug(
  * nothing can clear the ≥ 3 threshold, and that is the rule working rather
  * than failing.
  */
+/**
+ * Every `(city, provider)` pair, for the detail route's `generateStaticParams`.
+ *
+ * **This is what turns 55 per-request renders into 55 prerendered files.**
+ * Without it the route has no paths to build, so Next serves it on demand and
+ * every Googlebot fetch runs a function and queries the database — which is
+ * what stalled crawling (`.seo/ANALYSIS_2026-09-24.md` → ROOT CAUSE).
+ *
+ * It mirrors `getServicePageParams` deliberately, including going through
+ * `getCityProviders` per city rather than `getAllProviders`: that query is the
+ * one place the listing rules live, so a provider hidden from a city listing
+ * cannot acquire a prerendered detail page here.
+ *
+ * `dynamicParams` stays default-true on the route, so a provider added after a
+ * build still renders on demand and is cached from then on.
+ */
+export async function getProviderPageParams(): Promise<
+  { grad: string; pogrebnik: string }[]
+> {
+  const cities = await getCities();
+  const params: { grad: string; pogrebnik: string }[] = [];
+
+  for (const city of cities) {
+    const providers = await getCityProviders(city.id);
+    for (const p of providers) params.push({ grad: city.slug, pogrebnik: p.slug });
+  }
+
+  return params;
+}
+
 export async function getServicePageParams(): Promise<
   { grad: string; usluga: string }[]
 > {

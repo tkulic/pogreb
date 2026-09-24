@@ -13,9 +13,11 @@ import styles from '../prose.module.css';
  *    novine, MVEP — listed in `SOURCES` and rendered at the foot of the page,
  *    so a family can check what they are being told. The rules governing edits
  *    to that text live in `lib/guidance.ts`; read them before touching it.
- * 2. **Statements counted from our own database**, live, at render time. These
- *    assert nothing about procedure and are verifiable against the listing
- *    itself.
+ * 2. **Statements counted from our own database**, counted when the page is
+ *    rendered — which since 2026-09-24 means at build and then hourly, not per
+ *    request. These assert nothing about procedure and are verifiable against
+ *    the listing itself, and they are worded rather than exact, so an hour of
+ *    staleness cannot make one of them false.
  *
  * Both sections disappear on their own if their input disappears: no
  * `PROCEDURE_STEPS`, no steps and no sources block; no providers, no counts.
@@ -24,7 +26,15 @@ import styles from '../prose.module.css';
  * ⚠️ The procedural text still needs a native-speaker read and the owner's
  * sign-off before launch — the facts are sourced, the phrasing is not reviewed.
  */
-export const dynamic = 'force-dynamic';
+/**
+ * **Revalidated hourly rather than rendered per request.** The live counts
+ * below change only when a migration adds providers, so a per-request render
+ * bought nothing and cost an uncacheable page — see
+ * `.seo/ANALYSIS_2026-09-24.md` → ROOT CAUSE. The figures here go through
+ * `providerShare` / `providerFloor`, which are deliberately worded rather than
+ * exact, so an hour of staleness cannot make a sentence wrong.
+ */
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: 'Što učiniti prvo',
