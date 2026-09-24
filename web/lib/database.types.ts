@@ -140,12 +140,32 @@ export type Database = {
     };
     Views: Record<never, never>;
     Functions: {
+      /**
+       * `p_referrer` is the visitor's **entry** referrer — `document.referrer`,
+       * reduced to its origin by `lib/instrumentation.ts`. It exists because
+       * the server cannot derive it: the RPC's own `referer` header is always
+       * our own page, which is why every row written before 2026-09-24 said
+       * `internal` (SPEC_database.md → Attribution).
+       *
+       * The empty string is meaningful — the browser reporting *no referrer*,
+       * bucketed `direct`. It is optional so that the migration can land before
+       * the frontend deploy without dropping events; a call that omits it is
+       * bucketed `unknown`, never `internal`.
+       */
       log_event: {
-        Args: { p_entity_id: string; p_event_type: EventType };
+        Args: {
+          p_entity_id: string;
+          p_event_type: EventType;
+          p_referrer?: string;
+        };
         Returns: undefined;
       };
       log_city_event: {
-        Args: { p_city_id: string; p_event_type: CityEventType };
+        Args: {
+          p_city_id: string;
+          p_event_type: CityEventType;
+          p_referrer?: string;
+        };
         Returns: undefined;
       };
     };

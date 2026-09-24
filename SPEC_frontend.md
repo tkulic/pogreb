@@ -537,6 +537,8 @@ Which number the primary action dials — one rule, shared with the shortlist ca
 
 This is the whole point of typing phones in the schema: after hours the office line is useless, and the emergency line is the entire value of the listing.
 
+**The rule runs in the browser, in the component that renders the button** — `ContactActions` on a card, `PrimaryCallAction` on the detail page — and never in whatever server component happens to render them (2026-09-24, see Search → Rendering). Two reasons, and the second is not hypothetical: a server-side choice pins the page to one instant and forces the whole route to be per-request, which is what stalled indexing; and it had already frozen the choice at build time on the 36 statically prerendered service listings, so those pages would hand a family the office line at 3am. **Before hydration the button carries `phones[0]`** — the rule's own answer whenever it has no grounds to promote the dežurni line — so the no-JavaScript path dials correctly and simply does not get the after-hours upgrade.
+
 **The detail page differs from the list page in one respect: every number is shown.** All numbers are listed beneath the button with their type in Croatian (`office` → *ured*, `mobile` → *mobitel*, `emergency` → *dežurni*), each a `tel:` link that logs `phone_click`. The button itself reads `Nazovite` without a number and needs no reveal step here, because the list below already provides it. **It read `Nazovi` until 2026-09-07** — the one place in the product still in the ti-form, against the register rule two sections up; the owner settled it on the vi-form, so the detail page, the cards and `/specimen` now all read `Nazovite` / `Pošaljite e-mail`.
 
 That is a deliberate exception. Choosing between a provider's office and dežurni line is core value on this page — and hiding all of them behind clicks would be hostile on the one page a family reaches when they have decided who to call. It also gives the number a no-JavaScript path, which the list page's reveal does not have. The cost is that a number can be dialled off this page without a `phone_click`; that leak is bounded, it always follows a recorded `detail_view`, and it undercounts rather than overcounts.
@@ -548,6 +550,7 @@ That is a deliberate exception. Choosing between a provider's office and dežurn
 - **An absent day means unknown and renders as nothing.** It must never render as *zatvoreno*. Wrongly telling a family a provider is closed is the worst failure this page can produce.
 - `working_hours` null entirely → no hours section, and no open/closed claim anywhere on the page.
 - `available_24_7` true → the open-now status is always *"Dostupni 0–24"*, regardless of `working_hours`.
+- **Computed in the browser after mount** (`OpenStatus`, 2026-09-24 — see Search → Rendering), so a cached page cannot claim *otvoreno* at midnight. **Before hydration it renders nothing**, which is the same output as the unknown-day case above and for the same reason: a page that has not yet run the computation has no grounds to make a claim either way.
 
 ### Rest of the page
 
@@ -555,7 +558,7 @@ That is a deliberate exception. Choosing between a provider's office and dežurn
 - **Two CTAs at the top, call and e-mail** (2026-09-07). One column on a phone, halves from 480px up; the primary keeps its weight through fill, not width. Neither reveals a number, unlike the shortlist card — every number is listed in full below, so there is nothing to reveal. The e-mail action needs a client boundary to log its click and does not reuse `ContactActions`, which carries the card's reveal behaviour with it.
 - **Four labelled sections, in this order: Kontakt, Usluge, Radno vrijeme, Web stranica** (2026-09-07). The e-mail address moved into `Kontakt`, directly under the numbers and in the same row shape as a `PhoneList` row — the button is the action, the address is the fact. The website kept its place after the opening hours, because sending a visitor off-site earlier ends the visit while they are still deciding, but it gained a heading of its own: the page used to trail off into an unlabelled block of links grouped by *is a link* rather than by what a reader is looking for.
 - **`last_verified_at` is not displayed**, and **no freshness claim of any kind appears** — not even a soft *"podaci se redovno provjeravaju"*. With manual entry the date will go stale, and a visible stale date damages trust more than no date; an unverifiable reassurance is worse than both. The field stays internal, for data-quality triage.
-- **Back link to the results, preserving the query parameters**, so returning does not restart the flow.
+- **Back link to the results, preserving the query parameters**, so returning does not restart the flow. The answers are read in the browser (`FlowBackLink`) rather than from `searchParams`, because reading them on the server made the whole route per-request — see Search → Rendering. They were never used for anything this page renders.
 - **No map.** Coordinates are null for all 7, and a mapping API is a new external integration ([SPEC.md](SPEC.md) → Ask first).
 
 ## Routing and URLs
@@ -1090,6 +1093,33 @@ City entries carry `lastModified` derived from the newest `updated_at` among the
 
 Every route emits an absolute canonical resolved against `metadataBase`. **The home page emitted none at all** until 2026-09-04 — the page search matters most for was the one route opted out of the mechanism that exists to stop each host vouching for its own copy.
 
+### Rendering, and why it is a search decision (2026-09-24)
+
+**Every indexable page that can be cached, is.** This is not a performance preference; it is the constraint that governs whether the site gets indexed at all.
+
+**What went wrong.** Until 2026-09-24 the provider pages, the city pages, `/` and `/sto-uciniti-prvo` were all `force-dynamic`. They returned `Cache-Control: private,no-cache,no-store` with `Age: 0`, so nothing was served from Netlify's edge and every request — including every crawl — ran a serverless function and queried Supabase. Measured on the live site: one request at a time returned in ~0.8s, **eight concurrent requests returned in 3.6–4.4s**. Google's definition of *Discovered – currently not indexed* is *"Google wanted to crawl the URL but this was expected to overload the site; therefore Google rescheduled the crawl"* — and it had **88 of 113 URLs** in that state, indexing four pages in eighteen days. The full measurement is in `.seo/ANALYSIS_2026-09-24.md` → ROOT CAUSE.
+
+**Crawl throttling is per host, not per URL.** The 36 service listings were already static and fast, and only 2 of them were indexed. Slow routes drag down the crawl rate for the whole site, which is why this could not be fixed one page at a time.
+
+**The rule that follows: time-dependent output is computed in the browser, not in the server render.** Open-now and the dežurni-phone choice are pure functions of the current time over static columns, so rendering them on the server pins one instant into the HTML — which is only correct for a page rendered per request, and that is exactly the property that has to go. Running them after mount makes the page a cacheable artefact **and makes the answer stricter**: a cached render is right for the moment it was built, a client computation is right for the moment the reader is looking. `lib/hours.ts` did not change — it was already pure and already took `now` as a parameter, so only the call site moved.
+
+**Before hydration, each of these renders the time-independent fallback that `lib/hours.ts` itself produces when it has no information** — the stored primary number, and no open/closed claim at all. That keeps the no-JavaScript path working and keeps the absent-day rule intact: an un-hydrated page has no grounds to say a provider is shut, so it says nothing.
+
+**Two things force a route to be per-request, and both are easy to trip.**
+
+- **Reading `searchParams` in a server component** opts the whole route into per-request rendering whatever `revalidate` says. On the provider page the flow's answers were used for nothing the page renders — only for the back-link href — so they moved to `useSearchParams` behind a `Suspense` boundary. The fallback is the same link without the query, which is correct rather than empty.
+- **`revalidate` alone is not enough on a dynamic segment.** With no `generateStaticParams` there are no paths to build, so the route is served on demand and the first crawl of each page still pays full origin cost. `getProviderPageParams` exists for this, and mirrors `getServicePageParams` — including going through `getCityProviders`, so a provider hidden from a city listing cannot acquire a prerendered detail page.
+
+**The city pages and `/` stay per-request, deliberately.** Both need `searchParams` on the server — ranking and guidance on the city page, which step to show on `/`. Moving that to the client would client-render the provider list and its `ItemList` JSON-LD, which is a real search risk for no gain: that is 10 URLs against 55 provider pages, and most of them were already indexed. Uncached indexable URLs went from 66 to 10.
+
+**This also fixed a live defect.** The service listings are statically prerendered and render `ProviderCard`, which called `selectDisplayPhone` during the build — so on those 36 pages the after-hours rule was frozen at build time and would hand a family the office line at 3am. That is the precise failure the rule exists to prevent, and it had been shipping since those pages were built. It is the reason the phone choice belongs in the component rather than in whatever happens to render it.
+
+**Caching costs no instrumentation**, because Instrumentation rule 1 already requires `detail_view` to be logged from the client after mount and never from the server render. A decision taken to keep crawler and prefetch traffic out of `events` is what makes the pages safe to cache.
+
+**Verified on production the same day.** Provider pages now return `Cache-Control: public` with `X-Nextjs-Prerender: 1` and a climbing `Age`, against `private,no-cache,no-store` and `Age: 0` before. Re-running the eight-concurrent-request measurement: **3.63–4.44s before, 0.45–0.58s warm after**. The spread collapsing matters more than the mean — the spread under concurrency is what a crawler reads as a host that cannot take the load. City pages and `/` still return `no-store`, as intended.
+
+**The check to repeat after any change here** is `curl -sI` for `Cache-Control` and `Age`, plus eight parallel requests across different provider pages. A route that quietly reverts to per-request rendering — by taking `searchParams`, or losing `generateStaticParams` — will show up in both and in nothing else, because the page will look and behave completely normally.
+
 ## Deployment
 
 Netlify, on **`pogreb.net`** (Namecheap), with the **apex as the primary domain** and `www` redirecting to it. Moved into scope on 2026-09-04 ([SPEC.md](SPEC.md) → In scope), and **live and verified the same day** — every check at the end of this section passed.
@@ -1118,7 +1148,9 @@ Two failures on the way, both recorded because neither is guessable:
 Two consequences, both binding:
 
 - **After any migration that changes provider data, verify against a cleared cache** (`rm -rf .next`) before trusting a local build — a stale page is indistinguishable from a migration that silently did nothing.
-- **A deploy must not be assumed to pick up a data change**, because `@netlify/plugin-nextjs` restores `.next/cache` between builds. Trigger a deploy with the cache cleared, or confirm the new data on the live page rather than on the build log. The results page and provider detail are `force-dynamic` and always current; **it is the `/usluga/{slug}` listings that can go stale**, which is exactly where a newly added provider needs to appear.
+- **A deploy must not be assumed to pick up a data change**, because `@netlify/plugin-nextjs` restores `.next/cache` between builds. Trigger a deploy with the cache cleared, or confirm the new data on the live page rather than on the build log.
+
+**This got wider on 2026-09-24, and the note that used to sit here is now wrong.** It read that the results page and provider detail were `force-dynamic` and always current, so only the `/usluga/{slug}` listings could go stale. **Provider detail is now SSG**, so it is in the same position as the service listings: prerendered at build, and subject to the warm-`.next/cache` trap above. `revalidate = 3600` bounds the staleness to an hour on the live site, but **a build with a warm cache can still bake old data into all 55 pages at once**, which is worse than what this note originally described. The results page and `/` remain per-request and always current. Verify a data change on a provider detail page, not only on a city page.
 | `NEXT_TELEMETRY_DISABLED` | `1` | **a GDPR guarantee, not a preference.** See [SPEC.md](SPEC.md) → Project Structure: it was true only because of a machine-local Next config no build container has |
 | `@netlify/plugin-nextjs` | declared | Netlify installs it on detecting Next, but the app has server-rendered routes and cannot be served as a static export, so it is load-bearing rather than incidental |
 

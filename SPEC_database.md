@@ -4,6 +4,8 @@
 >
 > Status: **the whole schema in this document is implemented and applied to the hosted Supabase project** — the four content tables, `entities.slug`, the Croatian `services.slug` values, and all of **Usage logging** (`events` + `log_event`, its enums, index, RLS and grants), applied 2026-09-02; and **City-level logging** (`city_events` + `log_city_event`), applied 2026-09-21. SQL lives in `supabase/migrations/`; this document stays the source of truth for intent, the migrations for exact DDL.
 >
+> **Applied (2026-09-24):** `20260924120000_entry_referrer_attribution.sql` — `source` is now derived from a client-passed entry referrer instead of the RPC's own `referer` header, which had made it `internal` on 100% of rows. See **Attribution**. **Rows written before this date carry no attribution information and must be excluded from any `source` breakdown**, not read as "all internal".
+>
 > **Applied (2026-09-03):** the six-city pilot expansion — Zagreb, Rijeka, Zadar, Osijek, Pula, Dubrovnik. Six `cities` rows, 38 `entities`, 163 `entity_services`, two additions to the `services` lookup, and two corrections to the Split rows. No schema change: every migration is data. Curated source data and the full provenance trail live in `data/` (gitignored). The conventions those migrations follow are recorded in this document, marked *(2026-09-03)*. The hosted database now holds seven cities, and the frontend reads them — see [SPEC_frontend.md](SPEC_frontend.md) → Landing page and Screen 2.
 >
 > **Applied (2026-09-07):** the Split i okolica coverage expansion — **six new `entities` and 26 `entity_services`**, all under the existing `split` city row, plus five corrections to the seven pilot rows. No schema change; every migration is data. All seven live Split rows had sat in Split city proper while `CATCHMENT.split` claimed eight surrounding settlements, so the coverage claim rested on inference; four of those settlements now have providers of their own — Trogir (3), Kaštela (2), Solin (1), Omiš (1). Research, exclusions and the five decisions behind it are in `data/SPLIT_OKOLICA_REVIEW.md` (gitignored). As of that migration the hosted database held **seven cities and 51 providers** — Zagreb 20, **Split 13**, Rijeka 6, Zadar 5, Osijek 3, Pula 2, Dubrovnik 2 — and **254 `entity_services`**.
@@ -230,7 +232,7 @@ set search_path = public, pg_temp
 
 `set search_path` is mandatory hardening on any `security definer` function — without it, a caller-controlled search_path can redirect the function's table references to objects the caller owns.
 
-Note what is *not* a parameter: `occurred_at`, `source` and `device`. The client cannot assert them.
+Note what is *not* a parameter: `occurred_at` and `device`. The client cannot assert them. **`source` was in that list until 2026-09-24 and had to leave it** — see Attribution below for the defect that forced it and the exact scope of the weakening.
 
 ### Derived server-side
 
@@ -240,7 +242,7 @@ The function reads request headers via `current_setting('request.headers', true)
 |---|---|---|
 | `occurred_at` | `now()` | `date_trunc('hour', now())` — the client cannot backdate |
 | `device` | `user-agent` header | contains `ipad`/`tablet` → `tablet`; else contains `mobile`/`android`/`iphone` → `mobile`; otherwise `desktop`; header absent → `unknown`. **The raw string is never stored** |
-| `source` | `referer` header | host matched against the buckets below; header absent → `direct`; present but unparseable → `unknown`. **The raw referrer is never stored** |
+| `source` | **`p_referrer` parameter** | the caller's *entry* referrer, bucketed by `bucket_source()`; parameter omitted → `unknown`; empty string → `direct`; present but unparseable → `unknown`. **The raw referrer is never stored.** It was derived from the `referer` header until 2026-09-24, which never worked — see Attribution |
 
 `source` buckets:
 
@@ -261,6 +263,32 @@ The function reads request headers via `current_setting('request.headers', true)
 Bucketing in the function rather than storing the host keeps cardinality at 4 bytes and guarantees no URL — and therefore no third-party search term or path — is ever persisted.
 
 `source` is what makes the numbers mean anything to a provider: it is the difference between *"you got 34 calls"* and *"you got 34 calls, and 82% of those families arrived from Google rather than from your own website"*. Without attribution a provider can simply claim they would have won the customer anyway.
+
+### Attribution: why `source` became a parameter (2026-09-24)
+
+> **Status: applied to the hosted project on 2026-09-24**, in `20260924120000_entry_referrer_attribution.sql`, at the project owner's explicit direction (*"yes, push to db and verify then"*) — the **Ask first** approval this needed, since there is no staging environment and the push hit production.
+
+> **Verified against the live API, not inferred from a clean push.** With a browser user-agent and a nonexistent `entity_id`, a call carrying `p_referrer` raises `23503` on the FK — which proves the new signature is accepted *and* that the insert path actually executes, without writing a row. The same call with `p_referrer` omitted behaves identically, which is what proves an old two-argument client still works. The same call with a bot user-agent returns 204 and no FK error, which proves the bot filter still returns before the insert. `log_city_event` behaves identically. One real `brief_export` row for Rijeka carrying a `google.com` referrer exists from confirming the bucket itself.
+
+**`source` was `internal` on every row ever written** — 21 of 21 when this was found, including visits Search Console proves came from Google. It was not mostly wrong; it could not hold any other value.
+
+The cause: both functions derived it from `request.headers ->> 'referer'`, which is the referrer of the **PostgREST call**, not of the visitor's arrival. That call is made by JavaScript on a `pogreb.net` page, so the browser sends `https://pogreb.net/` and the host matched the `internal` branch every time. The bug was invisible because the column looked populated and plausible.
+
+What that cost is exactly the sentence above, and the `direct`-on-a-`detail_view` suspicion signal two sections down. Neither can be produced from a column with one value.
+
+**The fix: the client passes `document.referrer`, reduced to its origin; the server still buckets it and still stores only the enum.** No URL, no search term, no path is persisted, so the GDPR position is unchanged.
+
+**This is a deliberate, narrow weakening of "the client cannot assert them", and the scope matters.** A holder of the public `anon` key can now forge the *label* on an event. They still cannot forge the *count*: the hourly cap per `(entity_id, event_type, hour)` is untouched, `occurred_at` and `device` stay server-derived, and `anon` still holds no table privileges. The valuable attack — inflating a provider's call volume — remains blocked, and a forged label buys an attacker nothing.
+
+**The alternative was reading the real referrer during the page render, and it is closed.** Reading request headers in a server component forces per-request rendering, which is precisely what kept 88 URLs out of Google's index ([SPEC_frontend.md](SPEC_frontend.md) → Search → Rendering). Server-verified attribution and a crawlable site are mutually exclusive here, and crawlable wins.
+
+**The semantics changed, not just the plumbing.** `source` now means *how the session reached the site*, not *which page linked to this click*. `document.referrer` does not change across client-side navigation, so a family that lands from Google and then browses to a provider still logs `search` — which is the question the pitch asks. The consequence: **`internal` becomes rare rather than universal**, and now means a full page load referred by our own site. The earlier reading — "arrived from our city list" — was never achievable.
+
+**`null` and `''` are different and must stay so.** Parameter omitted (a cached old client) → `unknown`; empty string (browser reports no referrer: typed, bookmarked, or stripped) → `direct`. Falling back to the request header when null would only reproduce the bug, so it deliberately does not — `unknown` is a truthful *no data*, where `internal` would be a positive claim nothing supports.
+
+**Both functions changed**, and the bucketing rule was extracted into `bucket_source()` so they cannot drift: it was duplicated verbatim in `log_event` and `log_city_event`, which is how a fix reaches one and not the other.
+
+**Timing is the reason this was not deferred.** The benefit only lands in a monetization conversation, and the instinct is therefore to postpone — but attribution is a *track record*, not a switch. It cannot be backfilled, so the data has to already exist when that conversation happens. Delay does not defer the cost; it destroys the history.
 
 ### Data integrity
 
@@ -288,6 +316,8 @@ Each of these closes a pollution source that **no amount of server-side filterin
 `phone_click` is the resilient metric and the one to quote: it requires a deliberate gesture on a link that opens a dialer, which crawlers do not perform. `detail_view` is a page load — cheap, automatable, and the softer figure. The most valuable column is therefore also the hardest to forge.
 
 `source = 'direct'` on a `detail_view` is a useful retroactive suspicion signal: real users almost always reach a provider page from the city list (`internal`) or from search, rarely by landing on a deep URL with no referrer.
+
+⚠️ **That signal did not work until 2026-09-24 and its reading has changed** (see Attribution). It was dead while `source` was always `internal`. Under entry-referrer semantics the comparison is no longer `direct` against `internal` but **`direct` against `search`**, since `internal` is now rare by construction — a real family usually arrives from a search engine, so a run of `direct` on one provider's detail views is the anomaly worth looking at.
 
 For an external pitch, corroborate rather than trust. Google Search Console gives an independent, already-bot-filtered view of top-of-funnel traffic; and asking a pilot provider whether their call volume changed is the only ground truth showing that clicks became actual business.
 
@@ -454,6 +484,7 @@ All applied. Nothing is pending.
 | `20260914103000_entities_slavonski_brod_velika_gorica.sql` | eight providers (4 Slavonski Brod, 4 Velika Gorica) plus **`miraj` relocated** from Zagreb to Velika Gorica by `city_id` update, keeping its slug and nine services. 47 → 55 |
 | `20260914104000_entity_services_2026_09_14.sql` | 75 service rows across the five enriched and eight new providers; zero-service rows 17 → 8 |
 | `20260921120000_city_events_and_log_city_event.sql` | `city_event_type` enum (`brief_export` only); the `city_events` table and its `(city_id, occurred_at)` index; `log_city_event()` with a **per-event-type** cap; RLS enabled with no policies; `revoke all` on the table and `grant execute` on the function. `event_source` and `event_device` are reused, not redefined |
+| `20260924120000_entry_referrer_attribution.sql` | **applied 2026-09-24.** `bucket_source(text)` extracted from the two log functions so they cannot drift; `log_event` and `log_city_event` dropped and recreated with a defaulted `p_referrer text`, bucketing the caller's **entry** referrer instead of the RPC's own `referer` header; grants reissued for the new signatures (a drop takes privileges with it). Fixes `source` being `internal` on 100% of rows — see Attribution. **Deploy the migration before the frontend**: the parameter is defaulted, so a client still calling with two arguments keeps working and logs `unknown` |
 
 **The 2026-09-14 batch was written and pushed in one pass** at the project owner's explicit direction (*"write all chunks and push to db immediately"*), which waived the chunk-by-chunk migration review in `CLAUDE.md`. Every guard in all five passed, so the counts they assert are confirmed against the live database: **55 entities across 9 cities, 8 rows still carrying no services.** Research and the full decision log are in `data/DATA_REVIEW_2026-09-14.md` (gitignored).
 
