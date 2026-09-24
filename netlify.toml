@@ -30,9 +30,21 @@
   # else, starting with the first CI build.
   NEXT_TELEMETRY_DISABLED = "1"
 
+# `/kako-rangiramo` was deleted on 2026-09-24 when ranking was removed: there is
+# no ordering to explain any more, so the page had no subject. It is redirected
+# rather than left to 404 because it was indexed (position 3.50) and linked from
+# four pages — and on a site where 88 of 113 URLs are still waiting to be
+# crawled, a 404 spends crawl budget to say nothing. `/nase-obecanje` is the
+# destination because that is where the promise it carried now lives.
+[[redirects]]
+  from = "/kako-rangiramo"
+  to = "/nase-obecanje"
+  status = 301
+  force = true
+
 # The Next.js runtime. Netlify installs it automatically on detecting Next, but
 # an automatic dependency is one that can stop being automatic; the app has
-# server-rendered routes (`/`, the city and provider pages) and cannot be served
-# as a static export, so this is load-bearing.
+# server-rendered routes (`/` and the flow) and cannot be served as a static
+# export, so this is load-bearing.
 [[plugins]]
   package = "@netlify/plugin-nextjs"

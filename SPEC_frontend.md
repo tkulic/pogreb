@@ -35,7 +35,9 @@ Two consequences of that, which are requirements rather than side effects:
 
 > I am organising a funeral. Someone has just died, or is dying. I have hours, not days, and no capacity to research anything.
 >
-> I don't want to search, compare, or work through a questionnaire. I want to be asked as little as possible and then be told, in plain language, **who I should call first and why** — with the phone number right there, working at 3am.
+> I don't want to search, compare, or work through a questionnaire. I want to be asked as little as possible and then be shown, in plain language, **everyone I could call and what distinguishes them** — with the phone number right there, working at 3am.
+>
+> *(Amended 2026-09-24. This read "be told who I should call first and why" until ranking was removed — see [Order and filtering](#order-and-filtering). The product no longer makes that claim, and a user story that still asked for it would be the loudest surviving argument for putting it back.)*
 >
 > I need to trust that the list isn't sold. If I'm unsure about anything I'm asked, I need to be able to say "I don't know" and still get an answer. And if I don't want to be led at all, I need one tap to just see everyone.
 
@@ -43,7 +45,11 @@ Two consequences of that, which are requirements rather than side effects:
 
 With 7 providers in the Split pilot, a filter cannot do much work. Four of the sixteen services — `organizacija-pogreba`, `cvjetni-aranzmani`, `prijevoz-pokojnika`, `prijevoz-pokojnika-inozemstvo` — are offered by all 7 and therefore discriminate nothing. The only service that genuinely splits the pilot list is `kremiranje` (4 of 7).
 
-So the flow's value is **not filtering**. It is orientation and confidence: turning "I have no idea where to start" into "here are these few, and here is why these few". Every design decision below follows from that. A flow that filtered well but explained nothing would be the wrong product.
+So the flow's value was framed as **orientation rather than filtering**: turning "I have no idea where to start" into "here are these few, and here is why these few".
+
+**That framing was overtaken by the data on 2026-09-24, and the flow survives on narrower grounds.** 16 of 19 search clicks land straight on a city page, so the flow is a front door almost nobody uses, and "here are these few" was a promise ranking made and could not keep ([Order and filtering](#order-and-filtering)). What is left is real but smaller: `kremiranje` genuinely narrows a list — 17 → 5 in Zagreb, 13 → 5 in Split — and `situacija` chooses the guidance. **Both now also exist on the city page itself**, where the traffic actually lands.
+
+The flow is kept for the minority who arrive at `/`, and is unchanged: it writes the same `?nacin=` the inline filter writes, so the two cannot disagree. **Screen 3 is now redundant with the inline filter** and is the piece to revisit once there is an instrument that can see whether either is used.
 
 ## Landing page
 
@@ -258,7 +264,11 @@ Binding on the implementation:
    **The city is state too**, and it moves between the two halves of the URL: `?grad=` while the flow is running, the path segment once the results are shown. `lib/answers.ts` owns both spellings (`flowHref`, `resultsHref`) so that no page hand-builds a flow URL — which is how the results page's *"promijenite"* link came to point at the landing page instead of at the questions, silently breaking rule 2 below.
 2. **Back always works and preserves answers.** During design review, bestattungen.de's own wizard discarded every selection and returned four validation errors at once on the first Continue. That failure mode is the reason this is a numbered requirement.
 3. **Every screen is skippable except screen 2**, which is pre-answered from the city path segment and then not shown at all.
-3a. **Every page carries the site header** — a wordmark that always returns to the landing page, plus a contextual back link, and a `n / 3` step counter inside the flow. The back link is a real `<Link>` to a known URL rather than `history.back()`: history can hold anything, including another site, and a back control that sometimes leaves the product is worse than none. It also keeps the header working with no JavaScript, like the rest of the flow.
+3a. **Every page carries the site header** — a wordmark that always returns to the landing page — **and a way back that is a real `<Link>` to a known URL**, never `history.back()`: history can hold anything, including another site, and a back control that sometimes leaves the product is worse than none. It keeps working with no JavaScript, like the rest of the flow.
+
+   **What that way back is differs by page (2026-09-24).** The flow screens and `/lista-pogrebnih-usluga` keep `PageBack` — a contextual back link, with the `n / 3` step counter inside the flow. **The city pages use `BackHome` instead** — *← Natrag na naslovnicu*, one 11px line inside the header block. Two reasons: `PageBack` is a 44px tap target that, as a direct child of the page shell, also took its 26px gap — 74px before the `<h1>` on the page that most needed the height — and `← Pitanja` had stopped being the useful destination, since 16 of 19 search clicks arrive here having never seen the flow. See [Structured data](#structured-data).
+
+   **The flow's return did not go with it.** `← Pitanja` duplicated the *"promijenite"* link in the answers strip, which is the one that carries the answers and renders exactly when there are answers to carry. A reader who answered only screen 3 arrives with a filter rather than an answer, and the filter panel is on the page — there is nothing to return to.
 4. **Every question carries an explicit escape** — *"Još ne znam"*, *"Ne znam"*, *"Nije važno"*. Taken directly from bestatter-preisvergleich, which offers "Weiß noch nicht" on every question, and it is the most humane thing on that site.
 5. **No validation errors are possible.** Nothing is required, nothing is typed, so nothing can be wrong. The flow must never block on input.
 6. **Results are reachable in at most three taps**, and in one tap via the screen 1 bypass.
@@ -270,95 +280,118 @@ The destination of the flow, and the page the whole product exists to render.
 
 ### Block structure, top to bottom
 
-1. **Site header** — wordmark home link and a back link into the questions. Shared with every other page.
-2. **Header** — title, *"Split i okolica"*, the coverage claim on one line, and the answers read back on one quiet line with a *"promijenite"* link into the flow (which must arrive with the current answers still selected). Closing gold rule.
+1. **Site header** — the wordmark (`pogreb.net`), shared with every other page. The contextual back link is gone from this page; *← Natrag na naslovnicu* below replaces it (rule 3a).
+2. **Header** — *← Natrag na naslovnicu*, then `Pogrebnici · N` over the area label inside one `<h1>`, with the funnel to its right. Closing gold rule.
 
-   The coverage line is here rather than only in the footer because it is the reason to trust this page over a page of search results, and it is the page's own claim rather than the site's — which is why neither the masthead nor the footer may repeat it ([Layout and shape](#layout-and-shape)). It is set in Archivo and ink, not Spectral SC and gold: on this page gold belongs to the reason lines, and a gold claim above them would compete with the thing that justifies the shortlist.
-3. **`NAJBOLJE ODGOVARA · N`** — the shortlist.
-4. **`OSTALI POGREBNICI · N`** — everyone else, quieter but complete.
-5. **Guidance strip** — conditional on `situacija` and `pokojnik`; links to `/sto-uciniti-prvo`. Text is sourced from the primary references listed under [screen 3b](#question-3b--gdje-je-pokojnik-sada--pulled-2026-09-04). Omitted entirely — rules and link included — when neither answer has guidance attached, rather than rendering an empty bordered strip. **Since 3b was pulled, `pokojnik` is never set**, so in practice the strip now renders on `situacija` alone.
-6. **Transparency footer** — the neutrality claim (nobody pays for position, nobody is left out), then the settlement list, then links to `/kako-rangiramo` and `/nase-obecanje`. The coverage sentence it used to open with moved up into the header (2); the footer now carries what *qualifies* the claim rather than restating it.
+   **The count sits beside the word it counts**, and reads `· 5 od 13` while a filter is on. It is a bare figure next to a heading, which is the position the no-counts-in-prose rule explicitly does not cover — it counts the rows below it rather than the market. `providerCountLabel` is deliberately **not** used here: *"Pogrebnici · 13 pogrebnika"* says the noun twice.
+3. **Filter panel** — only when the funnel is present and open.
+4. **`SVI POGREBNICI`** — every provider in the city, alphabetical, one row each.
+5. **The sheet** — *Ponesite popis usluga pogrebniku*, held by a gold hairline.
+6. **Guidance strip** — conditional on `situacija`; links to `/sto-uciniti-prvo`. **The *"odabrali ste … promijenite"* strip that used to sit above the list is gone** (owner, 2026-09-24): `situacija` is the only answer that still reaches this page, it changes nothing about the list, and reading it back cost a line on the page with the tightest height budget in the product. Omitted entirely when no answer has guidance attached, rather than rendering an empty bordered strip.
+7. **Transparency footer** — the coverage summary and the settlement list as one sentence (*"Prikazujemo registrirane pogrebnike u Splitu i okolici: Podstrana, Solin, …"*), then *"Ne rangiramo pogrebnike. Popis je abecedni, nitko nam ne plaća za poziciju i nitko nije izostavljen."*, then a link to `/nase-obecanje`.
 
-**Two things moved here after the page was built and reviewed, and both were hierarchy problems rather than content problems:**
+**What moved on 2026-09-24, and why:**
 
-- **The provider count is gone from the header.** It used to open the context strip, in the most prominent position on the page. Both section headings already carry `· N`, so it was the same number stated three times, and it was the first thing the eye met on a page whose job is to present providers.
-- **The guidance strip moved below the two blocks.** Above them it read as the page's main content and pushed the actual service into second place. It is genuinely useful and honestly sourced, but a family that arrived here to find someone to call should meet the providers first; below the list it catches the reader who did not find what they needed. The settlement list moved to the footer for the same reason — it qualifies the claim rather than introducing it.
+- **The two blocks became one list of rows.** `NAJBOLJE ODGOVARA` and `OSTALI POGREBNICI` existed to separate a ranked shortlist from everyone else; with nothing ranked there is nothing to separate. See [Row anatomy](#row-anatomy).
+- **The coverage sentence is gone** (owner). *"Svi registrirani pogrebnici u Zagrebu i okolici — pogrebna poduzeća i obrti"* repeated the locative the `<h1>` had just given. The footer still carries the claim that qualifies the list, which is where a qualification belongs.
+- **The coverage claim and the settlement list became one footer sentence** (owner). They had been two separate things in two places — a claim under the heading and a bare list at the foot — and neither said what the other was for. Together they read as what they are: what this page shows, and where. The footer rather than the header because they qualify the list, and the heading and the rows come first.
+- **The sheet moved below the list** (owner). It sat under the shortlist at what this spec called *"the natural pause"*; one list has no such seam, and after the rows is where the reader has finished scanning and has not yet called anyone.
+- **`← Pitanja` became `← Natrag na naslovnicu`.** See rule 3a and [Structured data](#structured-data).
 
 ### Guarantees
 
-These are the page's contract with the user, and they are why the transparency footer is honest:
+These are the page's contract with the reader, and they are why the transparency footer is honest:
 
-- **Every provider in the city appears on the page, always.** The two blocks partition the set; they never subset it. No pagination, no "show more" — at pilot scale seven rows fit.
-- **The page is never empty.** The shortlist block may be, the page may not.
-- **`N` is stated in both headings**, so the reader can see for themselves that the partition adds up — the two numbers are the only count on the page, and they are what makes the header's coverage claim checkable rather than asserted.
+- **Every provider in the city appears, always.** No pagination, no "show more", no truncation. Filters narrow what is *shown*, on the reader's own instruction and reversibly — they never decide for them.
+- **The order makes no claim.** Alphabetical, Croatian collation, and the only order we ever choose ourselves.
+- **The page is never empty**, including when a filter arriving by URL matches nobody.
+- **The count is stated**, so the reader can see that what is on screen is the whole of what the header claims.
+- **What a crawler is served is the complete unfiltered list**, in the same order and with the same `ItemList`. Structurally true rather than maintained: filters run in the browser, after the markup is served.
 
-### Partition and shortlist size
+### The filter panel
 
-Let *M* = providers matching every selected criterion (currently only `nacin=kremiranje`; `ukop` and every unanswered question match everything).
+Three checkboxes and one more that sorts, behind a funnel in the header.
 
-| case | shortlist | others |
-|---|---|---|
-| *M* ≥ 1 | top `min(4, |M|)` by ranking | all remaining, in ranking order |
-| *M* = 0 | block omitted, with a line saying no provider in the area offers the chosen service and that everyone is shown instead | all of them |
+**It appears only where a city has more than six providers** — `FILTERS_MIN_PROVIDERS` in `web/lib/listing.ts`. Six is what fits on a medium phone screen at the current row height, and that is the whole argument: **filters exist because the list is too long to scan, and a list you can see all of is not too long.** Today that means Zagreb (17) and Split (13) and nowhere else.
 
-The cap of 4 is what makes it a shortlist rather than a re-sorted list. *M* = 0 is unreachable with current pilot data — the only filter is `kremiranje` and 4 providers offer it — so it is a defensive rule, not a live case.
+**The same rule closes the empty-result hole, which is why it is binding rather than cosmetic.** Measured against live data on 2026-09-24: **28 of the 63 city × filter-combination pairs return nothing**, and every one of them is in a city at or below the threshold. Zadar has no cremation provider at all, so one tap on the most-wanted filter would have emptied a page that had just shown four providers; Pula and Dubrovnik return nothing for all three filters and all four combinations, so the panel would have been dead furniture. Zagreb and Split return nothing for none of the eight. **The cheap rule and the safe rule are the same rule** — the per-city alternative (hide each filter where its own count is zero) needed three conditional counts plus a disabled state and still would not have covered a filter arriving by URL.
 
-A card also **drops out of the shortlist if no reason line can be composed for it** (below). A card in the shortlist that cannot say why it is there does not belong there.
+**Below the threshold a city ignores `?filtri=` entirely**, rather than applying it and rendering nothing. That is what makes a shared link safe, and it is honest precisely where it applies: at six providers or fewer the whole list is on one screen with nothing hidden.
 
-### The reason line
+#### The three filters, and why these three
 
-**Mandatory on every shortlist card.** It is the difference between a justified shortlist and an opaque ranking, and opacity is exactly what makes the German portals read as brokers.
-
-Composed from stored facts only, deterministic, **at most two clauses**, joined by `·`:
-
-- **Clause 1 — availability.** `available_24_7` → *"Dostupni 0–24"*. Else any phone with `type = 'emergency'` → *"Dežurna linija"*. Else omitted.
-- **Clause 2 — the most distinguishing remaining fact**, first match wins:
-  1. **Rarest *eligible* service** — a service this provider offers that ≤2 providers in the city offer **and** that is a reason to choose a provider, rendered as its short display phrase (*"klesarske usluge"*). Most rare wins ties; ties at equal rarity break on canonical seed order, so the output is deterministic.
-  2. **Widest range** — this provider has strictly the most `entity_services` rows in the city → *"najveći izbor usluga"*. A strict maximum: if two providers tie for the most rows, neither is the widest.
-  3. **Match confirmation** — a filter was selected and this provider satisfies it → *"nudi kremiranje"*.
-  4. Otherwise omitted.
-
-Worked against the pilot data, this reproduces the approved mockup exactly:
-
-**Rarity alone is not sufficient, and this was learned by shipping it.** Implemented literally against the pilot data, the clause produced *"Dežurna linija · ekshumacija"* for Lovrinac and *"Dežurna linija · urne"* for Zec. Both are true, both are rare, and both are the wrong thing to say to someone whose relative died tonight. Worse, it made the widest-range clause **unreachable** — the widest provider in the city always tripped the rare-service rule first.
-
-So a rare service must also be **decision-driving**. Three kinds are excluded, held in `REASON_ELIGIBLE_SERVICES` (`web/lib/services.ts`):
-
-| excluded | which | why |
-|---|---|---|
-| goods chosen in person | `urne`, `lijesovi` | the same argument that rejects a service picker above — a casket is not a filter, it is an item chosen an hour later, with the provider |
-| out of register | `ekshumacija` | a real service and a real search term, but not something that recommends a funeral director in the first hours |
-| nice-to-have extras | `fotografiranje-pogreba` | genuinely useful when relatives cannot travel, but it does not drive the choice, and it crowds out a stronger clause |
-
-That list is **copy, not logic** — an editorial judgement about what recommends a funeral director, and the project owner's to change. Adding a service back is safe: the rarity threshold still gates it.
-
-| provider | clause 1 | clause 2 | line |
+| filter | service slug | Zagreb | Split |
 |---|---|---|---|
-| Bila ruža | 24/7 | no eligible rare service, not widest → match | Dostupni 0–24 · nudi kremiranje |
-| Bradvica | **24/7** | no eligible rare service, not widest → match | Dostupni 0–24 · nudi kremiranje |
-| Zec | emergency line | widest range (12 rows) | Dežurna linija · najveći izbor usluga |
-| Lovrinac | emergency line | rarest eligible (`nadgrobni-spomenici`, 1 of 7) | Dežurna linija · klesarske usluge |
+| Kremiranje | `kremiranje` | 5 | 5 |
+| Pokojnik je u inozemstvu | `prijevoz-pokojnika-inozemstvo` | 7 | 9 |
+| Pomoć oko dokumentacije | `sredivanje-dokumentacije` | 3 | 7 |
 
-**Bradvica's clause 1 changed from the mockup** — it reads *"Dostupni 0–24"* rather than *"Dežurna linija"* because `available_24_7` became true in the availability reconciliation the project owner resolved. That is data drift correctly reflected, not a rule change.
+**Measured, not chosen.** Across all nine cities these are the only services that both split a list and name a real fork in a family's situation. Several others split just as evenly — `osmrtnice` and `cvjetni-aranzmani` sit at the top of that table — and nobody picks a funeral director because they print death notices. It is the same distinction `REASON_ELIGIBLE_SERVICES` used to encode: **splitting a list is not the same as being a reason to choose.**
 
-These four lines are asserted exactly in `web/lib/ranking.test.ts` against a fixture captured from the live database, so a change to the rules or the data that breaks them fails the suite rather than silently reaching the page.
+Labels name the family's situation, never our taxonomy: *Pokojnik je u inozemstvu*, not *Prijevoz pokojnika u inozemstvo*.
 
-Both clauses empty → the card moves to the others block.
+#### Checkboxes, not chips
 
-**Ranking, the partition and the reason line are one pure function** over the array the city query returns — `web/lib/ranking.ts`, with no database access, no clock and no randomness in it. That is what makes the guarantees above testable rather than merely stated: the partition adding up, the shortlist cap, the "no reason line, no shortlist" rule and the stable ordering are all unit tests.
+Real `<input type="checkbox">` with a `<label>`, one per line, no border and no padding chrome. They are independent options combined with AND, which is exactly what a checkbox group is — a row of toggle buttons was pretending to be one. Three consequences, all improvements: the full wording fits because each option owns a line, the counts align into a column readable as a set, and four options stop looking like a control panel.
 
-### Card anatomy — shortlist
+**Rows are 36px, under the 44px minimum, deliberately.** They tile with no dead space and span the full column, so each target is roughly 346 × 36 ≈ 12,500px² against the ~1,900px² a 44 × 44 square guarantees. It is a larger target, not a smaller one — recorded here as a stated exception rather than left to look like drift.
 
-Rendered per the **Kamen** direction (chunk 3). Content and order:
+#### The counts are conditional
 
-1. **Name** — `entities.name`, Spectral SC caps. The trading name as stored, which is what families know (see [SPEC_database.md](SPEC_database.md) — *"Pogrebne usluge Zec"*, not *"Adepto d.o.o."*).
-2. **24-hour mark** — filled gold, top right, only when `available_24_7`.
-3. **Address** — `address` + city name. Head office only; never implies branch coverage.
-4. **Reason line** — Spectral SC, gold.
-5. **Service list** — every service the provider offers, in canonical seed order ([SPEC_database.md](SPEC_database.md) → Seed data), joined by `·`. No truncation and no "+N more": at 12 rows maximum this is three lines, and a family scanning for one specific service should not have to expand anything.
-6. **Contact actions** — see below.
+Each number is what that filter **would** leave given what is already ticked, never the city's total for it.
 
-### Contact actions
+Not academic: Zagreb's three stand at 5, 7 and 3 individually and at **one** together. Unconditional counts would show three reassuring numbers on the way to a list of one — and, after one curation pass, to a list of none, with no number anywhere having warned. Counting against the current selection means every state a reader can reach was reached through a number they saw first, which is what makes the interactive path to an empty result impossible.
+
+#### The fourth checkbox sorts
+
+*Prvo prikaži dostupne 0–24*, below a hairline. Off by default; alphabetical is the default and the only order we ever choose ourselves.
+
+**A sort the reader picks is not a ranking**, and that distinction is what keeps the provider conversation clean: the answer to *"why is that business above mine"* becomes *"because the family asked for 0–24, and you have not told us you are"* — checkable, and fixable by the provider. It is worded *"show first"* rather than naming the condition, because sitting under three filters `Dostupni 0–24` would read as a fourth filter.
+
+### The reason line — removed
+
+The gold clause under a provider's name went on 2026-09-24, with the card it lived on.
+
+**It had stopped working where it was needed most.** Composed from stored facts, it required either a džurni line without a round-the-clock claim, or a service offered by at most two providers in the city. In a large list neither fires: Zagreb carried a reason line on **2 of 17** rows, Split on 4 of 13 — while Pula and Dubrovnik carried one on both of theirs. So the annotation meant to distinguish providers worked in inverse proportion to how many there were to distinguish. A decoration appearing on an eighth of the rows is not structure, and the row had no line to spare for it.
+
+Removed with it: `reasonLine` and its two clause functions, `serviceFrequency`, and the `SERVICE_SHORT_PHRASE` and `REASON_ELIGIBLE_SERVICES` tables in `web/lib/services.ts` that existed only to feed it. `CANONICAL_SERVICE_ORDER` stays — it orders the services inside a row's disclosure and drives `/lista-pogrebnih-usluga`.
+
+**The editorial judgement it encoded survives in the filters.** *"Rare is not the same as decision-driving"* became *"splitting a list is not the same as being a reason to choose"*, which is why the three filters are cremation, repatriation and paperwork rather than the three services that happen to split most evenly.
+
+### Row anatomy
+
+**One row type, three lines.** It was `ProviderCard` until 2026-09-24 and the rename is the change: the card ran to ~256px, so a phone showed **three** of Zagreb's seventeen providers and the list read as a wall. The row is ~86px and shows six or seven.
+
+1. **Name** — `entities.name`, Spectral SC, the link to the detail page. Truncates with an ellipsis rather than wrapping: 11 of 55 names exceed 24 characters, and the address below disambiguates.
+2. **Availability mark** — `0–24`, filled gold, only when `available_24_7`. The detail page renders the same component with `long`, giving `Dostupni 0–24`, because it has the width.
+3. **Address** — `entities.address`, **without the city appended**. The `<h1>` already names it, so `", Zagreb"` was eight characters on every row saying nothing; the settlement stays where one is stored (*"Gaj 37, Lučko"*), which is the part that informs.
+4. **Third line** — the services disclosure on the left, the actions on the right.
+
+#### The three actions are icons, and the third one is ours
+
+`Nazovite` · `Pošaljite e-mail` · **our detail page**. The provider's own website is **not** on the row; it appears on the detail page, one step further on.
+
+That inversion is deliberate. `detail_view` is by some distance the most logged action in the product — 16 of 21 events — so people are genuinely using the site to compare, and the row should make that easy rather than push them off it. It also keeps any outbound click on a page where a `detail_view` has already been recorded.
+
+**Icon-only, with `aria-label`, and no tooltip anywhere.** A tooltip is a hover affordance and 73% of this product's traffic is mobile, where there is no hover — so an icon-only control has to be legible on its own. A handset and an envelope are; a globe for "website" is not, which is one more reason that action moved. The third glyph is an arrow meaning "open this", the one list convention a reader does not have to learn.
+
+**Exactly one solid dark mass per row, and it is the call.** The other two are outlined. At seventeen rows, three filled buttons would have been fifty-one dark blocks.
+
+**The reveal is unchanged and remains desktop-shaped.** The number is still obtained only through the click that logs it, which is what keeps `phone_click` a complete count rather than a sample. On mobile the tap dials and the click is counted in one gesture; on desktop, where `tel:` usually does nothing visible, showing the number *is* the outcome.
+
+#### Services, collapsed
+
+A `<details>` labelled `Usluge (N)`, sharing the third line with the actions.
+
+**Why they collapsed.** Every service used to render inline, joined by `·`, on the argument that *"at 12 rows this is three lines, and a family scanning for one specific service should not have to expand anything"*. Right for a shortlist of four cards; wrong for one list of seventeen, where three or four wrapped lines per card is the single biggest reason the list cannot be scanned.
+
+**A `<details>`, never a dialog, and the reason is search rather than taste.** Service names are the keywords the `/usluga/{slug}` listings rank on, and `<details>` keeps every one of them in the served HTML whether open or shut. A dialog populated on click can lose them from the page entirely, on exactly the pages that most need indexing. Three lesser reasons agree: the masthead already discloses this way, it works with no JavaScript, and taking the whole screen from a bereaved reader to answer *"what do they offer"* is out of proportion.
+
+**The count is in the summary on purpose** — nine services against two is a real difference between two businesses, readable without opening anything and without us characterising it. **Omitted entirely at zero**: 8 of 55 providers have no service rows, 5 of them in Zagreb, and `Usluge (0)` would state our research gap as a fact about them.
+
+### Contact actions — the detail page
+
+*(This section describes `ContactActions`, which since 2026-09-24 renders only on the provider detail page. The listing rows use `RowActions` — see [Row anatomy](#row-anatomy).)*
 
 **Neither CTA displays the address it acts on.** A visible phone number can be dialled by hand, which produces the conversion without producing the `phone_click` that is the product's only evidence it happened ([SPEC_database.md](SPEC_database.md) → What the numbers are worth). The number is therefore revealed *by* the click that logs it.
 
@@ -398,33 +431,29 @@ Actions render only when the underlying field is non-null, and the row collapses
 
 **Accepted cost.** Hiding the number is a small usability tax on a product whose first priority is usability, paid to protect the one metric the pitch rests on. The mitigations are that the detail page lists every number openly (below), and that any leak *undercounts* — which is the safe direction to be wrong, since an overstated click count would destroy the number's credibility entirely.
 
-### Card anatomy — others
+### Order and filtering
 
-Deliberately quieter, and reduced rather than restyled: **name, address, and the 24-hour mark outlined rather than filled** if applicable. No service list, no reason line.
+**Nothing is ranked. Removed on 2026-09-24, as a principle rather than a tuning decision.**
 
-**No contact action and no visible number or email address** — the whole card is a link to the detail page. That costs one extra tap for the providers that matched least, and buys two things: the hierarchy stays intact (a second pair of buttons per row would flatten it), and the contact action happens on a page where a `detail_view` has already been recorded, so nothing is dialled off an untracked surface.
+The list is **alphabetical**, collated with the `hr` locale so Č, Ć, Š, Ž and Đ sort in their proper places rather than falling to the end. That is the entire ordering rule, and the only order we ever choose ourselves — the reader can add *Prvo prikaži dostupne 0–24*, which is their instruction and not our verdict (see [The filter panel](#the-filter-panel)). Computed in the app rather than in SQL, as a pure function over the array the city query returns, which keeps it unit-testable and keeps the rule in one readable place.
 
-### Ranking rules
+**Why ranking went.** 16 of 19 search clicks land on a city page carrying no flow answers. With no answers the comparator's first two terms — criteria match and urgency — were both inert, so it fell through to **record completeness** and then to the alphabet. `NAJBOLJE ODGOVARA` therefore meant, for almost every visitor the product actually had, *"the four providers whose records we filled in most thoroughly, A–Z"*. In Zagreb eight of seventeen providers tied on completeness and the four-card cut fell **inside that tie**, which made the Croatian alphabet the deciding term on a heading that claimed to be a judgement.
 
-Computed in the app, not in SQL: one query fetches the city's providers with their services, and ranking is a pure function over that array — which keeps it unit-testable and keeps the rules in one readable place. At 7 rows performance is irrelevant.
+This document had already recorded the flaw, as a caveat: *"completeness ranks providers partly by how thoroughly we researched them, not by anything they did… worth revisiting if a provider ever complains, because the complaint would be fair."* That caveat was written assuming completeness sat behind real criteria. The traffic promoted it to the primary sort, and nobody decided that.
 
-In order:
+**What replaced it.** One list, everyone visible, narrowed by a filter the reader sets. A filter states a fact about a provider; a rank states a verdict on them. The fact is checkable, correctable, and survives the conversation — which is what makes the neutrality claim structural rather than promised. There is no first place, so there is nothing to sell, and no methodology page is needed to say so.
 
-1. **Criteria match** — matching providers above non-matching. This is what produces the block partition.
-2. **Urgency**, applied only when `situacija = 'preminuo'`: `available_24_7` first, then presence of an `emergency` phone.
-3. **Record completeness** — one point each for: any phone; an `emergency` or `mobile` phone; `working_hours` present; `email`; `website`; ≥5 service rows. A listing that cannot be acted on is worth less to the reader than one that can.
-4. **Name, A–Z**, collated with the `hr` locale so Č, Ć, Š, Ž and Đ sort correctly rather than falling to the end of the alphabet.
+**The four-card cap went with it.** A cap on a ranked list is a shortlist; a cap on an unranked one is arbitrary truncation, which is worse than showing everyone. What stops seventeen cards being a wall is the filter and the shorter card, not a cap.
 
-**A caveat to keep visible:** completeness ranks providers partly by how thoroughly *we* researched them, not by anything they did. It sits last of the substantive terms, after availability, and the remedy is to complete the data rather than to weight it differently. Worth revisiting if a provider ever complains, because the complaint would be fair.
+**`/kako-rangiramo` was deleted in the same change** — its subject ceased to exist. It is 301-redirected to `/nase-obecanje` in `netlify.toml` rather than left to 404: it was indexed at position 3.50 and linked from four pages, and on a site with 88 URLs still waiting to be crawled a 404 spends crawl budget to say nothing. The promise it carried — that position cannot be bought — now lives on `/nase-obecanje` as the `Ne rangiramo` promise, which is the stronger form of the same claim.
 
-**Deliberately not ranking terms:**
+**Deliberately not ordering terms**, each for a reason worth keeping:
 
+- **Record completeness.** The term that caused this. Ranking by it sorts providers by how thoroughly *we* researched them, and the remedy was always to complete the data rather than to reweight it.
 - **`events` click or view counts.** Ranking on them makes the metric self-fulfilling and destroys its value as evidence of anything ([SPEC_database.md](SPEC_database.md) → What the numbers are worth). This is the tempting one; it stays out.
-- **Anything paid.** No charging in Phase 1 ([SPEC.md](SPEC.md) → Never), and the transparency footer is a promise.
-- **Random or rotating order.** Non-deterministic order breaks the shareable-URL guarantee and makes *"here is why these"* unverifiable.
-- **Price.** No provider in the pilot publishes one — `price_from` and `price_to` are null throughout.
-
-The rules are published, not just documented: the transparency footer links to a short `/kako-rangiramo` page stating them in plain Croatian.
+- **Anything paid.** No charging in Phase 1 ([SPEC.md](SPEC.md) → Never), and the neutrality claim is a promise.
+- **Random or rotating order.** Non-deterministic order breaks the shareable-URL guarantee, and cannot be statically rendered at all.
+- **Price.** No provider publishes one — `price_from` and `price_to` are null throughout.
 
 ## The list a family carries — `/lista-pogrebnih-usluga`
 
@@ -450,7 +479,7 @@ A top-level route taking `?grad=`, not a segment beneath the city. `/pogrebne-us
 
 ### It names no provider
 
-**Provider-neutral by decision** (owner, 2026-09-21). The family may well visit two, so a reusable sheet is worth more to them than a routed one; and naming a single provider on a document carrying our mark would look like a referral, which is the appearance `/kako-rangiramo` exists to deny. The cost is the cleanest attribution signal we could have had, and it is accepted.
+**Provider-neutral by decision** (owner, 2026-09-21). The family may well visit two, so a reusable sheet is worth more to them than a routed one; and naming a single provider on a document carrying our mark would look like a referral — the appearance the whole product is built to avoid, and which since 2026-09-24 it avoids by not ranking at all. The cost is the cleanest attribution signal we could have had, and it is accepted.
 
 ### A worksheet, not a receipt
 
@@ -567,14 +596,13 @@ That is a deliberate exception. Choosing between a provider's office and dežurn
 |---|---|
 | `/` | landing page — what the service is, and the way into the flow |
 | `/?korak=situacija\|mjesto\|potrebe` | the three question screens; not canonical, `noindex` via `robots`. Carries `?grad=` from screen 2 onward |
-| `/pogrebne-usluge/{grad}` | results; screen 2 answered by the path, screens 1 and 3 by query params |
+| `/pogrebne-usluge/{grad}` | the city listing; screen 2 answered by the path, screens 1 and 3 by query params. **Statically prerendered** — the answers are read in the browser ([Rendering](#rendering-and-why-it-is-a-search-decision-2026-09-24)) |
 | `/pogrebne-usluge/{grad}/{pogrebnik}` | provider detail |
 | `/pogrebne-usluge/{grad}/usluga/{usluga}` | indexable service-filtered listing |
 | `/lista-pogrebnih-usluga` | the sheet a family carries to the funeral director, generated from the flow. Carries `?grad=`, the answers, and `?trebam=`. `noindex`, absent from the sitemap, and **not** disallowed in `robots.txt` — see The list a family carries |
 | `/sto-uciniti-prvo` | guidance page |
 | `/koliko-kosta-pogreb` | the cost page and the estimator |
 | `/preuzimanje-troskova-pogreba` | who covers funeral costs when the family does not — the statutory schemes |
-| `/kako-rangiramo` | the ranking rules in plain Croatian |
 | `/nase-obecanje` | the four promises in full, each with what it rules out |
 | `/za-pogrebnike` | the provider page — corrections, missing listings, collaboration, and the product's only form |
 | `/za-pogrebnike/hvala` | where a submission lands. Reached only by Netlify's redirect; `noindex`, and absent from the sitemap |
@@ -584,10 +612,10 @@ That is a deliberate exception. Choosing between a provider's office and dežurn
 
 This settles the open question in [SPEC_database.md](SPEC_database.md) → Open questions, which correctly deferred it here. **Option 1 — segment the namespace.** The two kinds of thing are separated because they are not the same kind of thing:
 
-- **Flow and filter state → query parameters.** `?situacija=…&nacin=…&pokojnik=…`. Not canonical pages: each carries `rel=canonical` to the bare city page and is excluded from the sitemap. Collision is impossible, the URL stays shareable, and this is where the wizard's answers already live.
+- **Flow and filter state → query parameters.** The flow carries `?situacija=…&nacin=…&pokojnik=…`; a city page carries `?situacija=`, `?pokojnik=` and its own `?filtri=` and `?poredak=`. **`nacin` is translated, not carried** — `resultsHref` turns `nacin=kremiranje` into `filtri=kremiranje` and drops `ukop` entirely, so the same instruction is never in the URL twice and the two can never disagree. Not canonical pages: each carries `rel=canonical` to the bare city page and is excluded from the sitemap. Collision is impossible, the URL stays shareable, and this is where the wizard's answers already live.
 - **Indexable service listings → `/usluga/{slug}`.** The literal `usluga` segment makes the collision *structurally* impossible rather than accidentally absent — it survives a future provider named "Urne", which is the exact case that made the current arrangement unguarded rather than merely unbroken.
 
-`/kremiranje/split` (option 2) is rejected: it reads well and matches search intent, but it puts a data-driven vocabulary at the URL root, colliding with every future top-level route (`/o-nama`, `/sto-uciniti-prvo`, `/kako-rangiramo`) and creating a second route tree with a second template to maintain.
+`/kremiranje/split` (option 2) is rejected: it reads well and matches search intent, but it puts a data-driven vocabulary at the URL root, colliding with every future top-level route (`/o-nama`, `/sto-uciniti-prvo`, `/nase-obecanje`) and creating a second route tree with a second template to maintain.
 
 ### Which service pages exist
 
@@ -621,19 +649,19 @@ Three rules on it:
 
 **Still absent: a named owner.** A promise page with nobody behind it is the weakest kind, and a name cannot be invented ([SPEC.md](SPEC.md) → Never: fabricating data); the project owner has chosen not to publish one. It waits on `/o-nama`. Tracked under [Known gaps](#known-gaps-deliberately-deferred).
 
-**The contact route is half closed as of 2026-09-04.** *"Javite nam"* appears on this page and on `/kako-rangiramo`, and until that date neither actually linked anywhere — a defect, since earlier revisions of this spec and of `CLAUDE.md` both claimed they did. Both now link to `/za-pogrebnike`. On this page the phrase lives inside a plain-string array, so the address sits in a sentence below the list rather than inside the sentence that promises it. What is still missing is a route for a member of the public who is not a funeral director; that half is untouched.
+**The contact route is half closed as of 2026-09-04.** *"Javite nam"* appears on this page and appeared on `/kako-rangiramo` until that page was deleted, and until 2026-09-04 neither actually linked anywhere — a defect, since earlier revisions of this spec and of `CLAUDE.md` both claimed they did. Both now link to `/za-pogrebnike`. On this page the phrase lives inside a plain-string array, so the address sits in a sentence below the list rather than inside the sentence that promises it. What is still missing is a route for a member of the public who is not a funeral director; that half is untouched.
 
 **The closing note carries no count**, deliberately. An earlier version described the coverage as one area and a small number of providers, and said so straight through the seven-city expansion. A hand-written number here goes stale exactly the way `cities[0]` did; the landing page counts cities from the live rows so that prose like this does not have to.
 
 ## The provider page
 
-`/za-pogrebnike` carries the product's only form. It exists because the businesses being listed had no way to reach us at all — the tracked half of the *"javite nam"* gap, which `/kako-rangiramo` and `/nase-obecanje` both said with nowhere to write to. Both now link here.
+`/za-pogrebnike` carries the product's only form. It exists because the businesses being listed had no way to reach us at all — the tracked half of the *"javite nam"* gap, which the prose pages said with nowhere to write to. They now link here.
 
 **It is named for its audience, not for the transaction.** A menu item reading *Kontakt* would promise a grieving visitor a route that does not exist: there is still no user-facing form and no published address, by decision. *Za pogrebnike* says who the page is for, which is also how the providers who need it find it.
 
 | section | content |
 |---|---|
-| *Prije nego pišete* | three facts stated before the form rather than after it, because they are what a provider decides on: listing is free, position cannot be bought (linking to `/kako-rangiramo`), and the data is entered by hand and therefore goes stale |
+| *Prije nego pišete* | three facts stated before the form rather than after it, because they are what a provider decides on: listing is free, **we do not rank** (linking to `/nase-obecanje`), and the data is entered by hand and therefore goes stale. The middle fact read *"position cannot be bought"* until 2026-09-24; there is no position now, which is the stronger version of the same assurance and the one a provider can check for themselves |
 | the form | company (required), OIB, city, reason, contact name, phone, email (required), message. Croatian labels, English field names — [SPEC.md](SPEC.md) → Naming Convention |
 | the note under it | what happens to what they send, and that the search itself asks nothing of anybody |
 
@@ -722,7 +750,7 @@ Both would have been contradicted by the page directly beneath them, and the pro
 
 ### What it does not do
 
-It names no provider, quotes no provider's price, and ranks nothing. `/kako-rangiramo` came out of `MENU` when this page went in — the masthead stayed at four items rather than growing to five — and it is still linked from the city pages, the service pages, `/nase-obecanje` and `/za-pogrebnike`, which is where a methodology page belongs anyway.
+It names no provider, quotes no provider's price, and ranks nothing. `/kako-rangiramo` came out of `MENU` when this page went in — the masthead stayed at four items rather than growing to five — and the page itself was deleted on 2026-09-24 with the ranking it documented.
 
 ## The entitlements page — `/preuzimanje-troskova-pogreba`
 
@@ -878,6 +906,26 @@ Every candidate tested other than Cinzel rendered `Đ`/`đ` correctly (Cormorant
 
 **The automated check has since been removed**, deliberately: the payloads are vendored in the repo (see [Typography](#typography)), so they cannot change underneath us, and the risk it guarded against only returns when someone swaps or version-bumps a face. The constraint itself still binds. **If a face is ever replaced, check `Đ`/`đ` on `/specimen` before adopting it** — the stroke must cut through the stem, not float above it. Having the glyph is not the same as drawing it correctly, which is the entire lesson of this section.
 
+### The wordmark
+
+**`pogreb.net`, not `Pogrebne usluge`** (owner, 2026-09-24), in the masthead and the footer alike. The category name described what the site is about, and on a directory of funeral services that is the one thing every page already says — it read as a label rather than as a name. The domain is what a reader repeats to a relative.
+
+**The `<title>` template still ends `· Pogrebne usluge`**, and that is a separate decision rather than an oversight: the suffix puts the primary search phrase in every one of the site's titles, and `pogreb.net` is a brand nobody searches for yet. Changing it is an SEO question for a search read, not a branding one.
+
+### Page height
+
+**Vertical space on a phone is the scarcest resource this product has, and it outranks almost every other layout instinct.** 73% of traffic is mobile, the pages that matter are lists, and a family reading one is not browsing — every screenful they have to scroll past is a provider they did not see.
+
+Treat it as a budget. Before adding any element to a listing page, the question is what it costs in pixels and what it displaces, not whether it is nice to have. What that has meant in practice:
+
+- **A 256px card became an ~86px row**, and a phone went from showing three of Zagreb's providers to six or seven.
+- **Repeated text is deleted, not shrunk.** The coverage sentence repeated the locative the `<h1>` had just given; the address repeated the city the heading names; `· Zagreb` on every row cost eight characters seventeen times. None of them were made smaller — they were removed.
+- **Chrome pays rent.** `← Pitanja` cost 74px before the heading, once its own 44px tap target and the shell's 26px gap were counted, to offer a destination 16 of 19 visitors had never been to.
+- **Prefer one line doing two jobs to two lines doing one each.** The count sits beside the heading it counts; the services disclosure shares a line with the actions; the coverage claim and the settlement list are one sentence.
+- **Measure, do not estimate.** The numbers above came from reading the built HTML and the CSS, not from looking at a screenshot.
+
+**The floors that do not move for height:** a tap target stays a tap target (the one stated exception is in [Accessibility](#accessibility), and it is larger than the rule, not smaller); text that a claim depends on is never removed to save a line; and nothing indexable leaves the served HTML.
+
 ### Layout and shape
 
 - Single column, mobile-first, **390px design width**, **22px page gutter**. The reading column caps at **560px**, and at **620px** from 1024px up.
@@ -1019,6 +1067,8 @@ One implementation rule, learned by shipping it wrong: **the SVG's viewBox is th
 - One `<h1>` per page; section headings are `<h2>`.
 - **The 24-hour mark is never colour-only** — it carries the text `24 SATA`. Same for the outlined variant in the others block.
 
+**One stated exception to the 44px minimum (2026-09-24).** The filter panel's checkbox rows are 36px. They tile with no dead space and span the full column, so each target is roughly 346 × 36 ≈ 12,500px² against the ~1,900px² a 44 × 44 square guarantees — a larger target, not a smaller one. It is written down here so it reads as a decision rather than as drift; nothing else in the product goes under 44.
+
 ## Instrumentation
 
 Applying [SPEC_database.md](SPEC_database.md) → Client-side rules to these specific screens. Those rules are binding; what follows is where each one bites here.
@@ -1058,13 +1108,19 @@ The root template is `%s · Pogrebne usluge`, so a page title opening with *"Pog
 
 ### Structured data
 
+**The city pages carry visible upward navigation, as of 2026-09-24.** `BreadcrumbList` had shipped since the search work with nothing on the page to describe, which is not what the markup is for — Google's guidance is that it describes a breadcrumb the page has — and `Search appearance.csv` came back header-only in both Search Console reads with no enhancement credited.
+
+**What the city pages actually render is one link home, worded as an action:** *← Natrag na naslovnicu*. It was briefly a two-crumb trail and the owner cut it back — the second crumb repeated the `<h1>` directly beneath it, and a crumb over a heading that already says the same thing spends a line to say nothing.
+
+The markup still carries both crumbs, and this link is the first of them worded as an action rather than a name — the page's one piece of upward navigation, which is what `BreadcrumbList` describes. The second crumb's name was changed from *"Pogrebnici u Zagrebu i okolici"* to the area label so it matches the heading it stands for. **Worth re-checking at the next search read** whether the enhancement is credited: a trail of literal crumbs is the shape Google's examples use, and this is a link.
+
 Built in `lib/structured-data.ts`, rendered by `components/JsonLd.tsx`:
 
 | type | where | what it is |
 |---|---|---|
 | `FuneralHome` | provider pages | the business — name, address, phone, email, `taxID` from `oib`, opening hours, services as offers |
 | `ItemList` | city and service listings | the providers **in the order the page renders them** |
-| `BreadcrumbList` | city, provider, service | the trail, with names matching the visible headings |
+| `BreadcrumbList` | city, provider, service | the trail, **with names matching the visible breadcrumb word for word** |
 
 Two rules govern this and neither is negotiable:
 
@@ -1079,7 +1135,7 @@ Two rules govern this and neither is negotiable:
 
 Link previews exist because the product already assumes the behaviour: a family member sends the link to a sibling, and those links open in WhatsApp and Viber.
 
-⚠️ **Next merges `metadata` shallowly, and this cost real tags.** A page setting its own `openGraph` **replaces** the root layout's object outright instead of merging into it — so `og:site_name`, `og:locale`, `og:type` and the file-based `og:image` vanished from exactly the pages that bothered to write a good title, while `/kako-rangiramo`, which sets no `openGraph` at all, kept a complete set.
+⚠️ **Next merges `metadata` shallowly, and this cost real tags.** A page setting its own `openGraph` **replaces** the root layout's object outright instead of merging into it — so `og:site_name`, `og:locale`, `og:type` and the file-based `og:image` vanished from exactly the pages that bothered to write a good title, while a prose page setting no `openGraph` at all kept a complete set.
 
 **Therefore: no page hand-writes an `openGraph` object.** Every one goes through `openGraph()` in `lib/seo.ts`, which restates the site-wide parts alongside the per-page ones. A page that bypasses it will look correct in review and ship a broken preview card.
 
@@ -1107,16 +1163,29 @@ Every route emits an absolute canonical resolved against `metadataBase`. **The h
 
 **Two things force a route to be per-request, and both are easy to trip.**
 
-- **Reading `searchParams` in a server component** opts the whole route into per-request rendering whatever `revalidate` says. On the provider page the flow's answers were used for nothing the page renders — only for the back-link href — so they moved to `useSearchParams` behind a `Suspense` boundary. The fallback is the same link without the query, which is correct rather than empty.
-- **`revalidate` alone is not enough on a dynamic segment.** With no `generateStaticParams` there are no paths to build, so the route is served on demand and the first crawl of each page still pays full origin cost. `getProviderPageParams` exists for this, and mirrors `getServicePageParams` — including going through `getCityProviders`, so a provider hidden from a city listing cannot acquire a prerendered detail page.
+- **Reading `searchParams` in a server component** opts the whole route into per-request rendering whatever `revalidate` says. On the provider page the flow's answers were used for nothing the page renders — only for the back-link href — so they moved to `useSearchParams` behind a `Suspense` boundary. The fallback is the same link without the query, which is correct rather than empty. On the city page the answers did drive rendered output until ranking was removed; what is left is read with `useMounted`, for the reason below.
+- **`revalidate` alone is not enough on a dynamic segment.** With no `generateStaticParams` there are no paths to build, so the route is served on demand and the first crawl of each page still pays full origin cost. `getProviderPageParams` exists for this, and mirrors `getServicePageParams` — including going through `getCityProviders`, so a provider hidden from a city listing cannot acquire a prerendered detail page. The city pages build theirs straight from `getCities`.
 
-**The city pages and `/` stay per-request, deliberately.** Both need `searchParams` on the server — ranking and guidance on the city page, which step to show on `/`. Moving that to the client would client-render the provider list and its `ItemList` JSON-LD, which is a real search risk for no gain: that is 10 URLs against 55 provider pages, and most of them were already indexed. Uncached indexable URLs went from 66 to 10.
+**The city pages became static on 2026-09-24, and only `/` stays per-request.**
+
+This section originally recorded the opposite — that the city pages had to stay per-request because they needed `searchParams` on the server for *"ranking and guidance"*, and that moving them would client-render the provider list and its `ItemList`. **Removing ranking removed the last server-side use of the answers** ([Order and filtering](#order-and-filtering)), and the objection turned out not to apply to what replaced it:
+
+- **A filter is subtractive; an order is not.** Ranking had to run on the server because the order has to be *in* the HTML. Hiding non-matching cards does not: the server renders every provider alphabetically with the full `ItemList`, and the browser narrows it afterwards. A crawler is served the complete list, which is strictly better than what it got before.
+- **Guidance costs nothing to move.** The strip only renders when `situacija` is set, and a crawler never sets it — so it was never in the served HTML to begin with.
+
+`generateStaticParams` over the nine cities, and `revalidate = 3600`. **Uncached indexable URLs went 66 → 10 → 1.**
+
+**The city page's header lives in the client component too**, because two of its three parts are client state: the count reads `5 od 17` once a filter is on, and the funnel is the control that put it there. The `<h1>` is still in the served HTML — a client component is rendered on the server for the initial markup — so [Headings carry the city](#headings-carry-the-city) is untouched. Verified after every build by grepping the prerendered HTML for the heading and the row count.
+
+**`useSearchParams` is the wrong tool for a component that renders content, and this is the trap to know.** During static rendering it makes its subtree bail out to client-side rendering, so what lands in the HTML is the Suspense *fallback*. On `FlowBackLink` that fallback is a link, which is why the pattern is correct there. On the provider list it would be a city page whose served HTML contains **no providers at all** — invisible in the browser, catastrophic in the index. So `CityListing` and `FlowQuestionsLink` use `useMounted` and read `window.location.search` after mount instead: the full unfiltered list renders on the server and in the first client render, and the filter applies only once hydrated. That is the same shape as the open-now rule, and for the same reason.
+
+**`/` stays per-request**, since it reads `searchParams` on the server to decide which flow step to show — the one remaining uncached indexable URL.
 
 **This also fixed a live defect.** The service listings are statically prerendered and render `ProviderCard`, which called `selectDisplayPhone` during the build — so on those 36 pages the after-hours rule was frozen at build time and would hand a family the office line at 3am. That is the precise failure the rule exists to prevent, and it had been shipping since those pages were built. It is the reason the phone choice belongs in the component rather than in whatever happens to render it.
 
 **Caching costs no instrumentation**, because Instrumentation rule 1 already requires `detail_view` to be logged from the client after mount and never from the server render. A decision taken to keep crawler and prefetch traffic out of `events` is what makes the pages safe to cache.
 
-**Verified on production the same day.** Provider pages now return `Cache-Control: public` with `X-Nextjs-Prerender: 1` and a climbing `Age`, against `private,no-cache,no-store` and `Age: 0` before. Re-running the eight-concurrent-request measurement: **3.63–4.44s before, 0.45–0.58s warm after**. The spread collapsing matters more than the mean — the spread under concurrency is what a crawler reads as a host that cannot take the load. City pages and `/` still return `no-store`, as intended.
+**Verified on production the same day.** Provider pages now return `Cache-Control: public` with `X-Nextjs-Prerender: 1` and a climbing `Age`, against `private,no-cache,no-store` and `Age: 0` before. Re-running the eight-concurrent-request measurement: **3.63–4.44s before, 0.45–0.58s warm after**. The spread collapsing matters more than the mean — the spread under concurrency is what a crawler reads as a host that cannot take the load. City pages returned `no-store` until 2026-09-24 and are now prerendered too; `/` still returns `no-store`, as intended.
 
 **The check to repeat after any change here** is `curl -sI` for `Cache-Control` and `Age`, plus eight parallel requests across different provider pages. A route that quietly reverts to per-request rendering — by taking `searchParams`, or losing `generateStaticParams` — will show up in both and in nothing else, because the page will look and behave completely normally.
 
